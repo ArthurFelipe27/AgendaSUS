@@ -1,0 +1,71 @@
+package br.com.tcc.agendasus.service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.tcc.agendasus.dto.ExameCadastroDTO;
+import br.com.tcc.agendasus.dto.ExameResponseDTO;
+import br.com.tcc.agendasus.model.entity.Exame;
+import br.com.tcc.agendasus.model.entity.Medico;
+import br.com.tcc.agendasus.model.entity.Paciente;
+import br.com.tcc.agendasus.model.entity.Usuario;
+import br.com.tcc.agendasus.model.enums.Role;
+import br.com.tcc.agendasus.repository.ExameRepository;
+import br.com.tcc.agendasus.repository.MedicoRepository;
+import br.com.tcc.agendasus.repository.PacienteRepository;
+
+@Service
+public class ExameService {
+
+    private final ExameRepository repository;
+    private final PacienteRepository pacienteRepository;
+    private final MedicoRepository medicoRepository;
+
+    public ExameService(ExameRepository repository, PacienteRepository pacienteRepository, MedicoRepository medicoRepository) {
+        this.repository = repository;
+        this.pacienteRepository = pacienteRepository;
+        this.medicoRepository = medicoRepository;
+    }
+
+    @Transactional
+    public ExameResponseDTO criar(ExameCadastroDTO dados, Authentication auth) {
+        Usuario usuarioLogado = (Usuario) auth.getPrincipal();
+        Medico medico = medicoRepository.findById(usuarioLogado.getId())
+                .orElseThrow(() -> new RuntimeException("Médico não encontrado"));
+        Paciente paciente = pacienteRepository.findById(dados.idPaciente())
+                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+
+        Exame exame = new Exame();
+        exame.setMedico(medico);
+        exame.setPaciente(paciente);
+        exame.setTipo(dados.tipo());
+        exame.setDataRealizacao(dados.dataRealizacao());
+
+        Exame exameSalvo = repository.save(exame);
+        return new ExameResponseDTO(exameSalvo);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExameResponseDTO> listarMinhas(Authentication auth) {
+        Usuario usuarioLogado = (Usuario) auth.getPrincipal();
+        List<Exame> lista;
+
+        if (usuarioLogado.getRole() == Role.PACIENTE) {
+            lista = repository.findAllByPacienteIdUsuario(usuarioLogado.getId());
+        } else if (usuarioLogado.getRole() == Role.MEDICO) {
+            lista = repository.findAllByMedicoIdUsuario(usuarioLogado.getId());
+        } else {
+            return List.of();
+        }
+        return lista.stream().map(ExameResponseDTO::new).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExameResponseDTO> listarTodas() {
+        return repository.findAll().stream().map(ExameResponseDTO::new).collect(Collectors.toList());
+    }
+}
