@@ -2,9 +2,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
 
     // Mapa de Dias da Semana (precisamos dele aqui também)
+    // SUBSTITUA SEU MAPA ANTIGO POR ESTE:
+    // Mapa para traduzir dia da semana (String) para o número do dia (JS)
     const DIAS_SEMANA_MAP = {
-        0: "DOMINGO", 1: "SEGUNDA", 2: "TERCA", 3: "QUARTA", 4: "QUINTA", 5: "SEXTA", 6: "SABADO"
+        "DOMINGO": 0,
+        "SEGUNDA": 1,
+        "TERCA": 2,
+        "QUARTA": 3,
+        "QUINTA": 4,
+        "SEXTA": 5,
+        "SABADO": 6
     };
+
+    // 2. A FUNÇÃO DE CÁLCULO DE DATA:
+    function getProximaDataISO(diaDaSemanaAlvo, horaMinuto) {
+        const [hora, minuto] = horaMinuto.split(':').map(Number);
+        const agora = new Date();
+        const diaDeHoje = agora.getDay(); // JS: Domingo = 0
+        const diaAlvoJS = DIAS_SEMANA_MAP[diaDaSemanaAlvo.toUpperCase()];
+
+        let diasParaAdicionar = diaAlvoJS - diaDeHoje;
+
+        if (diasParaAdicionar < 0 || (diasParaAdicionar === 0 && agora.getHours() >= hora)) {
+            diasParaAdicionar += 7;
+        }
+
+        const dataAlvo = new Date(agora);
+        dataAlvo.setDate(agora.getDate() + diasParaAdicionar);
+        dataAlvo.setHours(hora, minuto, 0, 0);
+
+        const offset = dataAlvo.getTimezoneOffset();
+        const dataLocalSemTZ = new Date(dataAlvo.getTime() - (offset * 60 * 1000));
+        return dataLocalSemTZ.toISOString().slice(0, 19);
+    }
+    // ========================================================
 
     // Função de inicialização do dashboard de paciente
     async function initPacienteDashboard() {
