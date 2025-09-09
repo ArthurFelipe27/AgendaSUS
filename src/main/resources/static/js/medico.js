@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Busca o perfil do usuário logado para pegar o ID (necessário para ler os próprios horários)
         try {
             const respMe = await fetchAuthenticated('/api/usuarios/me');
+            if (!respMe.ok) throw new Error('Falha ao buscar perfil do médico.');
             const usuario = await respMe.json();
             meuIdDeMedico = usuario.id; // Salva o ID globalmente para este script
         } catch (e) {
@@ -35,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Renderiza a lista de agendamentos do médico (Lógica anterior, sem alteração)
+     * Renderiza a lista de agendamentos do médico
      */
     async function renderMinhaAgenda() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
@@ -112,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleUpdateStatus(agendamentoId, novoStatus) {
-        // (Lógica anterior, sem alteração)
         const dto = { novoStatus: novoStatus };
         try {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/status`, {
@@ -123,16 +123,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(`Agendamento atualizado para ${novoStatus} com sucesso!`);
                 renderMinhaAgenda();
             } else {
-                await handleApiError(response, null);
+                // Temos que aguardar o helper de erro antes de prosseguir
+                await handleApiError(response, 'medico-content-dinamico'); // Passa um ID de div qualquer (não temos um form aqui)
+                alert("Não foi possível atualizar o status.");
             }
         } catch (err) {
             alert('Erro de rede ao atualizar status.');
         }
     }
-
-    // ===================================================================
-    // FUNÇÃO DE GERENCIAR HORÁRIOS (TOTALMENTE REESCRITA)
-    // ===================================================================
 
     /**
      * Renderiza o CONSTRUTOR DE HORÁRIOS interativo
@@ -147,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="schedule-builder">
         `;
 
-        // Cria um card para cada dia da semana
         DIAS_DA_SEMANA.forEach(dia => {
             htmlForm += `
                 <div class="schedule-day-card" id="card-${dia}">
@@ -156,8 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="time" class="time-input" data-dia="${dia}">
                         <button type="button" class="btn-add-time" data-dia="${dia}">+</button>
                     </div>
-                    <div class="time-tags-container" id="tags-${dia}">
-                        </div>
+                    <div class="time-tags-container" id="tags-${dia}"></div>
                 </div>
             `;
         });
@@ -168,8 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         contentDinamico.innerHTML = htmlForm;
 
-        // --- Lógica Pós-Renderização ---
-
         // Carrega a agenda atual da API para pré-popular
         try {
             const respHorarios = await fetchAuthenticated(`/api/medicos/${meuIdDeMedico}/horarios`);
@@ -178,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (agendaAtual.dias) {
                     agendaAtual.dias.forEach(diaInfo => {
                         diaInfo.horarios.forEach(hora => {
-                            // Cria a tag de horário para cada horário salvo
                             criarTagDeHorario(diaInfo.dia, hora);
                         });
                     });
@@ -186,55 +179,49 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error("Erro ao buscar agenda atual para popular", e);
-            // Não bloqueia a renderização, apenas não pré-popula
         }
 
-        // Adiciona listener para todos os botões "+"
         document.querySelectorAll('.btn-add-time').forEach(button => {
             button.addEventListener('click', (e) => {
                 const dia = e.target.dataset.dia;
                 const input = document.querySelector(`.time-input[data-dia="${dia}"]`);
                 if (input.value) {
                     criarTagDeHorario(dia, input.value);
-                    input.value = ''; // Limpa o input
+                    input.value = '';
                 }
             });
         });
 
-        // Adiciona listener para o botão de Salvar Principal
         document.getElementById('btn-salvar-agenda').addEventListener('click', handleSalvarHorarios);
     }
 
-    /**
-     * Helper que cria o HTML da "tag" de horário e seu botão de remover
-     */
     function criarTagDeHorario(diaSemana, horaString) {
         const container = document.getElementById(`tags-${diaSemana}`);
+        // Evita adicionar tags duplicadas
+        const existente = container.querySelector(`[data-hora="${horaString}"]`);
+        if (existente) return;
+
         const tag = document.createElement('div');
         tag.className = 'time-tag';
         tag.textContent = horaString;
-        tag.dataset.hora = horaString; // Salva o valor
+        tag.dataset.hora = horaString;
 
         const removeBtn = document.createElement('span');
         removeBtn.className = 'remove-tag';
         removeBtn.textContent = 'x';
         removeBtn.onclick = () => {
-            tag.remove(); // Remove a tag do DOM
+            tag.remove();
         };
 
         tag.appendChild(removeBtn);
         container.appendChild(tag);
     }
 
-    /**
-     * Handler que LÊ o DOM, MONTA o JSON e ENVIA para a API
-     */
     async function handleSalvarHorarios(event) {
         event.preventDefault();
         const errorMessageDiv = document.getElementById('horarios-error-message');
         errorMessageDiv.style.display = 'none';
 
-        // Constrói o DTO lendo as tags da tela
         const agendaDTO = { dias: [] };
 
         DIAS_DA_SEMANA.forEach(dia => {
@@ -246,11 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 tags.forEach(tag => {
                     horarios.push(tag.dataset.hora);
                 });
-                agendaDTO.dias.push({ dia: dia, horarios: horarios.sort() }); // Salva os horários ordenados
+                agendaDTO.dias.push({ dia: dia, horarios: horarios.sort() });
             }
         });
 
-        // Envia o DTO montado para a API
         try {
             const response = await fetchAuthenticated('/api/medicos/horarios', {
                 method: 'PUT',
@@ -268,7 +254,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- (Funções de criar prescrição/atestado que já fizemos) ---
+    // --- Funções Pós-Consulta (Criação de Documentos) ---
+
     function renderFormularioPrescricao(pacienteId, pacienteNome) {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `
@@ -323,9 +310,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    /*
+     * Função GERAL para salvar documentos (Prescrição ou Atestado)
+     */
     async function handleDocumentoSubmit(apiUrl, dto, successMessage) {
         try {
-            const response = await fetchAuthenticated(apiUrl, dto.method || 'POST', dto);
+            // CORREÇÃO: Passa a URL e um OBJETO de opções (method + body)
+            const response = await fetchAuthenticated(apiUrl, {
+                method: 'POST',
+                body: JSON.stringify(dto)
+            });
+
             if (response.ok) {
                 alert(successMessage);
                 renderMinhaAgenda(); // Volta para a agenda
@@ -333,7 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 await handleApiError(response, 'doc-error-message');
             }
         } catch (err) {
-            document.getElementById('doc-error-message').textContent = 'Erro de rede.';
+            console.error("Erro de rede ao salvar documento:", err);
+            document.getElementById('doc-error-message').textContent = 'Erro de rede. Não foi possível salvar.';
             document.getElementById('doc-error-message').style.display = 'block';
         }
     }
