@@ -36,54 +36,66 @@ document.addEventListener('DOMContentLoaded', () => {
         await renderMinhaAgenda();
     }
 
+    // Em: static/js/medico.js
+    // SUBSTITUA A FUNÇÃO INTEIRA:
+
     async function renderMinhaAgenda() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meus Agendamentos</h3><ul id="lista-agendamentos-medico" class="medico-list"><li>Carregando...</li></ul>`;
+        contentDinamico.innerHTML = `<h3>Meus Agendamentos</h3><p>Clique em um agendamento para ver os detalhes da ficha do paciente.</p><ul id="lista-agendamentos-medico" class="medico-list"><li>Carregando...</li></ul>`;
 
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
             if (!response.ok) throw new Error("Erro ao buscar agendamentos.");
+
             const agendamentos = await response.json();
             const listaUL = document.getElementById('lista-agendamentos-medico');
             listaUL.innerHTML = '';
+
             if (agendamentos.length === 0) {
                 listaUL.innerHTML = '<li>Você não possui agendamentos.</li>';
                 return;
             }
+
             agendamentos.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+
             agendamentos.forEach(ag => {
                 const li = document.createElement('li');
-                li.className = 'medico-item';
+                // ADICIONAMOS UMA NOVA CLASSE E DATA ATTRIBUTE
+                li.className = 'medico-item-clicavel';
+                li.dataset.agendamentoId = ag.idAgendamento; // Guardamos o ID aqui
+
                 let htmlAcoes = '';
-                if (ag.status === 'PENDENTE' || ag.status === 'CONFIRMADO') {
+                if (ag.status === 'ATENDIDO') {
                     htmlAcoes = `
-                        <div class="form-actions" style="justify-content: flex-end;">
-                            <button class="btn-confirm btn-status-atendido" data-id="${ag.idAgendamento}">Marcar como Atendido</button>
-                            <button class="btn-cancel btn-status-cancelado" data-id="${ag.idAgendamento}">Cancelar</button>
-                        </div>`;
-                } else if (ag.status === 'ATENDIDO') {
-                    htmlAcoes = `
-                        <div class="form-actions" style="justify-content: flex-end; gap: 0.5rem;">
-                            <button class="btn-primary-doc btn-criar-prescricao" data-paciente-id="${ag.paciente.id}" data-paciente-nome="${ag.paciente.nome}">+ Prescrição</button>
-                            <button class="btn-secondary-doc btn-criar-atestado" data-paciente-id="${ag.paciente.id}" data-paciente-nome="${ag.paciente.nome}">+ Atestado</button>
-                        </div>`;
-                } else {
-                    htmlAcoes = `<p style="color: #555; text-align: right;">Consulta finalizada/cancelada.</p>`;
-                }
-                li.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div style="flex-grow: 1;">
-                            <strong>[${ag.status}] ${new Date(ag.dataHora).toLocaleString('pt-BR')}</strong><br>
-                            <small>Paciente: ${ag.paciente.nome}</small>
-                        </div>
-                        ${htmlAcoes}
+                    <div class="form-actions" style="justify-content: flex-end; gap: 0.5rem;">
+                        <button class="btn-primary-doc btn-criar-prescricao" data-paciente-id="${ag.paciente.id}" data-paciente-nome="${ag.paciente.nome}">+ Prescrição</button>
+                        <button class="btn-secondary-doc btn-criar-atestado" data-paciente-id="${ag.paciente.id}" data-paciente-nome="${ag.paciente.nome}">+ Atestado</button>
                     </div>`;
+                } else if (ag.status !== 'CANCELADO' && ag.status !== 'NAO_COMPARECEU') {
+                    htmlAcoes = `<span style="color: #555; text-align: right;">Ações disponíveis após o atendimento.</span>`;
+                }
+
+                li.innerHTML = `
+                <div style="flex-grow: 1;">
+                    <strong>[${ag.status}] ${new Date(ag.dataHora).toLocaleString('pt-BR')}</strong><br>
+                    <small>Paciente: ${ag.paciente.nome}</small>
+                </div>
+                ${htmlAcoes}
+            `;
                 listaUL.appendChild(li);
+
+                // Adiciona listener de clique no item da lista (mas não nos botões)
+                li.addEventListener('click', (e) => {
+                    // Se o clique foi em um botão dentro do 'li', não faz nada
+                    if (e.target.tagName === 'BUTTON') return;
+                    handleVerFicha(ag.idAgendamento);
+                });
             });
-            document.querySelectorAll('.btn-status-atendido').forEach(btn => btn.addEventListener('click', () => handleUpdateStatus(btn.dataset.id, 'ATENDIDO')));
-            document.querySelectorAll('.btn-status-cancelado').forEach(btn => btn.addEventListener('click', () => handleUpdateStatus(btn.dataset.id, 'CANCELADO')));
-            document.querySelectorAll('.btn-criar-prescricao').forEach(btn => btn.addEventListener('click', () => renderFormularioPrescricao(btn.dataset.pacienteId, btn.dataset.pacienteNome)));
-            document.querySelectorAll('.btn-criar-atestado').forEach(btn => btn.addEventListener('click', () => renderFormularioAtestado(btn.dataset.pacienteId, btn.dataset.pacienteNome)));
+
+            // Listeners dos botões (separados do clique do 'li')
+            document.querySelectorAll('.btn-criar-prescricao').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); renderFormularioPrescricao(btn.dataset.pacienteId, btn.dataset.pacienteNome); }));
+            document.querySelectorAll('.btn-criar-atestado').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); renderFormularioAtestado(btn.dataset.pacienteId, btn.dataset.pacienteNome); }));
+
         } catch (err) {
             console.error(err);
             contentDinamico.innerHTML = '<li>Erro ao carregar agendamentos.</li>';
@@ -202,6 +214,61 @@ document.addEventListener('DOMContentLoaded', () => {
             const dto = { idPaciente: parseInt(pacienteId), medicamentos: document.getElementById('medicamentos').value };
             handleDocumentoSubmit('/api/prescricoes', dto, 'Prescrição salva com sucesso!');
         });
+    }
+
+    // Em: static/js/medico.js
+    // ADICIONE ESTA NOVA FUNÇÃO:
+
+    async function handleVerFicha(agendamentoId) {
+        try {
+            const response = await fetchAuthenticated(`/api/fichas-medicas/agendamento/${agendamentoId}`);
+            if (!response.ok) throw new Error('Falha ao buscar ficha médica');
+
+            const ficha = await response.json();
+
+            // Cria o HTML do Modal
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+            <div class="modal-content">
+                <button class="modal-close">&times;</button>
+                <h4>Ficha Médica do Paciente</h4>
+                <p style="margin-bottom: 1rem;">Paciente: <strong>${ficha.paciente.nome}</strong></p>
+                
+                <div class="ficha-detalhe">
+                    <strong>Sintomas Relatados:</strong>
+                    <p>${ficha.sintomas || 'Não informado'}</p>
+                </div>
+                <div class="ficha-detalhe">
+                    <strong>Dias com Sintomas:</strong>
+                    <p>${ficha.diasSintomas || 'Não informado'}</p>
+                </div>
+                <div class="ficha-detalhe">
+                    <strong>Alergias Conhecidas:</strong>
+                    <p>${ficha.alergias || 'Não informado'}</p>
+                </div>
+                <div class="ficha-detalhe">
+                    <strong>Cirurgias Prévias:</strong>
+                    <p>${ficha.cirurgias || 'Não informado'}</p>
+                </div>
+            </div>
+        `;
+
+            // Adiciona o modal ao corpo do documento
+            document.body.appendChild(modal);
+
+            // Lógica para fechar o modal
+            modal.querySelector('.modal-close').addEventListener('click', () => modal.remove());
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+        } catch (err) {
+            console.error("Erro ao buscar ficha:", err);
+            alert("Não foi possível carregar os detalhes da ficha médica.");
+        }
     }
 
     function renderFormularioAtestado(pacienteId, pacienteNome) {
