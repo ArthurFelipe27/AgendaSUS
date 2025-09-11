@@ -1,21 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
-    const usuarioLogadoNome = localStorage.getItem('userName');
-
-    // Pega o ID do usuário do token (precisamos buscar o /me)
     let idUsuarioLogado = null;
 
     async function initDiretorDashboard() {
         try {
-            // Precisamos do ID do diretor logado para não deixar ele se auto-desativar
             const responseMe = await fetchAuthenticated('/api/usuarios/me');
             if (!responseMe.ok) throw new Error('Falha ao buscar perfil do admin');
             const adminUser = await responseMe.json();
             idUsuarioLogado = adminUser.id;
-
-            // Renderiza o painel principal
             renderDashboardDiretor();
-
         } catch (e) {
             console.error(e);
             contentArea.innerHTML = "<p>Erro fatal ao carregar dados do administrador.</p>";
@@ -26,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         contentArea.innerHTML = `
             <h3>Painel Administrativo</h3>
             <div class="dashboard-grid">
-                <div class="dashboard-card admin" id="card-gerenciar-medicos">Cadastrar/Gerenciar Médicos</div>
+                <div class="dashboard-card admin" id="card-gerenciar-medicos">Gerenciar Médicos</div>
                 <div class="dashboard-card admin" id="card-gerenciar-usuarios">Gerenciar Usuários</div>
                 <div class="dashboard-card admin" id="card-gerenciar-conteudo">Gerenciar Conteúdo</div>
             </div>
@@ -34,27 +27,106 @@ document.addEventListener('DOMContentLoaded', () => {
             <div id="diretor-content-dinamico"></div> 
         `;
 
-        // Listeners dos Cards
-        document.getElementById('card-gerenciar-medicos').addEventListener('click', renderGerenciadorDeMedicos);
+        document.getElementById('card-gerenciar-medicos').addEventListener('click', renderFormCadastroMedico);
         document.getElementById('card-gerenciar-usuarios').addEventListener('click', renderGerenciadorDeUsuarios);
-        // document.getElementById('card-gerenciar-conteudo').addEventListener('click', renderGerenciadorDeConteudo);
+        document.getElementById('card-gerenciar-conteudo').addEventListener('click', renderGerenciadorDeConteudo);
     }
 
-    // --- Funções: Gerenciar Médicos ---
-    function renderGerenciadorDeMedicos() {
-        // Por agora, apenas o formulário de cadastro.
-        // Uma versão completa listaria os médicos com botões de editar/desativar.
+    // --- Funções: Gerenciar Conteúdo (NOVAS) ---
+    async function renderGerenciadorDeConteudo() {
+        const adminContent = document.getElementById('diretor-content-dinamico');
+        adminContent.innerHTML = `<h4>Moderação de Conteúdo</h4><div id="admin-content-list">Carregando...</div>`;
+
+        try {
+            const response = await fetchAuthenticated('/api/conteudo/admin/todos');
+            if (!response.ok) throw new Error('Falha ao buscar conteúdo');
+
+            const conteudos = await response.json();
+
+            let tableHTML = `
+                <table class="admin-table">
+                    <thead><tr><th>ID</th><th>Título</th><th>Autor</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody>`;
+
+            if (conteudos.length === 0) {
+                tableHTML += `<tr><td colspan="5">Nenhum conteúdo para moderar.</td></tr>`;
+            } else {
+                conteudos.forEach(c => {
+                    let acoes = '';
+                    if (c.status === 'RASCUNHO') {
+                        acoes = `<button class="btn-confirm btn-aprovar-conteudo" data-id="${c.id}">Aprovar</button>
+                                 <button class="btn-delete btn-deletar-conteudo" data-id="${c.id}" style="margin-left: 0.5rem;">Deletar</button>`;
+                    } else if (c.status === 'PUBLICADO') {
+                        acoes = `<button class="btn-cancel btn-desativar-conteudo" data-id="${c.id}">Desativar</button>`;
+                    } else { // DESATIVADO
+                        acoes = `<button class="btn-delete btn-deletar-conteudo" data-id="${c.id}">Deletar</button>`;
+                    }
+
+                    tableHTML += `
+                        <tr>
+                            <td>${c.id}</td><td>${c.titulo}</td><td>${c.autor.nome}</td><td>${c.status}</td><td>${acoes}</td>
+                        </tr>`;
+                });
+            }
+            tableHTML += `</tbody></table>`;
+            document.getElementById('admin-content-list').innerHTML = tableHTML;
+
+            // Adiciona listeners aos botões
+            document.querySelectorAll('.btn-aprovar-conteudo').forEach(btn => btn.addEventListener('click', () => handleUpdateConteudoStatus(btn.dataset.id, 'PUBLICADO')));
+            document.querySelectorAll('.btn-desativar-conteudo').forEach(btn => btn.addEventListener('click', () => handleUpdateConteudoStatus(btn.dataset.id, 'DESATIVADO')));
+            document.querySelectorAll('.btn-deletar-conteudo').forEach(btn => btn.addEventListener('click', () => handleDeletarConteudo(btn.dataset.id)));
+
+        } catch (err) {
+            console.error(err);
+            adminContent.innerHTML = `<p>Erro ao carregar conteúdo.</p>`;
+        }
+    }
+
+    async function handleUpdateConteudoStatus(conteudoId, novoStatus) {
+        if (!confirm(`Tem certeza que deseja alterar o status deste conteúdo para ${novoStatus}?`)) return;
+        const dto = { status: novoStatus };
+        try {
+            const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`, { method: 'PUT', body: JSON.stringify(dto) });
+            if (response.ok) {
+                alert(`Conteúdo atualizado para ${novoStatus}!`);
+                renderGerenciadorDeConteudo();
+            } else {
+                await handleApiError(response, 'diretor-content-dinamico');
+            }
+        } catch (err) {
+            alert('Erro de rede ao atualizar conteúdo.');
+        }
+    }
+
+    async function handleDeletarConteudo(conteudoId) {
+        if (!confirm(`Tem certeza que deseja DELETAR PERMANENTEMENTE este conteúdo? Esta ação não pode ser desfeita.`)) return;
+        try {
+            const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`, { method: 'DELETE' });
+            if (response.ok) {
+                alert(`Conteúdo deletado com sucesso!`);
+                renderGerenciadorDeConteudo();
+            } else {
+                await handleApiError(response, 'diretor-content-dinamico');
+            }
+        } catch (err) {
+            alert('Erro de rede ao deletar conteúdo.');
+        }
+    }
+
+
+    // --- Funções de Gerenciar Médicos e Usuários (Já existentes) ---
+    function renderFormCadastroMedico() {
         const adminContent = document.getElementById('diretor-content-dinamico');
         adminContent.innerHTML = `
             <h4>Cadastrar Novo Médico</h4>
             <form id="form-cad-medico" class="login-form" style="padding: 0; box-shadow: none;">
                 <div id="admin-med-error" class="error-message" style="display: none;"></div>
-                <div class="input-group"><label for="med-nome">Nome</label><input type="text" id="med-nome" required></div>
-                <div class="input-group"><label for="med-email">Email</label><input type="email" id="med-email" required></div>
-                <div class="input-group"><label for="med-cpf">CPF</label><input type="text" id="med-cpf" required maxlength="11"></div>
-                <div class="input-group"><label for="med-crm">CRM</label><input type="text" id="med-crm" required></div>
-                <div class="input-group"><label for="med-especialidade">Especialidade</label><input type="text" id="med-especialidade" required></div>
-                <div class="input-group"><label for="med-senha">Senha</label><input type="password" id="med-senha" required minlength="6"></div>
+                <div class="input-group"><label>Nome</label><input type="text" id="med-nome" required></div>
+                <div class="input-group"><label>Email</label><input type="email" id="med-email" required></div>
+                <div class="input-group"><label>CPF</label><input type="text" id="med-cpf" required maxlength="11"></div>
+                <div class="input-group"><label>CRM</label><input type="text" id="med-crm" required></div>
+                <div class="input-group"><label>Especialidade</label><input type="text" id="med-especialidade" required></div>
+                <div class="input-group"><label>Senha</label><input type="password" id="med-senha" required minlength="6"></div>
                 <button type="submit" class="btn-login">Cadastrar Médico</button>
             </form>
         `;
@@ -64,19 +136,15 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleCadastroMedicoSubmit(event) {
         event.preventDefault();
         const dadosMedico = {
-            nome: document.getElementById('med-nome').value,
-            email: document.getElementById('med-email').value,
-            cpf: document.getElementById('med-cpf').value,
-            crm: document.getElementById('med-crm').value,
-            especialidade: document.getElementById('med-especialidade').value,
-            senha: document.getElementById('med-senha').value
+            nome: document.getElementById('med-nome').value, email: document.getElementById('med-email').value,
+            cpf: document.getElementById('med-cpf').value, crm: document.getElementById('med-crm').value,
+            especialidade: document.getElementById('med-especialidade').value, senha: document.getElementById('med-senha').value
         };
-
         try {
             const response = await fetchAuthenticated('/api/medicos', { method: 'POST', body: JSON.stringify(dadosMedico) });
             if (response.ok) {
                 alert('Médico cadastrado com sucesso!');
-                renderFormCadastroMedico(); // Limpa o formulário
+                renderFormCadastroMedico();
             } else {
                 await handleApiError(response, 'admin-med-error');
             }
@@ -86,29 +154,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Funções: Gerenciar Usuários ---
     async function renderGerenciadorDeUsuarios() {
         const adminContent = document.getElementById('diretor-content-dinamico');
         adminContent.innerHTML = `<h4>Gerenciamento de Usuários</h4><div id="admin-user-list-container">Carregando...</div>`;
-
         try {
             const response = await fetchAuthenticated('/api/usuarios');
             if (!response || !response.ok) throw new Error('Falha ao buscar usuários');
-
             const usuarios = await response.json();
             document.getElementById('admin-user-list-container').innerHTML = renderUserTable(usuarios);
-
             document.querySelectorAll('.btn-delete-user').forEach(button => {
-                button.addEventListener('click', async (e) => {
-                    const userId = e.target.dataset.userId;
-                    const userName = e.target.dataset.userName;
-
-                    if (confirm(`Tem certeza que deseja desativar o usuário: ${userName} (ID: ${userId})?`)) {
-                        await handleDesativarUsuario(userId);
+                button.addEventListener('click', async e => {
+                    if (confirm(`Desativar: ${e.target.dataset.userName}?`)) {
+                        await handleDesativarUsuario(e.target.dataset.userId);
                     }
                 });
             });
-
         } catch (err) {
             console.error(err);
             adminContent.innerHTML = `<p>Erro ao carregar usuários.</p>`;
@@ -119,28 +179,16 @@ document.addEventListener('DOMContentLoaded', () => {
         let tableHTML = `
             <div class="admin-table-container">
                 <table class="admin-table">
-                    <thead><tr>
-                        <th>ID</th><th>Nome</th><th>Email</th><th>CPF</th><th>Perfil</th><th>Ativo?</th><th>Ações</th>
-                    </tr></thead>
-                    <tbody>
-        `;
+                    <thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Perfil</th><th>Ativo?</th><th>Ações</th></tr></thead>
+                    <tbody>`;
         usuarios.forEach(user => {
-            const isSelf = (user.id === idUsuarioLogado); // Usa o ID global que buscamos
+            const isSelf = (user.id === idUsuarioLogado);
             tableHTML += `
                 <tr>
-                    <td>${user.id}</td>
-                    <td>${user.nome}</td>
-                    <td>${user.email}</td>
-                    <td>${user.cpf}</td>
-                    <td>${user.role}</td>
+                    <td>${user.id}</td><td>${user.nome}</td><td>${user.email}</td><td>${user.role}</td>
                     <td>${user.ativo ? 'Sim' : 'Não'}</td>
-                    <td>
-                        <button class="btn-delete btn-delete-user" data-user-id="${user.id}" data-user-name="${user.nome}" ${isSelf ? 'disabled' : ''}>
-                            Desativar
-                        </button>
-                    </td>
-                </tr>
-            `;
+                    <td><button class="btn-delete btn-delete-user" data-user-id="${user.id}" data-user-name="${user.nome}" ${isSelf ? 'disabled' : ''}>Desativar</button></td>
+                </tr>`;
         });
         tableHTML += `</tbody></table></div>`;
         return tableHTML;
@@ -148,25 +196,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleDesativarUsuario(userId) {
         try {
-            const response = await fetchAuthenticated(`/api/usuarios/${userId}`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) { // 204 No Content
+            const response = await fetchAuthenticated(`/api/usuarios/${userId}`, { method: 'DELETE' });
+            if (response.ok) {
                 alert('Usuário desativado com sucesso!');
-                renderGerenciadorDeUsuarios(); // Recarrega a lista
+                renderGerenciadorDeUsuarios();
             } else {
-                const error = await response.json();
-                alert(`Falha ao desativar: ${error.message}`);
+                await handleApiError(response, 'diretor-content-dinamico');
             }
         } catch (err) {
-            console.error(err);
-            alert('Ocorreu um erro ao tentar desativar.');
+            alert('Erro ao tentar desativar.');
         }
     }
 
-    // --- (Aqui entrariam as funções do Gerenciador de Conteúdo) ---
-
-    // Inicializa o Dashboard do Diretor
+    // Inicializa o Dashboard
     initDiretorDashboard();
 });

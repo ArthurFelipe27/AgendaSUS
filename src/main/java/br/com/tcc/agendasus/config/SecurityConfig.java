@@ -27,65 +27,68 @@ public class SecurityConfig {
         this.securityFilter = securityFilter;
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
+    // Em: br/com/tcc/agendasus/config/SecurityConfig.java
 
-                .authorizeHttpRequests(auth -> auth
-                        
-                        // --- 1. REGRAS PÚBLICAS (API e Frontend) ---
-                        .requestMatchers(HttpMethod.POST, "/api/login", "/api/usuarios").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/conteudo/publico/**").permitAll()
-                        
-                        // Libera todos os arquivos estáticos (CSS, JS, HTML)
-                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() 
-                        .requestMatchers("/", "/login.html", "/cadastro.html", "/paciente_dashboard.html", "/medico_dashboard.html", "/diretor_dashboard.html", "/*.html").permitAll()
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    return http
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .formLogin(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable)
 
-                        // --- 2. REGRAS AUTENTICADAS (API) ---
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/{id}").hasRole("DIRETOR")
-                        
-                        // Médicos (Ordem correta)
-                        .requestMatchers(HttpMethod.PUT, "/api/medicos/horarios").hasRole("MEDICO") 
-                        .requestMatchers(HttpMethod.POST, "/api/medicos").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.GET, "/api/medicos", "/api/medicos/{id}", "/api/medicos/{id}/horarios").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/medicos/{id}").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/medicos/{id}").hasRole("DIRETOR") 
-                        
-                        // Agendamentos
-                        .requestMatchers(HttpMethod.POST, "/api/agendamentos").hasRole("PACIENTE") 
-                        .requestMatchers(HttpMethod.GET, "/api/agendamentos/meus").hasAnyRole("PACIENTE", "MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/agendamentos/todos").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/status").hasRole("MEDICO")
-                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/cancelar").hasRole("PACIENTE")
+            .authorizeHttpRequests(auth -> auth
+                    
+                    // --- 1. REGRAS PÚBLICAS (API e Frontend) ---
+                    .requestMatchers(HttpMethod.POST, "/api/login", "/api/usuarios").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/conteudo/publico/**").permitAll()
+                    .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() 
+                    .requestMatchers("/", "/login.html", "/cadastro.html", "/paciente_dashboard.html", "/medico_dashboard.html", "/diretor_dashboard.html", "/*.html").permitAll()
 
-                        // Pós-Consulta (Regras Específicas)
-                        .requestMatchers(HttpMethod.POST, "/api/prescricoes").hasRole("MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/prescricoes/meus").hasAnyRole("PACIENTE", "MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/prescricoes/todas").hasRole("DIRETOR")
-                        
-                        .requestMatchers(HttpMethod.POST, "/api/atestados").hasRole("MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/atestados/meus").hasAnyRole("PACIENTE", "MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/atestados/todas").hasRole("DIRETOR")
+                    // --- 2. REGRAS AUTENTICADAS (API) ---
+                    .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("DIRETOR")
+                    .requestMatchers(HttpMethod.DELETE, "/api/usuarios/{id}").hasRole("DIRETOR")
+                    
+                    // Médicos
+                    .requestMatchers(HttpMethod.PUT, "/api/medicos/horarios").hasRole("MEDICO") 
+                    .requestMatchers(HttpMethod.POST, "/api/medicos").hasRole("DIRETOR")
+                    .requestMatchers(HttpMethod.GET, "/api/medicos", "/api/medicos/{id}", "/api/medicos/{id}/horarios").authenticated()
+                    .requestMatchers(HttpMethod.PUT, "/api/medicos/{id}").hasRole("DIRETOR")
+                    .requestMatchers(HttpMethod.DELETE, "/api/medicos/{id}").hasRole("DIRETOR") 
+                    
+                    // Agendamentos
+                    .requestMatchers(HttpMethod.POST, "/api/agendamentos").hasRole("PACIENTE") 
+                    .requestMatchers(HttpMethod.GET, "/api/agendamentos/meus").hasAnyRole("PACIENTE", "MEDICO")
+                    .requestMatchers(HttpMethod.GET, "/api/agendamentos/todos").hasRole("DIRETOR")
+                    .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/status").hasRole("MEDICO")
+                    .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/cancelar").hasRole("PACIENTE")
 
-                        .requestMatchers(HttpMethod.POST, "/api/exames").hasRole("MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/exames/meus").hasAnyRole("PACIENTE", "MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/exames/todas").hasRole("DIRETOR")
-                        
-                        // Conteúdo Admin
-                        .requestMatchers("/api/conteudo/admin/**").hasRole("DIRETOR")
+                    // Pós-Consulta
+                    .requestMatchers(HttpMethod.POST, "/api/prescricoes").hasRole("MEDICO")
+                    .requestMatchers(HttpMethod.GET, "/api/prescricoes/meus").hasAnyRole("PACIENTE", "MEDICO")
+                    .requestMatchers(HttpMethod.GET, "/api/prescricoes/todas").hasRole("DIRETOR")
+                    .requestMatchers(HttpMethod.POST, "/api/atestados").hasRole("MEDICO")
+                    .requestMatchers(HttpMethod.GET, "/api/atestados/meus").hasAnyRole("PACIENTE", "MEDICO")
+                    .requestMatchers(HttpMethod.GET, "/api/atestados/todas").hasRole("DIRETOR")
+                    .requestMatchers(HttpMethod.POST, "/api/exames").hasRole("MEDICO")
+                    .requestMatchers(HttpMethod.GET, "/api/exames/meus").hasAnyRole("PACIENTE", "MEDICO")
+                    .requestMatchers(HttpMethod.GET, "/api/exames/todas").hasRole("DIRETOR")
+                    
+                    // --- 3. REGRAS DE CONTEÚDO (AQUI ESTÁ A CORREÇÃO FINAL) ---
+                    // Substituímos a regra genérica "/api/conteudo/admin/**" por estas:
+                    .requestMatchers(HttpMethod.POST, "/api/conteudo/admin").hasAnyRole("DIRETOR", "MEDICO") // Diretor E Médico podem CRIAR
+                    .requestMatchers(HttpMethod.GET, "/api/conteudo/admin/todos").hasRole("DIRETOR")       // Apenas Diretor pode ver TUDO
+                    .requestMatchers(HttpMethod.PUT, "/api/conteudo/admin/{id}").hasRole("DIRETOR")        // Apenas Diretor pode ATUALIZAR (Aprovar)
+                    .requestMatchers(HttpMethod.DELETE, "/api/conteudo/admin/{id}").hasRole("DIRETOR")    // Apenas Diretor pode DELETAR
+                    // --- FIM DA CORREÇÃO ---
 
-                        // --- 3. REGRA FINAL ---
-                        .anyRequest().authenticated() 
-                )
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
+                    // --- 4. REGRA FINAL ---
+                    .anyRequest().authenticated() 
+            )
+            .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+            .build();
+}
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
