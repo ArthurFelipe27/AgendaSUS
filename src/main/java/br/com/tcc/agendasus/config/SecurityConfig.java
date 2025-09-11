@@ -72,6 +72,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
                     .requestMatchers(HttpMethod.POST, "/api/atestados").hasRole("MEDICO")
                     .requestMatchers(HttpMethod.GET, "/api/atestados/meus").hasAnyRole("PACIENTE", "MEDICO")
                     .requestMatchers(HttpMethod.GET, "/api/atestados/todas").hasRole("DIRETOR")
+                    .requestMatchers(HttpMethod.PUT, "/api/exames/{id}/resultado").hasRole("MEDICO")
                     .requestMatchers(HttpMethod.POST, "/api/exames").hasRole("MEDICO")
                     .requestMatchers(HttpMethod.GET, "/api/exames/meus").hasAnyRole("PACIENTE", "MEDICO")
                     .requestMatchers(HttpMethod.GET, "/api/exames/todas").hasRole("DIRETOR")

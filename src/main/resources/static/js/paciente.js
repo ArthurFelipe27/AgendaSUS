@@ -1,3 +1,7 @@
+// ===================================================================
+// PACIENTE.JS (VERSÃO FINAL E COMPLETA - CORRIGIDA)
+// ===================================================================
+
 document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
 
@@ -6,11 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
         "DOMINGO": 0, "SEGUNDA": 1, "TERCA": 2, "QUARTA": 3, "QUINTA": 4, "SEXTA": 5, "SABADO": 6
     };
 
-    function getProximaDataISO(diaDaSemanaAlvo, horaMinuto) {
+    function getProximaDataISO(diaDaSemana, horaMinuto) {
         const [hora, minuto] = horaMinuto.split(':').map(Number);
         const agora = new Date();
         const diaDeHoje = agora.getDay();
-        const diaAlvoJS = DIAS_SEMANA_MAP[diaDaSemanaAlvo.toUpperCase()];
+        const diaAlvoJS = DIAS_SEMANA_MAP[diaDaSemana.toUpperCase()];
         let diasParaAdicionar = diaAlvoJS - diaDeHoje;
         if (diasParaAdicionar < 0 || (diasParaAdicionar === 0 && (agora.getHours() > hora || (agora.getHours() === hora && agora.getMinutes() >= minuto)))) {
             diasParaAdicionar += 7;
@@ -30,24 +34,55 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="dashboard-grid">
                 <div class="dashboard-card" id="card-agendar">Novo Agendamento</div>
                 <div class="dashboard-card" id="card-meus-agendamentos">Meus Agendamentos</div>
-                <div class="dashboard-card" id="card-meus-documentos">Minhas Prescrições/Atestados</div>
-                <div class="dashboard-card" id="card-noticias">Notícias</div> </div>
+                <div class="dashboard-card" id="card-meu-perfil">Meu Perfil</div>
+                <div class="dashboard-card" id="card-prescricoes">Minhas Prescrições</div>
+                <div class="dashboard-card" id="card-atestados">Meus Atestados</div>
+                <div class="dashboard-card" id="card-exames">Meus Exames</div>
+                <div class="dashboard-card" id="card-noticias">Notícias e Artigos</div>
             </div>
             <hr>
             <div id="paciente-content-dinamico"></div>
         `;
 
-        // ADICIONA OS LISTENERS PARA TODOS OS CARDS
         document.getElementById('card-agendar').addEventListener('click', renderListaMedicos);
         document.getElementById('card-meus-agendamentos').addEventListener('click', renderMeusAgendamentos);
-        document.getElementById('card-meus-documentos').addEventListener('click', renderMeusDocumentos);
+        document.getElementById('card-meu-perfil').addEventListener('click', renderMeuPerfil);
+        document.getElementById('card-prescricoes').addEventListener('click', renderMinhasPrescricoes);
+        document.getElementById('card-atestados').addEventListener('click', renderMeusAtestados);
+        document.getElementById('card-exames').addEventListener('click', renderMeusExames);
         document.getElementById('card-noticias').addEventListener('click', () => renderNoticiasPublicas('paciente-content-dinamico'));
 
-        // Carrega a visão principal (Novo Agendamento) por padrão
         renderListaMedicos();
     }
 
-    // --- RENDER: FLUXO DE NOVO AGENDAMENTO ---
+    // --- SEÇÃO 1: "MEU PERFIL" ---
+
+    async function renderMeuPerfil() {
+        const contentDinamico = document.getElementById('paciente-content-dinamico');
+        contentDinamico.innerHTML = `<h3>Meu Perfil</h3><div id="perfil-container">Carregando...</div>`;
+
+        try {
+            const response = await fetchAuthenticated('/api/usuarios/me');
+            if (!response.ok) throw new Error('Falha ao buscar dados do perfil.');
+
+            const usuario = await response.json();
+
+            document.getElementById('perfil-container').innerHTML = `
+                <div class="document-item">
+                    <p><strong>Nome:</strong> ${usuario.nome}</p>
+                    <p><strong>Email:</strong> ${usuario.email}</p>
+                    <p><strong>CPF:</strong> ${usuario.cpf}</p>
+                </div>
+            `;
+
+        } catch (err) {
+            console.error(err);
+            contentDinamico.innerHTML = '<p>Erro ao carregar seu perfil.</p>';
+        }
+    }
+
+
+    // --- SEÇÃO 2: FLUXO DE NOVO AGENDAMENTO (AS FUNÇÕES QUE FALTAVAM) ---
 
     async function renderListaMedicos() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
@@ -61,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             listaUL.innerHTML = '';
 
             if (medicos.length === 0) {
-                listaUL.innerHTML = '<li>Nenhum médico cadastrado.</li>';
+                listaUL.innerHTML = '<li>Nenhum médico cadastrado no momento.</li>';
                 return;
             }
 
@@ -82,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderDetalhesMedicoParaAgendamento(medicoId) {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<ul class="medico-list"><li>Carregando agenda...</li></ul>`;
+        contentDinamico.innerHTML = `<ul class="medico-list"><li>Carregando agenda do médico...</li></ul>`;
 
         try {
             const [respMedico, respHorarios] = await Promise.all([
@@ -90,23 +125,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetchAuthenticated(`/api/medicos/${medicoId}/horarios`)
             ]);
 
-            if (!respMedico.ok || !respHorarios.ok) throw new Error('Não foi possível carregar os dados.');
+            if (!respMedico.ok || !respHorarios.ok) throw new Error('Não foi possível carregar os dados do médico.');
 
             const medico = await respMedico.json();
             const agenda = await respHorarios.json();
 
             let htmlAgenda = `<h3>Agenda de ${medico.nome} (${medico.especialidade})</h3>`;
-            htmlAgenda += `<button class="btn-cancel" id="btn-voltar-lista" style="margin-bottom: 1rem;">&larr; Voltar</button>`;
+            htmlAgenda += `<button class="btn-cancel" id="btn-voltar-lista" style="margin-bottom: 1rem;">&larr; Voltar para lista</button>`;
 
             if (!agenda.dias || agenda.dias.length === 0) {
-                htmlAgenda += '<p>Este médico ainda não cadastrou horários.</p>';
+                htmlAgenda += '<p>Este médico ainda não cadastrou horários disponíveis.</p>';
             } else {
                 htmlAgenda += '<p>Selecione um horário para agendar:</p>';
                 agenda.dias.forEach(dia => {
                     htmlAgenda += `<div class="dia-agenda"><strong>${dia.dia}</strong><div class="horarios-grid">`;
                     dia.horarios.forEach(hora => {
                         const dataSlotISO = getProximaDataISO(dia.dia, hora);
-                        htmlAgenda += `<button class="btn-horario" data-iso-datetime="${dataSlotISO}" data-medico-id="${medico.id}" data-medico-nome="${medico.nome}">${hora}</button>`;
+                        const dataFormatadaAmigavel = new Date(dataSlotISO).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+                        htmlAgenda += `<button class="btn-horario" data-iso-datetime="${dataSlotISO}" data-medico-id="${medico.id}" data-medico-nome="${medico.nome}" title="Agendar para ${dataFormatadaAmigavel}">${hora}</button>`;
                     });
                     htmlAgenda += `</div></div>`;
                 });
@@ -162,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetchAuthenticated('/api/agendamentos', { method: 'POST', body: JSON.stringify(agendamentoDTO) });
             if (response.ok) {
                 alert('Agendamento realizado com sucesso!');
-                renderMeusAgendamentos(); // Leva para a lista de agendamentos após o sucesso
+                renderMeusAgendamentos();
             } else {
                 await handleApiError(response, 'booking-error-message');
             }
@@ -172,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- RENDER: MEUS AGENDAMENTOS E DOCUMENTOS ---
+    // --- SEÇÃO 3: MEUS AGENDAMENTOS E DOCUMENTOS ---
 
     async function renderMeusAgendamentos() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
@@ -224,8 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Agendamento cancelado com sucesso!');
                 renderMeusAgendamentos();
             } else {
-                await handleApiError(response, null);
-                alert('Não foi possível cancelar o agendamento.');
+                const errorData = await response.json();
+                alert(`Não foi possível cancelar: ${errorData.message}`);
             }
         } catch (err) {
             alert('Erro de rede ao tentar cancelar.');
@@ -234,43 +270,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderMeusDocumentos() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meus Documentos</h3><div id="documentos-container">Carregando...</div>`;
+        contentDinamico.innerHTML = `<h3>Meus Documentos</h3><p>Esta seção foi dividida em cards separados.</p>`;
+    }
 
+    async function renderMinhasPrescricoes() {
+        const contentDinamico = document.getElementById('paciente-content-dinamico');
+        contentDinamico.innerHTML = `<h3>Minhas Prescrições</h3><div id="prescricoes-container">Carregando...</div>`;
         try {
-            const [respPrescricoes, respAtestados] = await Promise.all([
-                fetchAuthenticated('/api/prescricoes/meus'),
-                fetchAuthenticated('/api/atestados/meus')
-            ]);
+            const response = await fetchAuthenticated('/api/prescricoes/meus');
+            if (!response.ok) throw new Error('Falha ao buscar prescrições.');
+            const prescricoes = await response.json();
+            const container = document.getElementById('prescricoes-container');
+            container.innerHTML = '';
 
-            if (!respPrescricoes.ok || !respAtestados.ok) throw new Error('Falha ao buscar docs.');
-
-            const prescricoes = await respPrescricoes.json();
-            const atestados = await respAtestados.json();
-
-            let html = '<div class="document-list-container">';
-            html += '<h4>Prescrições</h4>';
             if (prescricoes.length === 0) {
-                html += '<p>Nenhuma prescrição encontrada.</p>';
+                container.innerHTML = '<p>Nenhuma prescrição encontrada.</p>';
             } else {
                 prescricoes.forEach(p => {
-                    html += `<div class="document-item"><p class="meta">Emitido por <strong>Dr(a). ${p.medico.nome}</strong> em ${new Date(p.dataEmissao).toLocaleDateString('pt-BR')}</p><pre class="content">${p.medicamentos}</pre></div>`;
+                    container.innerHTML += `<div class="document-item"><p class="meta">Emitido por <strong>Dr(a). ${p.medico.nome}</strong> em ${new Date(p.dataEmissao).toLocaleDateString('pt-BR')}</p><pre class="content">${p.medicamentos}</pre></div>`;
                 });
             }
-            html += '</div><hr><div class="document-list-container">';
-            html += '<h4>Atestados</h4>';
-            if (atestados.length === 0) {
-                html += '<p>Nenhum atestado encontrado.</p>';
-            } else {
-                atestados.forEach(a => {
-                    html += `<div class="document-item"><p class="meta">Emitido por <strong>Dr(a). ${a.medico.nome}</strong> em ${new Date(a.dataEmissao).toLocaleDateString('pt-BR')}</p><pre class="content">${a.descricao}</pre></div>`;
-                });
-            }
-            html += '</div>';
-            document.getElementById('documentos-container').innerHTML = html;
-
         } catch (err) {
             console.error(err);
-            contentDinamico.innerHTML = '<p>Erro ao carregar documentos.</p>';
+            contentDinamico.innerHTML = '<p>Erro ao carregar prescrições.</p>';
+        }
+    }
+
+    async function renderMeusAtestados() {
+        const contentDinamico = document.getElementById('paciente-content-dinamico');
+        contentDinamico.innerHTML = `<h3>Meus Atestados</h3><div id="atestados-container">Carregando...</div>`;
+        try {
+            const response = await fetchAuthenticated('/api/atestados/meus');
+            if (!response.ok) throw new Error('Falha ao buscar atestados.');
+            const atestados = await response.json();
+            const container = document.getElementById('atestados-container');
+            container.innerHTML = '';
+
+            if (atestados.length === 0) {
+                container.innerHTML = '<p>Nenhum atestado encontrado.</p>';
+            } else {
+                atestados.forEach(a => {
+                    container.innerHTML += `<div class="document-item"><p class="meta">Emitido por <strong>Dr(a). ${a.medico.nome}</strong> em ${new Date(a.dataEmissao).toLocaleDateString('pt-BR')}</p><pre class="content">${a.descricao}</pre></div>`;
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            contentDinamico.innerHTML = '<p>Erro ao carregar atestados.</p>';
+        }
+    }
+
+    async function renderMeusExames() {
+        const contentDinamico = document.getElementById('paciente-content-dinamico');
+        contentDinamico.innerHTML = `<h3>Meus Exames</h3><div id="exames-container">Carregando...</div>`;
+        try {
+            const response = await fetchAuthenticated('/api/exames/meus');
+            if (!response.ok) throw new Error('Falha ao buscar exames.');
+            const exames = await response.json();
+            const container = document.getElementById('exames-container');
+            container.innerHTML = '';
+
+            if (exames.length === 0) {
+                container.innerHTML = '<p>Nenhum exame encontrado.</p>';
+            } else {
+                exames.forEach(e => {
+                    container.innerHTML += `<div class="document-item"><p class="meta">Solicitado por <strong>Dr(a). ${e.medico.nome}</strong> em ${new Date(e.dataRealizacao).toLocaleDateString('pt-BR')}</p><div class="content"><strong>Tipo:</strong> ${e.tipo}</div><div class="content" style="margin-top: 0.5rem;"><strong>Resultado:</strong> ${e.resultado || 'Aguardando'}</div></div>`;
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            contentDinamico.innerHTML = '<p>Erro ao carregar exames.</p>';
         }
     }
 

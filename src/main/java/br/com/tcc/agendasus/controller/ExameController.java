@@ -6,13 +6,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.tcc.agendasus.dto.ExameCadastroDTO;
 import br.com.tcc.agendasus.dto.ExameResponseDTO;
+import br.com.tcc.agendasus.dto.ExameResultadoUpdateDTO;
 import br.com.tcc.agendasus.service.ExameService;
 import jakarta.validation.Valid;
 
@@ -41,4 +44,14 @@ public class ExameController {
     public ResponseEntity<List<ExameResponseDTO>> listarTodas() {
         return ResponseEntity.ok(service.listarTodas());
     }
+
+    @PutMapping("/{id}/resultado")
+public ResponseEntity<ExameResponseDTO> atualizarResultado(
+        @PathVariable Long id,
+        @RequestBody @Valid ExameResultadoUpdateDTO dados,
+        Authentication auth) {
+            
+    ExameResponseDTO exameAtualizado = service.atualizarResultado(id, dados, auth);
+    return ResponseEntity.ok(exameAtualizado);
+}
 }

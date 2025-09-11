@@ -3,12 +3,14 @@ package br.com.tcc.agendasus.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.tcc.agendasus.dto.ExameCadastroDTO;
 import br.com.tcc.agendasus.dto.ExameResponseDTO;
+import br.com.tcc.agendasus.dto.ExameResultadoUpdateDTO;
 import br.com.tcc.agendasus.model.entity.Exame;
 import br.com.tcc.agendasus.model.entity.Medico;
 import br.com.tcc.agendasus.model.entity.Paciente;
@@ -17,6 +19,7 @@ import br.com.tcc.agendasus.model.enums.Role;
 import br.com.tcc.agendasus.repository.ExameRepository;
 import br.com.tcc.agendasus.repository.MedicoRepository;
 import br.com.tcc.agendasus.repository.PacienteRepository;
+
 
 @Service
 public class ExameService {
@@ -68,4 +71,20 @@ public class ExameService {
     public List<ExameResponseDTO> listarTodas() {
         return repository.findAll().stream().map(ExameResponseDTO::new).collect(Collectors.toList());
     }
+
+    @Transactional
+public ExameResponseDTO atualizarResultado(Long exameId, ExameResultadoUpdateDTO dados, Authentication auth) {
+    Usuario usuarioLogado = (Usuario) auth.getPrincipal();
+    Exame exame = repository.findById(exameId)
+            .orElseThrow(() -> new RuntimeException("Exame não encontrado."));
+
+    // REGRA DE SEGURANÇA: Apenas o médico que solicitou o exame pode atualizar o resultado.
+    if (!exame.getMedico().getIdUsuario().equals(usuarioLogado.getId())) {
+        throw new AccessDeniedException("Você não tem permissão para atualizar o resultado deste exame.");
+    }
+
+    exame.setResultado(dados.resultado());
+    Exame exameSalvo = repository.save(exame);
+    return new ExameResponseDTO(exameSalvo);
+}
 }
