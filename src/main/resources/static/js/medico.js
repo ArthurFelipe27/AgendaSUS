@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="dashboard-card" id="card-minha-agenda">Ver Minha Agenda</div>
                 <div class="dashboard-card" id="card-meus-horarios">Gerenciar Meus Horários</div>
                 <div class="dashboard-card" id="card-criar-conteudo">Criar Artigo/Notícia</div>
+                <div class="dashboard-card" id="card-noticias">Ver Notícias Públicas</div> </div>
             </div>
             <hr>
             <div id="medico-content-dinamico"></div>
@@ -29,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('card-minha-agenda').addEventListener('click', renderMinhaAgenda);
         document.getElementById('card-meus-horarios').addEventListener('click', renderGerenciarHorarios);
         document.getElementById('card-criar-conteudo').addEventListener('click', renderFormularioConteudo);
+        document.getElementById('card-noticias').addEventListener('click', () => renderNoticiasPublicas('medico-content-dinamico'));
+
 
         await renderMinhaAgenda();
     }

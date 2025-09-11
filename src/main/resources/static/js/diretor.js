@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="dashboard-card admin" id="card-gerenciar-medicos">Gerenciar Médicos</div>
                 <div class="dashboard-card admin" id="card-gerenciar-usuarios">Gerenciar Usuários</div>
                 <div class="dashboard-card admin" id="card-gerenciar-conteudo">Gerenciar Conteúdo</div>
+                <div class="dashboard-card admin" id="card-noticias">Ver Notícias Públicas</div> </div>
             </div>
             <hr>
             <div id="diretor-content-dinamico"></div> 
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('card-gerenciar-medicos').addEventListener('click', renderFormCadastroMedico);
         document.getElementById('card-gerenciar-usuarios').addEventListener('click', renderGerenciadorDeUsuarios);
         document.getElementById('card-gerenciar-conteudo').addEventListener('click', renderGerenciadorDeConteudo);
+        document.getElementById('card-noticias').addEventListener('click', () => renderNoticiasPublicas('diretor-content-dinamico'));
     }
 
     // --- Funções: Gerenciar Conteúdo (NOVAS) ---

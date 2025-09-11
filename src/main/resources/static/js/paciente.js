@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="dashboard-card" id="card-agendar">Novo Agendamento</div>
                 <div class="dashboard-card" id="card-meus-agendamentos">Meus Agendamentos</div>
                 <div class="dashboard-card" id="card-meus-documentos">Minhas Prescrições/Atestados</div>
+                <div class="dashboard-card" id="card-noticias">Notícias</div> </div>
             </div>
             <hr>
             <div id="paciente-content-dinamico"></div>
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('card-agendar').addEventListener('click', renderListaMedicos);
         document.getElementById('card-meus-agendamentos').addEventListener('click', renderMeusAgendamentos);
         document.getElementById('card-meus-documentos').addEventListener('click', renderMeusDocumentos);
+        document.getElementById('card-noticias').addEventListener('click', () => renderNoticiasPublicas('paciente-content-dinamico'));
 
         // Carrega a visão principal (Novo Agendamento) por padrão
         renderListaMedicos();
