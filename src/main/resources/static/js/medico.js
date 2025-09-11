@@ -1,27 +1,34 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Seletores e Variáveis Globais ---
     const contentArea = document.getElementById('content-area');
-    let meuIdDeMedico = null; // Armazena o ID do médico logado
+    let meuIdDeMedico = null; // Armazena o ID do médico logado para uso nas APIs
 
     // Constante com os dias da semana para o construtor de horários
     const DIAS_DA_SEMANA = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO", "DOMINGO"];
 
-    // Função principal que inicializa o dashboard
+    // --- FUNÇÃO DE INICIALIZAÇÃO ---
+
+    /**
+     * Função principal que constrói o dashboard do médico e adiciona os listeners
+     */
     async function initMedicoDashboard() {
+        // Busca o ID do médico logado (essencial para várias funções)
         try {
             const respMe = await fetchAuthenticated('/api/usuarios/me');
             if (!respMe.ok) throw new Error('Falha ao buscar perfil do médico.');
             const usuario = await respMe.json();
-            meuIdDeMedico = usuario.id; // Salva o ID para uso posterior
+            meuIdDeMedico = usuario.id;
         } catch (e) {
             console.error("Erro fatal ao buscar perfil do médico.", e);
             contentArea.innerHTML = "<p>Erro ao carregar dados. Faça login novamente.</p>";
             return;
         }
 
-        // Renderiza a estrutura principal do dashboard do médico
+        // Renderiza a estrutura principal do dashboard com os 4 cards
         contentArea.innerHTML = `
             <div class="dashboard-grid">
-                <div class="dashboard-card" id="card-minha-agenda">Ver Minha Agenda</div>
+                <div class="dashboard-card" id="card-minha-agenda">Minha Agenda (Ativas)</div>
+                <div class="dashboard-card" id="card-historico">Histórico de Atendimentos</div>
                 <div class="dashboard-card" id="card-meus-horarios">Gerenciar Meus Horários</div>
                 <div class="dashboard-card" id="card-criar-conteudo">Criar Artigo/Notícia</div>
             </div>
@@ -29,49 +36,104 @@ document.addEventListener('DOMContentLoaded', () => {
             <div id="medico-content-dinamico"></div>
         `;
 
-        // Adiciona os "ouvintes" de clique aos cards
+        // Liga os botões dos cards às suas respectivas funções
         document.getElementById('card-minha-agenda').addEventListener('click', renderMinhaAgenda);
+        document.getElementById('card-historico').addEventListener('click', renderHistoricoDeAtendimentos);
         document.getElementById('card-meus-horarios').addEventListener('click', renderGerenciarHorarios);
         document.getElementById('card-criar-conteudo').addEventListener('click', renderFormularioConteudo);
 
-        // Carrega a visualização da agenda por padrão ao entrar
+        // Carrega a agenda de consultas ativas por padrão ao entrar
         await renderMinhaAgenda();
     }
 
+    // --- SEÇÃO 1: VISUALIZAÇÃO DE AGENDAMENTOS ---
+
     /**
-     * Busca e renderiza a lista de agendamentos do médico
+     * Busca e renderiza APENAS os agendamentos ATIVOS (PENDENTE ou CONFIRMADO)
      */
     async function renderMinhaAgenda() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meus Agendamentos</h3><p>Clique em um agendamento para ver os detalhes da ficha do paciente.</p><ul id="lista-agendamentos-medico" class="medico-list"><li>Carregando...</li></ul>`;
+        contentDinamico.innerHTML = `<h3>Minha Agenda (Próximas Consultas)</h3><ul id="lista-agendamentos-medico" class="medico-list"><li>Carregando...</li></ul>`;
 
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
             if (!response.ok) throw new Error("Erro ao buscar agendamentos.");
-            const agendamentos = await response.json();
+            const todosAgendamentos = await response.json();
+
+            const agendamentosAtivos = todosAgendamentos.filter(ag => ag.status === 'PENDENTE' || ag.status === 'CONFIRMADO');
+
             const listaUL = document.getElementById('lista-agendamentos-medico');
             listaUL.innerHTML = '';
 
-            if (agendamentos.length === 0) {
-                listaUL.innerHTML = '<li>Você não possui agendamentos.</li>';
+            if (agendamentosAtivos.length === 0) {
+                listaUL.innerHTML = '<li>Você não possui nenhuma consulta ativa.</li>';
                 return;
             }
 
-            agendamentos.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora)); // Ordena por data
+            agendamentosAtivos.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
 
-            agendamentos.forEach(ag => {
+            agendamentosAtivos.forEach(ag => {
                 const li = document.createElement('li');
-                li.className = 'medico-item-clicavel'; // Clicável para ver a ficha
+                li.className = 'medico-item-clicavel';
                 li.dataset.agendamentoId = ag.idAgendamento;
 
+                const htmlAcoes = `
+                    <div class="form-actions" style="justify-content: flex-end;">
+                        <button class="btn-confirm btn-status-atendido" data-id="${ag.idAgendamento}">Marcar como Atendido</button>
+                        <button class="btn-cancel btn-status-cancelado" data-id="${ag.idAgendamento}">Cancelar</button>
+                    </div>`;
+
+                li.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div style="flex-grow: 1;">
+                            <strong>[${ag.status}] ${new Date(ag.dataHora).toLocaleString('pt-BR')}</strong><br>
+                            <small>Paciente: ${ag.paciente.nome}</small>
+                        </div>
+                        ${htmlAcoes}
+                    </div>`;
+                listaUL.appendChild(li);
+                li.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') handleVerFicha(ag.idAgendamento); });
+            });
+
+            document.querySelectorAll('.btn-status-atendido').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); handleUpdateStatus(btn.dataset.id, 'ATENDIDO'); }));
+            document.querySelectorAll('.btn-status-cancelado').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); handleUpdateStatus(btn.dataset.id, 'CANCELADO'); }));
+
+        } catch (err) {
+            console.error(err);
+            contentDinamico.innerHTML = '<li>Erro ao carregar agendamentos.</li>';
+        }
+    }
+
+    /**
+     * Busca e renderiza APENAS os agendamentos FINALIZADOS (Histórico)
+     */
+    async function renderHistoricoDeAtendimentos() {
+        const contentDinamico = document.getElementById('medico-content-dinamico');
+        contentDinamico.innerHTML = `<h3>Histórico de Atendimentos</h3><ul id="lista-historico-medico" class="medico-list"><li>Carregando...</li></ul>`;
+
+        try {
+            const response = await fetchAuthenticated('/api/agendamentos/meus');
+            if (!response.ok) throw new Error("Erro ao buscar agendamentos.");
+            const todosAgendamentos = await response.json();
+
+            const agendamentosInativos = todosAgendamentos.filter(ag => ag.status !== 'PENDENTE' && ag.status !== 'CONFIRMADO');
+
+            const listaUL = document.getElementById('lista-historico-medico');
+            listaUL.innerHTML = '';
+
+            if (agendamentosInativos.length === 0) {
+                listaUL.innerHTML = '<li>Nenhum atendimento no seu histórico.</li>';
+                return;
+            }
+
+            agendamentosInativos.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+
+            agendamentosInativos.forEach(ag => {
+                const li = document.createElement('li');
+                li.className = 'medico-item-clicavel';
+
                 let htmlAcoes = '';
-                if (ag.status === 'PENDENTE' || ag.status === 'CONFIRMADO') {
-                    htmlAcoes = `
-                        <div class="form-actions" style="justify-content: flex-end;">
-                            <button class="btn-confirm btn-status-atendido" data-id="${ag.idAgendamento}">Marcar como Atendido</button>
-                            <button class="btn-cancel btn-status-cancelado" data-id="${ag.idAgendamento}">Cancelar</button>
-                        </div>`;
-                } else if (ag.status === 'ATENDIDO') {
+                if (ag.status === 'ATENDIDO') {
                     htmlAcoes = `
                         <div class="form-actions" style="justify-content: flex-end; gap: 0.5rem;">
                             <button class="btn-primary-doc btn-criar-prescricao" data-paciente-id="${ag.paciente.id}" data-paciente-nome="${ag.paciente.nome}">+ Prescrição</button>
@@ -79,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button class="btn-confirm btn-criar-exame" data-paciente-id="${ag.paciente.id}" data-paciente-nome="${ag.paciente.nome}">+ Exame</button>
                         </div>`;
                 } else {
-                    htmlAcoes = `<p style="color: #555; text-align: right;">Consulta finalizada/cancelada.</p>`;
+                    htmlAcoes = `<p style="color: #555; text-align: right;">Consulta ${ag.status.toLowerCase().replace('_', ' ')}</p>`;
                 }
 
                 li.innerHTML = `
@@ -92,22 +154,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>`;
                 listaUL.appendChild(li);
 
-                li.addEventListener('click', (e) => {
-                    if (e.target.tagName === 'BUTTON') return;
-                    handleVerFicha(ag.idAgendamento);
-                });
+                li.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') handleVerFicha(ag.idAgendamento); });
             });
 
-            // Adiciona listeners aos botões de ação
-            document.querySelectorAll('.btn-status-atendido').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); handleUpdateStatus(btn.dataset.id, 'ATENDIDO'); }));
-            document.querySelectorAll('.btn-status-cancelado').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); handleUpdateStatus(btn.dataset.id, 'CANCELADO'); }));
-            document.querySelectorAll('.btn-criar-prescricao').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); renderFormularioPrescricao(btn.dataset.pacienteId, btn.dataset.pacienteNome); }));
-            document.querySelectorAll('.btn-criar-atestado').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); renderFormularioAtestado(btn.dataset.pacienteId, btn.dataset.pacienteNome); }));
-            document.querySelectorAll('.btn-criar-exame').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); renderFormularioExame(btn.dataset.pacienteId, btn.dataset.pacienteNome); }));
+            document.querySelectorAll('.btn-criar-prescricao').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); renderFormularioPrescricao(btn.dataset.pacienteId, btn.dataset.pacienteNome); }));
+            document.querySelectorAll('.btn-criar-atestado').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); renderFormularioAtestado(btn.dataset.pacienteId, btn.dataset.pacienteNome); }));
+            document.querySelectorAll('.btn-criar-exame').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); renderFormularioExame(btn.dataset.pacienteId, btn.dataset.pacienteNome); }));
 
         } catch (err) {
             console.error(err);
-            contentDinamico.innerHTML = '<li>Erro ao carregar agendamentos.</li>';
+            contentDinamico.innerHTML = '<li>Erro ao carregar histórico.</li>';
         }
     }
 
@@ -120,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/status`, { method: 'PUT', body: JSON.stringify(dto) });
             if (response.ok) {
                 alert(`Agendamento atualizado para ${novoStatus} com sucesso!`);
-                renderMinhaAgenda();
+                renderMinhaAgenda(); // Recarrega a agenda de ativos
             } else {
                 const error = await response.json();
                 alert(`Erro: ${error.message || 'Não foi possível atualizar o status.'}`);
@@ -152,16 +208,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
             document.body.appendChild(modal);
             modal.querySelector('.modal-close').addEventListener('click', () => modal.remove());
-            modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
         } catch (err) {
             console.error("Erro ao buscar ficha:", err);
             alert("Não foi possível carregar os detalhes da ficha médica.");
         }
     }
 
-    /**
-     * Renderiza o construtor de horários interativo
-     */
+    // --- SEÇÃO 2: GERENCIAMENTO DE HORÁRIOS ---
+
     async function renderGerenciarHorarios() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         let htmlForm = `
@@ -242,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Funções Pós-Consulta (Criação de Documentos) ---
+    // --- SEÇÃO 3: FUNÇÕES PÓS-CONSULTA E CONTEÚDO ---
 
     function renderFormularioPrescricao(pacienteId, pacienteNome) {
         const contentDinamico = document.getElementById('medico-content-dinamico');
@@ -252,10 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <form id="form-prescricao" style="margin-top: 1.5rem;">
                     <div id="doc-error-message" class="error-message" style="display:none;"></div>
                     <div class="input-group"><label>Medicamentos</label><textarea id="medicamentos" rows="10" required></textarea></div>
-                    <div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button><button type="button" class="btn-cancel" id="btn-cancelar-doc">Voltar</button></div>
+                    <div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button><button type="button" class="btn-cancel" id="btn-cancelar-doc">Voltar para Histórico</button></div>
                 </form>
             </div>`;
-        document.getElementById('btn-cancelar-doc').addEventListener('click', renderMinhaAgenda);
+        document.getElementById('btn-cancelar-doc').addEventListener('click', renderHistoricoDeAtendimentos);
         document.getElementById('form-prescricao').addEventListener('submit', e => {
             e.preventDefault();
             const dto = { idPaciente: parseInt(pacienteId), medicamentos: document.getElementById('medicamentos').value };
@@ -271,10 +326,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <form id="form-atestado" style="margin-top: 1.5rem;">
                     <div id="doc-error-message" class="error-message" style="display:none;"></div>
                     <div class="input-group"><label>Descrição</label><textarea id="descricao" rows="10" required></textarea></div>
-                    <div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button><button type="button" class="btn-cancel" id="btn-cancelar-doc">Voltar</button></div>
+                    <div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button><button type="button" class="btn-cancel" id="btn-cancelar-doc">Voltar para Histórico</button></div>
                 </form>
             </div>`;
-        document.getElementById('btn-cancelar-doc').addEventListener('click', renderMinhaAgenda);
+        document.getElementById('btn-cancelar-doc').addEventListener('click', renderHistoricoDeAtendimentos);
         document.getElementById('form-atestado').addEventListener('submit', e => {
             e.preventDefault();
             const dto = { idPaciente: parseInt(pacienteId), descricao: document.getElementById('descricao').value };
@@ -291,10 +346,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div id="doc-error-message" class="error-message" style="display:none;"></div>
                     <div class="input-group"><label>Tipo de Exame</label><input type="text" id="exame-tipo" required></div>
                     <div class="input-group"><label>Data de Realização</label><input type="date" id="exame-data" required></div>
-                    <div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button><button type="button" class="btn-cancel" id="btn-cancelar-doc">Voltar</button></div>
+                    <div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button><button type="button" class="btn-cancel" id="btn-cancelar-doc">Voltar para Histórico</button></div>
                 </form>
             </div>`;
-        document.getElementById('btn-cancelar-doc').addEventListener('click', renderMinhaAgenda);
+        document.getElementById('btn-cancelar-doc').addEventListener('click', renderHistoricoDeAtendimentos);
         document.getElementById('form-exame').addEventListener('submit', e => {
             e.preventDefault();
             const dto = {
@@ -349,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetchAuthenticated(apiUrl, { method: 'POST', body: JSON.stringify(dto) });
             if (response.ok) {
                 alert(successMessage);
-                renderMinhaAgenda();
+                renderHistoricoDeAtendimentos(); // Volta para o Histórico
             } else {
                 await handleApiError(response, 'doc-error-message');
             }
@@ -360,6 +415,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Inicializa o Dashboard
+    // --- Inicializa o Dashboard ---
     initMedicoDashboard();
 });
