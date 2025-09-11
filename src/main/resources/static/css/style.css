@@ -669,3 +669,15 @@ hr {
     border-radius: 4px;
     border: 1px solid #eee;
 }
+
+
+.token-box {
+    background-color: #e9ecef;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    word-wrap: break-word;
+    /* Quebra o token longo */
+    margin-top: 1rem;
+    font-family: 'Courier New', Courier, monospace;
+}

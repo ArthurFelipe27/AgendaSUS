@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Senha - AgendaSUS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <main class="login-container">
+        <form id="forgot-password-form" class="login-form">
+            <h2>Recuperar Senha</h2>
+            <p>Insira seu e-mail para receber o token de redefinição.</p>
+            <div id="error-message" class="error-message"></div>
+            <div class="input-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <button type="submit" class="btn-login">Enviar</button>
+            <div class="footer-links">
+                <a href="login.html">Voltar para o Login</a>
+            </div>
+        </form>
+
+        <div id="token-display" class="login-form" style="display: none;">
+            <h2>Token Gerado</h2>
+            <p style="color: #28a745;"><strong>Sucesso!</strong> Em um sistema real, este token seria enviado para seu
+                e-mail.</p>
+            <p>Copie o token abaixo e vá para a página de redefinição.</p>
+            <div class="token-box">
+                <code id="reset-token-code"></code>
+            </div>
+            <a href="redefinir-senha.html" class="btn-login"
+                style="text-align: center; text-decoration: none; display: block; margin-top: 1rem;">
+                Ir para Redefinir Senha &rarr;
+            </a>
+        </div>
+    </main>
+    <script src="js/esqueci-senha.js"></script>
+</body>
+
+</html>

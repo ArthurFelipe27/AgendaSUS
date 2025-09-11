@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redefinir Senha - AgendaSUS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <main class="login-container">
+        <form id="reset-password-form" class="login-form">
+            <h2>Redefinir Senha</h2>
+            <p>Cole o token e defina sua nova senha.</p>
+            <div id="error-message" class="error-message"></div>
+            <div class="input-group">
+                <label for="token">Token de Redefinição</label>
+                <input type="text" id="token" required>
+            </div>
+            <div class="input-group">
+                <label for="novaSenha">Nova Senha (mín. 6 caracteres)</label>
+                <input type="password" id="novaSenha" required minlength="6">
+            </div>
+            <div class="input-group">
+                <label for="confirmaSenha">Confirme a Nova Senha</label>
+                <input type="password" id="confirmaSenha" required>
+            </div>
+            <button type="submit" class="btn-login">Salvar Nova Senha</button>
+            <div class="footer-links">
+                <a href="login.html">Voltar para o Login</a>
+            </div>
+        </form>
+    </main>
+    <script src="js/redefinir-senha.js"></script>
+</body>
+
+</html>
