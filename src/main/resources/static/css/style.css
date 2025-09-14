@@ -681,3 +681,10 @@ hr {
     margin-top: 1rem;
     font-family: 'Courier New', Courier, monospace;
 }
+
+/* Em: static/css/style.css */
+.error-text {
+    color: #d93025;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}

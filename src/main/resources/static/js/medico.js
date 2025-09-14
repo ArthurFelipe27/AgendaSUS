@@ -1,7 +1,3 @@
-// ===================================================================
-// MEDICO.JS (VERSÃO FINAL E COMPLETA - COM "MEU PERFIL")
-// ===================================================================
-
 document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
     let meuIdDeMedico = null;
@@ -19,13 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // NOVO CARD "MEU PERFIL" ADICIONADO
         contentArea.innerHTML = `
             <div class="dashboard-grid">
-                <div class="dashboard-card" id="card-minha-agenda">Minha Agenda</div>
-                <div class="dashboard-card" id="card-historico">Histórico</div>
-                <div class="dashboard-card" id="card-meus-horarios">Gerenciar Horários</div>
-                <div class="dashboard-card" id="card-criar-conteudo">Criar Artigo</div>
+                <div class="dashboard-card" id="card-minha-agenda">Minha Agenda (Ativas)</div>
+                <div class="dashboard-card" id="card-historico">Histórico de Atendimentos</div>
+                <div class="dashboard-card" id="card-meus-horarios">Gerenciar Meus Horários</div>
+                <div class="dashboard-card" id="card-criar-conteudo">Criar Artigo/Notícia</div>
                 <div class="dashboard-card" id="card-meu-perfil">Meu Perfil</div>
             </div>
             <hr>
@@ -36,27 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('card-historico').addEventListener('click', renderHistoricoDeAtendimentos);
         document.getElementById('card-meus-horarios').addEventListener('click', renderGerenciarHorarios);
         document.getElementById('card-criar-conteudo').addEventListener('click', renderFormularioConteudo);
-        document.getElementById('card-meu-perfil').addEventListener('click', renderMeuPerfil); // NOVO LISTENER
+        document.getElementById('card-meu-perfil').addEventListener('click', renderMeuPerfil);
 
         await renderMinhaAgenda();
     }
 
-    // --- (Nossas funções de agenda e horários que já funcionam) ---
-    async function renderMinhaAgenda() { /* ...código anterior... */ }
-    async function renderHistoricoDeAtendimentos() { /* ...código anterior... */ }
-    async function handleUpdateStatus(agendamentoId, novoStatus) { /* ...código anterior... */ }
-    async function handleVerFicha(agendamentoId) { /* ...código anterior... */ }
-    async function renderGerenciarHorarios() { /* ...código anterior... */ }
-    function criarTagDeHorario(diaSemana, horaString) { /* ...código anterior... */ }
-    async function handleSalvarHorarios(event) { /* ...código anterior... */ }
-    function renderFormularioPrescricao(pacienteId, pacienteNome) { /* ...código anterior... */ }
-    function renderFormularioAtestado(pacienteId, pacienteNome) { /* ...código anterior... */ }
-    function renderFormularioExame(pacienteId, pacienteNome) { /* ...código anterior... */ }
-    async function handleDocumentoSubmit(apiUrl, dto, successMessage) { /* ...código anterior... */ }
-    function renderFormularioConteudo() { /* ...código anterior... */ }
-    async function handleConteudoSubmit(event) { /* ...código anterior... */ }
-
-    // --- (Abaixo estão as versões completas das funções omitidas) ---
     async function renderMinhaAgenda() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<h3>Minha Agenda (Próximas Consultas)</h3><ul id="lista-agendamentos-medico" class="medico-list"><li>Carregando...</li></ul>`;
@@ -85,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.btn-status-cancelado').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); handleUpdateStatus(btn.dataset.id, 'CANCELADO'); }));
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar agendamentos.</li>'; }
     }
+
     async function renderHistoricoDeAtendimentos() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<h3>Histórico de Atendimentos</h3><ul id="lista-historico-medico" class="medico-list"><li>Carregando...</li></ul>`;
@@ -118,19 +98,23 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.btn-criar-exame').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); renderFormularioExame(btn.dataset.pacienteId, btn.dataset.pacienteNome); }));
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar histórico.</li>'; }
     }
+
     async function handleUpdateStatus(agendamentoId, novoStatus) {
         const dto = { novoStatus: novoStatus };
         try {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/status`, { method: 'PUT', body: JSON.stringify(dto) });
             if (response.ok) {
-                alert(`Agendamento atualizado para ${novoStatus} com sucesso!`);
+                showToast(`Agendamento atualizado para ${novoStatus}!`, 'success');
                 renderMinhaAgenda();
             } else {
                 const error = await response.json();
-                alert(`Erro: ${error.message || 'Não foi possível atualizar o status.'}`);
+                showToast(error.message || 'Não foi possível atualizar o status.', 'error');
             }
-        } catch (err) { alert('Erro de rede ao atualizar status.'); }
+        } catch (err) {
+            showToast('Erro de rede ao atualizar status.', 'error');
+        }
     }
+
     async function handleVerFicha(agendamentoId) {
         try {
             const response = await fetchAuthenticated(`/api/fichas-medicas/agendamento/${agendamentoId}`);
@@ -142,8 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(modal);
             modal.querySelector('.modal-close').addEventListener('click', () => modal.remove());
             modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-        } catch (err) { console.error("Erro ao buscar ficha:", err); alert("Não foi possível carregar a ficha médica."); }
+        } catch (err) { showToast("Não foi possível carregar a ficha médica.", "error"); }
     }
+
     async function renderGerenciarHorarios() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         let htmlForm = `<h3>Meus Horários Disponíveis</h3><p>Adicione ou remova horários.</p><div id="horarios-error-message" class="error-message" style="display:none;"></div><div class="schedule-builder">`;
@@ -166,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('btn-salvar-agenda').addEventListener('click', handleSalvarHorarios);
     }
+
     function criarTagDeHorario(diaSemana, horaString) {
         const container = document.getElementById(`tags-${diaSemana}`);
         if (container.querySelector(`[data-hora="${horaString}"]`)) return;
@@ -180,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tag.appendChild(removeBtn);
         container.appendChild(tag);
     }
+
     async function handleSalvarHorarios(event) {
         event.preventDefault();
         const agendaDTO = { dias: [] };
@@ -192,10 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         try {
             const response = await fetchAuthenticated('/api/medicos/horarios', { method: 'PUT', body: JSON.stringify(agendaDTO) });
-            if (response.ok) { alert('Horários salvos com sucesso!'); }
+            if (response.ok) { showToast('Horários salvos com sucesso!', 'success'); }
             else { await handleApiError(response, 'horarios-error-message'); }
-        } catch (err) { document.getElementById('horarios-error-message').textContent = 'Erro de rede.'; document.getElementById('horarios-error-message').style.display = 'block'; }
+        } catch (err) { showToast('Erro de rede ao salvar horários.', 'error'); }
     }
+
     function renderFormularioPrescricao(pacienteId, pacienteNome) {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Nova Prescrição</h4><p>Paciente: <strong>${pacienteNome}</strong></p><form id="form-prescricao" style="margin-top: 1.5rem;"><div id="doc-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Medicamentos</label><textarea id="medicamentos" rows="10" required></textarea></div><div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button><button type="button" class="btn-cancel" id="btn-voltar">Voltar</button></div></form></div>`;
@@ -206,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
             handleDocumentoSubmit('/api/prescricoes', dto, 'Prescrição salva!');
         });
     }
+
     function renderFormularioAtestado(pacienteId, pacienteNome) {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Gerar Atestado</h4><p>Paciente: <strong>${pacienteNome}</strong></p><form id="form-atestado" style="margin-top: 1.5rem;"><div id="doc-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Descrição</label><textarea id="descricao" rows="10" required></textarea></div><div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button><button type="button" class="btn-cancel" id="btn-voltar">Voltar</button></div></form></div>`;
@@ -216,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             handleDocumentoSubmit('/api/atestados', dto, 'Atestado salvo!');
         });
     }
+
     function renderFormularioExame(pacienteId, pacienteNome) {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Solicitar Exame</h4><p>Paciente: <strong>${pacienteNome}</strong></p><form id="form-exame" style="margin-top: 1.5rem;"><div id="doc-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Tipo de Exame</label><input type="text" id="exame-tipo" required></div><div class="input-group"><label>Data</label><input type="date" id="exame-data" required></div><div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button><button type="button" class="btn-cancel" id="btn-voltar">Voltar</button></div></form></div>`;
@@ -226,109 +216,69 @@ document.addEventListener('DOMContentLoaded', () => {
             handleDocumentoSubmit('/api/exames', dto, 'Exame solicitado!');
         });
     }
+
     function renderFormularioConteudo() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Será salvo como rascunho para aprovação.</p><form id="form-conteudo" style="margin-top: 1.5rem;"><div id="conteudo-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions"><button type="submit" class="btn-confirm">Salvar Rascunho</button></div></form></div>`;
         document.getElementById('form-conteudo').addEventListener('submit', handleConteudoSubmit);
     }
+
     async function handleConteudoSubmit(event) {
         event.preventDefault();
         const dto = { titulo: document.getElementById('conteudo-titulo').value, tipo: document.getElementById('conteudo-tipo').value, corpo: document.getElementById('conteudo-corpo').value };
         try {
             const response = await fetchAuthenticated('/api/conteudo/admin', { method: 'POST', body: JSON.stringify(dto) });
-            if (response.ok) { alert('Conteúdo salvo como rascunho!'); document.getElementById('form-conteudo').reset(); }
+            if (response.ok) { showToast('Conteúdo salvo como rascunho!', 'success'); document.getElementById('form-conteudo').reset(); }
             else { await handleApiError(response, 'conteudo-error-message'); }
-        } catch (err) { document.getElementById('conteudo-error-message').textContent = 'Erro de rede.'; document.getElementById('conteudo-error-message').style.display = 'block'; }
+        } catch (err) { showToast('Erro de rede.', 'error'); }
     }
+
     async function handleDocumentoSubmit(apiUrl, dto, successMessage) {
         try {
             const response = await fetchAuthenticated(apiUrl, { method: 'POST', body: JSON.stringify(dto) });
-            if (response.ok) { alert(successMessage); renderHistoricoDeAtendimentos(); }
+            if (response.ok) { showToast(successMessage, 'success'); renderHistoricoDeAtendimentos(); }
             else { await handleApiError(response, 'doc-error-message'); }
-        } catch (err) { console.error(err); document.getElementById('doc-error-message').textContent = 'Erro de rede.'; document.getElementById('doc-error-message').style.display = 'block'; }
+        } catch (err) {
+            console.error("Erro ao salvar documento:", err);
+            showToast('Erro de rede ao salvar documento.', 'error');
+        }
     }
 
-    // --- AQUI ESTÃO AS NOVAS FUNÇÕES DE PERFIL ---
-
-    /**
-     * Renderiza a tela de "Meu Perfil"
-     */
-    function renderMeuPerfil() {
+    async function renderMeuPerfil() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `
-            <h3>Meu Perfil</h3>
-            <div id="perfil-info" class="document-item">Carregando seus dados...</div>
-            <hr>
-            <h4>Alterar Senha</h4>
-            <div class="booking-form-container">
-                <form id="form-alterar-senha">
-                    <div id="senha-error-message" class="error-message" style="display:none;"></div>
-                    <div class="input-group">
-                        <label for="nova-senha">Nova Senha (mínimo 6 caracteres)</label>
-                        <input type="password" id="nova-senha" required minlength="6">
-                    </div>
-                    <div class="input-group">
-                        <label for="confirma-senha">Confirme a Nova Senha</label>
-                        <input type="password" id="confirma-senha" required>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn-confirm">Salvar Nova Senha</button>
-                    </div>
-                </form>
-            </div>
-        `;
-
-        // Busca os dados do perfil
-        fetchAuthenticated('/api/usuarios/me').then(response => response.json()).then(usuario => {
-            document.getElementById('perfil-info').innerHTML = `
-                <p><strong>Nome:</strong> ${usuario.nome}</p>
-                <p><strong>Email:</strong> ${usuario.email}</p>
-                <p><strong>CPF:</strong> ${usuario.cpf}</p>
-                ${usuario.crm ? `<p><strong>CRM:</strong> ${usuario.crm}</p>` : ''}
-            `;
-        });
-
-        // Adiciona listener ao formulário de senha
+        contentDinamico.innerHTML = `<h3>Meu Perfil</h3><div id="perfil-info" class="document-item">Carregando...</div><hr><h4>Alterar Senha</h4><div class="booking-form-container"><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label for="nova-senha">Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label for="confirma-senha">Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button></div></form></div>`;
+        try {
+            const response = await fetchAuthenticated('/api/usuarios/me');
+            if (!response.ok) throw new Error('Falha ao buscar perfil.');
+            const usuario = await response.json();
+            document.getElementById('perfil-info').innerHTML = `<p><strong>Nome:</strong> ${usuario.nome}</p><p><strong>Email:</strong> ${usuario.email}</p><p><strong>CPF:</strong> ${usuario.cpf}</p>${usuario.crm ? `<p><strong>CRM:</strong> ${usuario.crm}</p>` : ''}`;
+        } catch (err) {
+            document.getElementById('perfil-info').innerHTML = '<p>Erro ao carregar perfil.</p>';
+        }
         document.getElementById('form-alterar-senha').addEventListener('submit', handleUpdatePassword);
     }
 
-    /**
-     * Lida com a submissão do formulário de alteração de senha
-     */
     async function handleUpdatePassword(event) {
         event.preventDefault();
         const novaSenha = document.getElementById('nova-senha').value;
         const confirmaSenha = document.getElementById('confirma-senha').value;
-        const errorMessageDiv = document.getElementById('senha-error-message');
-        errorMessageDiv.style.display = 'none';
-
         if (novaSenha !== confirmaSenha) {
-            errorMessageDiv.textContent = 'As senhas não coincidem.';
-            errorMessageDiv.style.display = 'block';
+            showToast('As senhas não coincidem.', 'error');
             return;
         }
-
         const dto = { senha: novaSenha };
         try {
-            // Usamos o ID do médico que já buscamos e salvamos
-            const response = await fetchAuthenticated(`/api/usuarios/${meuIdDeMedico}`, {
-                method: 'PUT',
-                body: JSON.stringify(dto)
-            });
-
+            const response = await fetchAuthenticated(`/api/usuarios/${meuIdDeMedico}`, { method: 'PUT', body: JSON.stringify(dto) });
             if (response.ok) {
-                alert('Senha alterada com sucesso! Você será deslogado por segurança.');
-                logout(); // Força o logout
+                showToast('Senha alterada! Você será deslogado.', 'success');
+                setTimeout(logout, 2000);
             } else {
                 await handleApiError(response, 'senha-error-message');
             }
         } catch (err) {
-            errorMessageDiv.textContent = 'Erro de rede. Não foi possível alterar a senha.';
-            errorMessageDiv.style.display = 'block';
+            showToast('Erro de rede ao alterar senha.', 'error');
         }
     }
 
-
-    // --- Inicializa o Dashboard ---
     initMedicoDashboard();
 });

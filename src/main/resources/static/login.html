@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgendaSUS - Login</title>
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -21,7 +25,7 @@
                 <label for="senha">Senha</label>
                 <input type="password" id="senha" name="senha" required>
             </div>
-            <div id="error-message" class="error-message"></div>
+            <div id="error-message" class="error-message" role="alert" aria-live="polite"></div>
             <button type="submit" class="btn-login">Entrar</button>
             <div class="footer-links">
                 <a href="cadastro.html">Não tem uma conta? Cadastre-se</a>
@@ -29,6 +33,17 @@
             </div>
         </form>
     </main>
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
+    <script src="js/common.js"></script>
     <script src="js/login.js"></script>
 </body>
 

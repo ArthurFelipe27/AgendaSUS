@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar Senha - AgendaSUS</title>
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -13,7 +17,7 @@
         <form id="forgot-password-form" class="login-form">
             <h2>Recuperar Senha</h2>
             <p>Insira seu e-mail para receber o token de redefinição.</p>
-            <div id="error-message" class="error-message"></div>
+            <div id="error-message" class="error-message" role="alert" aria-live="polite"></div>
             <div class="input-group">
                 <label for="email">E-mail</label>
                 <input type="email" id="email" name="email" required>
@@ -38,6 +42,16 @@
             </a>
         </div>
     </main>
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
     <script src="js/esqueci-senha.js"></script>
 </body>
 

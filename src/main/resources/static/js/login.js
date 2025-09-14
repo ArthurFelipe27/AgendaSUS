@@ -1,21 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
-
     const loginForm = document.getElementById('login-form');
     const emailInput = document.getElementById('email');
     const senhaInput = document.getElementById('senha');
-    const errorMessageDiv = document.getElementById('error-message');
 
-    // Usa caminho relativo da API
     const API_URL_LOGIN = '/api/login';
 
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        errorMessageDiv.style.display = 'none';
-
-        const loginData = {
-            email: emailInput.value,
-            senha: senhaInput.value
-        };
+        const loginData = { email: emailInput.value, senha: senhaInput.value };
 
         try {
             const response = await fetch(API_URL_LOGIN, {
@@ -26,12 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const data = await response.json();
-
                 localStorage.setItem('jwtToken', data.token);
-                // Salva o nome para usar nos dashboards
                 localStorage.setItem('userName', data.nome);
 
-                // ROTEADOR: Redireciona baseado na ROLE
                 switch (data.role) {
                     case 'PACIENTE':
                         window.location.href = 'paciente_dashboard.html';
@@ -46,20 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.clear();
                         window.location.href = 'login.html';
                 }
-
             } else {
-                // Erro 403 (Forbidden) do Spring Security para login inválido
-                exibirErro('Usuário ou senha inválidos.');
+                showToast('Usuário ou senha inválidos.', 'error');
             }
-
         } catch (error) {
             console.error('Erro de rede:', error);
-            exibirErro('Não foi possível conectar ao servidor.');
+            showToast('Não foi possível conectar ao servidor.', 'error');
         }
     });
-
-    function exibirErro(mensagem) {
-        errorMessageDiv.textContent = mensagem;
-        errorMessageDiv.style.display = 'block';
-    }
 });
