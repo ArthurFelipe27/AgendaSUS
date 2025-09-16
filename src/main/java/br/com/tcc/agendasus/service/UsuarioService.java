@@ -16,8 +16,10 @@ import br.com.tcc.agendasus.dto.ResetPasswordRequestDTO;
 import br.com.tcc.agendasus.dto.UsuarioCadastroDTO;
 import br.com.tcc.agendasus.dto.UsuarioResponseDTO;
 import br.com.tcc.agendasus.dto.UsuarioUpdateDTO;
+import br.com.tcc.agendasus.model.entity.Paciente;
 import br.com.tcc.agendasus.model.entity.Usuario;
 import br.com.tcc.agendasus.model.enums.Role;
+import br.com.tcc.agendasus.repository.PacienteRepository;
 import br.com.tcc.agendasus.repository.UsuarioRepository;
 import br.com.tcc.agendasus.service.security.TokenService;
 
@@ -26,32 +28,49 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    private final TokenService tokenService; 
+    private final TokenService tokenService;
+    private final PacienteRepository pacienteRepository; // NOVA DEPENDÊNCIA
 
-    
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, TokenService tokenService) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+                          TokenService tokenService, PacienteRepository pacienteRepository) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
+        this.pacienteRepository = pacienteRepository; // INJETADA AQUI
     }
 
     @Transactional
-    public UsuarioResponseDTO cadastrarUsuario(UsuarioCadastroDTO dadosCadastro) {
-        if (usuarioRepository.findByEmail(dadosCadastro.email()).isPresent()) {
+    public UsuarioResponseDTO cadastrarUsuario(UsuarioCadastroDTO dados) {
+        if (usuarioRepository.findByEmail(dados.email()).isPresent()) {
             throw new IllegalArgumentException("E-mail já cadastrado.");
         }
-        if (usuarioRepository.findByCpf(dadosCadastro.cpf()).isPresent()) {
+        if (usuarioRepository.findByCpf(dados.cpf()).isPresent()) {
             throw new IllegalArgumentException("CPF já cadastrado.");
         }
 
         Usuario novoUsuario = new Usuario();
-        novoUsuario.setNome(dadosCadastro.nome());
-        novoUsuario.setEmail(dadosCadastro.email());
-        novoUsuario.setCpf(dadosCadastro.cpf());
-        novoUsuario.setRole(dadosCadastro.role());
-        novoUsuario.setSenha(passwordEncoder.encode(dadosCadastro.senha()));
-
+        novoUsuario.setNome(dados.nome());
+        novoUsuario.setEmail(dados.email());
+        novoUsuario.setCpf(dados.cpf());
+        novoUsuario.setSenha(passwordEncoder.encode(dados.senha()));
+        novoUsuario.setRole(Role.PACIENTE); // Cadastro público é sempre PACIENTE
         Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
+        
+        // CRIA E SALVA A ENTIDADE PACIENTE COM OS DADOS COMPLETOS
+        Paciente novoPaciente = new Paciente();
+        novoPaciente.setUsuario(usuarioSalvo);
+        novoPaciente.setNomeSocial(dados.nomeSocial());
+        novoPaciente.setDataNascimento(dados.dataNascimento());
+        novoPaciente.setTelefone(dados.telefone());
+        novoPaciente.setSexo(dados.sexo());
+        novoPaciente.setCep(dados.cep());
+        novoPaciente.setCidade(dados.cidade());
+        novoPaciente.setEstado(dados.estado());
+        novoPaciente.setNumero(dados.numero());
+        novoPaciente.setComplemento(dados.complemento());
+        pacienteRepository.save(novoPaciente);
+
+
         return new UsuarioResponseDTO(usuarioSalvo);
     }
 

@@ -5,49 +5,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - AgendaSUS</title>
-
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <main class="login-container">
+    <main class="login-container" style="max-width: 800px;">
         <form id="cadastro-form" class="login-form">
-            <h2>Crie sua Conta</h2>
-            <p>Rápido e fácil.</p>
-            <div class="input-group">
-                <label for="nome">Nome Completo</label>
-                <input type="text" id="nome" name="nome" required>
-            </div>
-            <div class="input-group">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="input-group">
-                <label for="cpf">CPF (apenas números)</label>
-                <input type="text" id="cpf" name="cpf" placeholder="Apenas números" required maxlength="11">
+            <h2>Crie sua Conta no AgendaSUS</h2>
+            <p>Preencha seus dados para começar a agendar.</p>
+            <div id="error-message" class="error-message" role="alert" aria-live="polite" style="display: none;"></div>
+
+            <div class="form-sections">
+
+                <fieldset class="form-fieldset">
+                    <legend>Dados Pessoais</legend>
+                    <div class="input-group"><label for="nome">Nome Completo</label><input type="text" id="nome"
+                            required></div>
+                    <div class="input-group"><label for="nomeSocial">Nome Social (Opcional)</label><input type="text"
+                            id="nomeSocial"></div>
+                    <div class="input-group"><label for="dataNascimento">Data de Nascimento</label><input type="date"
+                            id="dataNascimento" required></div>
+                    <div class="input-group"><label for="sexo">Gênero</label>
+                        <select id="sexo" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Feminino</option>
+                            <option value="OUTRO">Outro</option>
+                            <option value="NAO_INFORMAR">Prefiro não informar</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label for="telefone">Telefone / Celular</label><input type="tel"
+                            id="telefone" required></div>
+                </fieldset>
+
+                <fieldset class="form-fieldset">
+                    <legend>Endereço (Opcional)</legend>
+                    <div class="input-group"><label for="cep">CEP</label><input type="text" id="cep" maxlength="8">
+                    </div>
+                    <div class="input-group"><label for="cidade">Cidade</label><input type="text" id="cidade"></div>
+                    <div class="input-group">
+                        <label for="estado">Estado</label>
+                        <select id="estado">
+                            <option value="" selected>Selecione o Estado</option>
+                            <option value="AC">Acre</option>
+                            <option value="AL">Alagoas</option>
+                            <option value="AP">Amapá</option>
+                            <option value="AM">Amazonas</option>
+                            <option value="BA">Bahia</option>
+                            <option value="CE">Ceará</option>
+                            <option value="DF">Distrito Federal</option>
+                            <option value="ES">Espírito Santo</option>
+                            <option value="GO">Goiás</option>
+                            <option value="MA">Maranhão</option>
+                            <option value="MT">Mato Grosso</option>
+                            <option value="MS">Mato Grosso do Sul</option>
+                            <option value="MG">Minas Gerais</option>
+                            <option value="PA">Pará</option>
+                            <option value="PB">Paraíba</option>
+                            <option value="PR">Paraná</option>
+                            <option value="PE">Pernambuco</option>
+                            <option value="PI">Piauí</option>
+                            <option value="RJ">Rio de Janeiro</option>
+                            <option value="RN">Rio Grande do Norte</option>
+                            <option value="RS">Rio Grande do Sul</option>
+                            <option value="RO">Rondônia</option>
+                            <option value="RR">Roraima</option>
+                            <option value="SC">Santa Catarina</option>
+                            <option value="SP">São Paulo</option>
+                            <option value="SE">Sergipe</option>
+                            <option value="TO">Tocantins</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label for="numero">Número</label><input type="text" id="numero"></div>
+                    <div class="input-group"><label for="complemento">Complemento</label><input type="text"
+                            id="complemento"></div>
+                </fieldset>
+
+                <fieldset class="form-fieldset full-width">
+                    <legend>Dados de Acesso</legend>
+                    <div class="input-group"><label for="email">E-mail</label><input type="email" id="email" required>
+                    </div>
+                    <div class="input-group"><label for="cpf">CPF (apenas números)</label><input type="text" id="cpf"
+                            required maxlength="11"></div>
+                    <div class="input-group"><label for="senha">Senha (mín. 6 caracteres)</label><input type="password"
+                            id="senha" required minlength="6"></div>
+                    <div class="input-group"><label for="confirmaSenha">Confirme a Senha</label><input type="password"
+                            id="confirmaSenha" required></div>
+                </fieldset>
             </div>
 
-            <div class="input-group">
-                <label for="senha">Senha (mín. 6 caracteres)</label>
-                <input type="password" id="senha" name="senha" required minlength="6">
-            </div>
+            <button type="submit" class="btn-login" style="margin-top: 1rem;">Finalizar Cadastro</button>
 
-            <div class="input-group">
-                <label for="confirmaSenha">Confirme a Senha</label>
-                <input type="password" id="confirmaSenha" name="confirmaSenha" required>
-            </div>
-
-            <div id="error-message" class="error-message" role="alert" aria-live="polite"></div>
-            <div id="error-message" class="error-message" role="alert" aria-live="polite"></div>
-            <button type="submit" class="btn-login">Cadastrar</button>
             <div class="footer-links">
                 <a href="login.html">Já tem uma conta? Faça login</a>
             </div>
         </form>
     </main>
+
+    <script src="js/common.js"></script>
+    <script src="js/cadastro.js"></script>
+
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>
@@ -58,8 +115,6 @@
     <script>
         new window.VLibras.Widget('https://vlibras.gov.br/app');
     </script>
-    <script src="js/common.js"></script>
-    <script src="js/cadastro.js"></script>
 </body>
 
 </html>

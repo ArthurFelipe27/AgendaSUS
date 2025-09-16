@@ -24,12 +24,15 @@ import br.com.tcc.agendasus.dto.MedicoResponseDTO;
 import br.com.tcc.agendasus.dto.MedicoUpdateDTO;
 import br.com.tcc.agendasus.model.entity.Agendamento;
 import br.com.tcc.agendasus.model.entity.Medico;
+import br.com.tcc.agendasus.model.entity.UnidadeDeSaude;
 import br.com.tcc.agendasus.model.entity.Usuario;
 import br.com.tcc.agendasus.model.enums.Role;
 import br.com.tcc.agendasus.model.enums.StatusAgendamento;
 import br.com.tcc.agendasus.repository.AgendamentoRepository;
 import br.com.tcc.agendasus.repository.MedicoRepository;
+import br.com.tcc.agendasus.repository.UnidadeDeSaudeRepository;
 import br.com.tcc.agendasus.repository.UsuarioRepository;
+
 
 @Service
 public class MedicoService {
@@ -38,17 +41,19 @@ public class MedicoService {
     private final MedicoRepository medicoRepository;
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
-    private final AgendamentoRepository agendamentoRepository; // NOVA DEPENDÊNCIA
+    private final AgendamentoRepository agendamentoRepository;
+    private final UnidadeDeSaudeRepository unidadeDeSaudeRepository;
 
     // CONSTRUTOR ATUALIZADO
     public MedicoService(UsuarioRepository usuarioRepository, MedicoRepository medicoRepository,
                          PasswordEncoder passwordEncoder, ObjectMapper objectMapper,
-                         AgendamentoRepository agendamentoRepository) {
+                         AgendamentoRepository agendamentoRepository, UnidadeDeSaudeRepository unidadeDeSaudeRepository) {
         this.usuarioRepository = usuarioRepository;
         this.medicoRepository = medicoRepository;
         this.passwordEncoder = passwordEncoder;
         this.objectMapper = objectMapper;
-        this.agendamentoRepository = agendamentoRepository; // INJETADA AQUI
+        this.agendamentoRepository = agendamentoRepository;
+        this.unidadeDeSaudeRepository = unidadeDeSaudeRepository; // DEPENDÊNCIA ADICIONADA
     }
 
     @Transactional
@@ -59,6 +64,10 @@ public class MedicoService {
         if (usuarioRepository.findByCpf(dados.cpf()).isPresent()) {
             throw new IllegalArgumentException("CPF já cadastrado.");
         }
+
+        // Busca a Unidade de Saúde para garantir que ela existe
+        UnidadeDeSaude unidade = unidadeDeSaudeRepository.findById(dados.idUnidade())
+                .orElseThrow(() -> new RuntimeException("Unidade de Saúde não encontrada."));
 
         Usuario novoUsuario = new Usuario();
         novoUsuario.setNome(dados.nome());
@@ -73,6 +82,7 @@ public class MedicoService {
         Medico novoMedico = new Medico();
         novoMedico.setUsuario(usuarioSalvo);
         novoMedico.setEspecialidade(dados.especialidade());
+        novoMedico.setUnidade(unidade); // VINCULA A UNIDADE AO MÉDICO
         
         Medico medicoSalvo = medicoRepository.save(novoMedico);
         return new MedicoResponseDTO(medicoSalvo);

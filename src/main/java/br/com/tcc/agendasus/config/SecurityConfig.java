@@ -55,6 +55,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/medicos", "/api/medicos/{id}", "/api/medicos/{id}/horarios").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/medicos/{id}").hasRole("DIRETOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/medicos/{id}").hasRole("DIRETOR") 
+                        .requestMatchers(HttpMethod.POST, "/api/unidades-saude").hasRole("DIRETOR")
+    .requestMatchers(HttpMethod.GET, "/api/unidades-saude").authenticated()
+
                         
                         // Agendamentos
                         .requestMatchers(HttpMethod.POST, "/api/agendamentos").hasRole("PACIENTE") 

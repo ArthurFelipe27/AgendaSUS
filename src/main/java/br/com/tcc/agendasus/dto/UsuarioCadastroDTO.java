@@ -1,8 +1,10 @@
 package br.com.tcc.agendasus.dto;
 
+import java.time.LocalDate;
+
 import org.hibernate.validator.constraints.br.CPF;
 
-import br.com.tcc.agendasus.model.enums.Role;
+import br.com.tcc.agendasus.model.enums.Sexo;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +26,14 @@ public record UsuarioCadastroDTO(
     @CPF(message = "Formato de CPF inválido")
     String cpf,
 
-    @NotNull(message = "A role (perfil) é obrigatória")
-    Role role
+    @NotNull LocalDate dataNascimento,
+    @NotBlank String telefone,
+    @NotNull Sexo sexo,
+
+    String nomeSocial,
+    String cep,
+    String cidade,
+    String estado,
+    String numero,
+    String complemento
 ) {}

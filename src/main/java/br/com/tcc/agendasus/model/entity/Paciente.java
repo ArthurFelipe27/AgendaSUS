@@ -60,4 +60,13 @@ public class Paciente {
     protected void onUpdate() {
         atualizadoEm = LocalDateTime.now();
     }
+
+    @Column(name = "nome_social")
+    private String nomeSocial;
+
+    private String cep;
+    private String cidade;
+    private String estado;
+    private String numero;
+    private String complemento;
 }

@@ -688,3 +688,62 @@ hr {
     font-size: 0.8rem;
     margin-top: 4px;
 }
+
+/* Em: static/css/style.css */
+
+.admin-form-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Duas colunas */
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+/* Em telas menores, volta para uma coluna */
+@media (max-width: 768px) {
+    .admin-form-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Em: static/css/style.css */
+
+.form-fieldset {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-fieldset legend {
+    font-weight: 600;
+    color: #0056b3;
+    padding: 0 0.5rem;
+    margin-left: -0.5rem;
+}
+
+/* ========================================= */
+/* === ESTILOS PARA O FORMULÁRIO DE CADASTRO V2 === */
+/* ========================================= */
+
+/* Container para as seções do formulário */
+.form-sections {
+    display: grid;
+    /* Cria duas colunas de tamanho igual */
+    grid-template-columns: 1fr 1fr;
+    /* Espaçamento entre as colunas */
+    gap: 1.5rem;
+}
+
+/* Faz a seção de "Dados de Acesso" ocupar a largura total (as duas colunas) */
+.form-fieldset.full-width {
+    grid-column: 1 / -1;
+    /* Começa na linha 1 e vai até a última (-1) */
+}
+
+/* Ajuste para telas menores: volta a ser uma coluna só */
+@media (max-width: 768px) {
+    .form-sections {
+        grid-template-columns: 1fr;
+    }
+}

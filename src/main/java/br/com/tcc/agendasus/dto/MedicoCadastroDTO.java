@@ -1,11 +1,10 @@
 package br.com.tcc.agendasus.dto;
 
-import br.com.tcc.agendasus.dto.MedicoCadastroDTO;
-import br.com.tcc.agendasus.model.entity.Medico;
-import br.com.tcc.agendasus.model.entity.Usuario;
+import org.hibernate.validator.constraints.br.CPF;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.br.CPF;
+import jakarta.validation.constraints.NotNull;
 
 public record MedicoCadastroDTO(
     @NotBlank String nome,
@@ -13,5 +12,6 @@ public record MedicoCadastroDTO(
     @NotBlank String senha,
     @NotBlank @CPF String cpf,
     @NotBlank String crm,
-    @NotBlank String especialidade
+    @NotBlank String especialidade,
+    @NotNull Long idUnidade
 ) {}
