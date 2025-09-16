@@ -187,28 +187,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const formContainer = document.getElementById('medico-form-container');
         let optionsUnidades = '<option value="" disabled selected>Selecione uma unidade</option>';
         if (unidades.length === 0) {
-            optionsUnidades = '<option value="" disabled selected>Nenhuma unidade cadastrada</option>';
+            optionsUnidades = '<option value="" disabled selected>Cadastre uma unidade primeiro</option>';
         } else {
             unidades.forEach(u => {
                 optionsUnidades += `<option value="${u.id}">${u.nome} - ${u.cidade}/${u.uf}</option>`;
             });
         }
+
+        // A MUDANÇA ESTÁ AQUI: O input de especialidade agora é um <select>
         formContainer.innerHTML = `
-            <div class="booking-form-container">
-                <h5>Cadastrar Novo Médico</h5>
-                <form id="form-cad-medico">
-                    <div id="admin-med-error" class="error-message" style="display: none;"></div>
-                    <div class="input-group"><label>Unidade de Saúde</label><select id="med-unidade" required>${optionsUnidades}</select></div>
-                    <div class="input-group"><label>Nome</label><input type="text" id="med-nome" required></div>
-                    <div class="input-group"><label>Email</label><input type="email" id="med-email" required></div>
-                    <div class="input-group"><label>CPF</label><input type="text" id="med-cpf" required maxlength="11"></div>
-                    <div class="input-group"><label>CRM</label><input type="text" id="med-crm" required></div>
-                    <div class="input-group"><label>Especialidade</label><input type="text" id="med-especialidade" required></div>
-                    <div class="input-group"><label>Senha</label><input type="password" id="med-senha" required minlength="6"></div>
-                    <button type="submit" class="btn-login">Cadastrar Médico</button>
-                </form>
-            </div>
-        `;
+        <div class="booking-form-container">
+            <h5>Cadastrar Novo Médico</h5>
+            <form id="form-cad-medico">
+                <div id="admin-med-error" class="error-message" style="display: none;"></div>
+                <div class="input-group">
+                    <label>Unidade de Saúde</label>
+                    <select id="med-unidade" required>${optionsUnidades}</select>
+                </div>
+                <div class="input-group"><label>Nome</label><input type="text" id="med-nome" required></div>
+                <div class="input-group"><label>Email</label><input type="email" id="med-email" required></div>
+                <div class="input-group"><label>CPF</label><input type="text" id="med-cpf" required maxlength="11"></div>
+                <div class="input-group"><label>CRM</label><input type="text" id="med-crm" required></div>
+                
+                <div class="input-group">
+                    <label>Especialidade</label>
+                    <select id="med-especialidade" required>
+                        <option value="" disabled selected>Selecione a especialidade...</option>
+                        <option value="CLINICA_GERAL">Clínica Médica (Geral)</option>
+                        <option value="MEDICINA_FAMILIA_COMUNIDADE">Medicina de Família e Comunidade</option>
+                        <option value="PEDIATRIA">Pediatria</option>
+                        <option value="GINECOLOGIA_OBSTETRICIA">Ginecologia e Obstetrícia</option>
+                        <option value="DERMATOLOGIA">Dermatologia</option>
+                        <option value="CARDIOLOGIA">Cardiologia</option>
+                        <option value="PSIQUIATRIA">Psiquiatria</option>
+                        <option value="ODONTOLOGIA">Odontologia</option>
+                        <option value="ENFERMAGEM">Enfermagem</option>
+                    </select>
+                </div>
+                
+                <div class="input-group"><label>Senha</label><input type="password" id="med-senha" required minlength="6"></div>
+                <button type="submit" class="btn-login">Cadastrar Médico</button>
+            </form>
+        </div>
+    `;
         document.getElementById('form-cad-medico').addEventListener('submit', handleCadastroMedicoSubmit);
     }
 
