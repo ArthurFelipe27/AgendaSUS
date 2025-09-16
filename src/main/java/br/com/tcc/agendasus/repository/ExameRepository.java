@@ -10,4 +10,5 @@ import br.com.tcc.agendasus.model.entity.Exame;
 public interface ExameRepository extends JpaRepository<Exame, Long> {
     List<Exame> findAllByPacienteIdUsuario(Long pacienteId);
     List<Exame> findAllByMedicoIdUsuario(Long medicoId);
+    boolean existsByPacienteIdUsuario(Long pacienteId);
 }

@@ -73,37 +73,65 @@ document.addEventListener('DOMContentLoaded', () => {
         await carregarListaUnidades();
     }
 
+    // Em: static/js/diretor.js
+    // SUBSTITUA A FUNÇÃO INTEIRA ABAIXO:
+
     function renderFormCadastroUnidade() {
         const formContainer = document.getElementById('unidade-form-container');
+
+        // Lista de Regiões Administrativas do DF
+        const regioesAdmin = ["Plano Piloto", "Gama", "Taguatinga", "Brazlândia", "Sobradinho", "Planaltina", "Paranoá", "Núcleo Bandeirante", "Ceilândia", "Guará", "Cruzeiro", "Samambaia", "Santa Maria", "São Sebastião", "Recanto das Emas", "Lago Sul", "Riacho Fundo", "Lago Norte", "Candangolândia", "Águas Claras", "Riacho Fundo II", "Sudoeste/Octogonal", "Varjão", "Park Way", "SCIA (Estrutural)", "Sobradinho II", "Jardim Botânico", "Itapoã", "SIA", "Vicente Pires", "Fercal", "Sol Nascente/Pôr do Sol", "Arniqueira"];
+
+        let optionsHtml = '<option value="" disabled selected>Selecione...</option>';
+        regioesAdmin.sort().forEach(ra => {
+            optionsHtml += `<option value="${ra}">${ra}</option>`;
+        });
+
         formContainer.innerHTML = `
-            <div class="booking-form-container">
-                <h5>Cadastrar Nova Unidade</h5>
-                <form id="form-cad-unidade">
-                    <div id="unidade-error-message" class="error-message" style="display: none;"></div>
-                    <div class="input-group"><label>Nome</label><input type="text" id="unidade-nome" required></div>
-                    <div class="input-group"><label>Endereço</label><input type="text" id="unidade-endereco" required></div>
-                    <div class="input-group"><label>Cidade</label><input type="text" id="unidade-cidade" required></div>
-                    <div class="input-group"><label>UF</label>
-                        <select id="unidade-uf" required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option value="AC">Acre</option><option value="AL">Alagoas</option><option value="AP">Amapá</option>
-                            <option value="AM">Amazonas</option><option value="BA">Bahia</option><option value="CE">Ceará</option>
-                            <option value="DF">Distrito Federal</option><option value="ES">Espírito Santo</option><option value="GO">Goiás</option>
-                            <option value="MA">Maranhão</option><option value="MT">Mato Grosso</option><option value="MS">Mato Grosso do Sul</option>
-                            <option value="MG">Minas Gerais</option><option value="PA">Pará</option><option value="PB">Paraíba</option>
-                            <option value="PR">Paraná</option><option value="PE">Pernambuco</option><option value="PI">Piauí</option>
-                            <option value="RJ">Rio de Janeiro</option><option value="RN">Rio Grande do Norte</option><option value="RS">Rio Grande do Sul</option>
-                            <option value="RO">Rondônia</option><option value="RR">Roraima</option><option value="SC">Santa Catarina</option>
-                            <option value="SP">São Paulo</option><option value="SE">Sergipe</option><option value="TO">Tocantins</option>
-                        </select>
-                    </div>
-                    <div class="input-group"><label>CEP</label><input type="text" id="unidade-cep" required maxlength="8"></div>
-                    <div class="input-group"><label>Telefone</label><input type="text" id="unidade-telefone"></div>
-                    <button type="submit" class="btn-login">Salvar Unidade</button>
-                </form>
-            </div>
-        `;
-        document.getElementById('form-cad-unidade').addEventListener('submit', handleCadastroUnidadeSubmit);
+        <div class="booking-form-container">
+            <h5>Cadastrar Nova Unidade</h5>
+            <form id="form-cad-unidade">
+                <div id="unidade-error-message" class="error-message" style="display: none;"></div>
+                <div class="input-group"><label>Nome da Unidade</label><input type="text" id="unidade-nome" required></div>
+                <div class="input-group"><label>Endereço</label><input type="text" id="unidade-endereco" required></div>
+                
+                <div class="input-group"><label>Região Administrativa</label>
+                    <select id="unidade-ra" required>${optionsHtml}</select>
+                </div>
+                
+                <div class="input-group"><label>UF</label><input type="text" id="unidade-uf" value="DF" required readonly></div>
+                <div class="input-group"><label>CEP</label><input type="text" id="unidade-cep" required maxlength="8"></div>
+                <div class="input-group"><label>Telefone</label><input type="text" id="unidade-telefone"></div>
+                <button type="submit" class="btn-login">Salvar Unidade</button>
+            </form>
+        </div>
+    `;
+
+        // Atualiza também a função que envia os dados
+        document.getElementById('form-cad-unidade').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const dados = {
+                nome: document.getElementById('unidade-nome').value,
+                endereco: document.getElementById('unidade-endereco').value,
+                cidade: document.getElementById('unidade-cidade').value,
+                uf: document.getElementById('unidade-uf').value,
+                // Campo novo/renomeado
+                regiao_administrativa: document.getElementById('unidade-ra').value,
+                cep: document.getElementById('unidade-cep').value,
+                telefone: document.getElementById('unidade-telefone').value
+            };
+            try {
+                // A API continua a mesma, só o DTO que mudou
+                const response = await fetchAuthenticated('/api/unidades-saude', { method: 'POST', body: JSON.stringify(dados) });
+                if (response.ok) {
+                    showToast('Unidade cadastrada com sucesso!', 'success');
+                    document.getElementById('unidade-form-container').style.display = 'none';
+                    await carregarListaUnidades();
+                } else {
+                    await handleApiError(response, 'unidade-error-message');
+                }
+            } catch (err) { showToast('Erro de rede.', 'error'); }
+        });
     }
 
     async function carregarListaUnidades() {

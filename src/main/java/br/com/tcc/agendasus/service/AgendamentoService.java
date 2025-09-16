@@ -1,7 +1,9 @@
 package br.com.tcc.agendasus.service;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -18,17 +20,20 @@ import br.com.tcc.agendasus.dto.AgendamentoCadastroDTO;
 import br.com.tcc.agendasus.dto.AgendamentoResponseDTO;
 import br.com.tcc.agendasus.dto.AgendamentoStatusUpdateDTO;
 import br.com.tcc.agendasus.dto.HorarioDisponivelDTO;
+import br.com.tcc.agendasus.dto.ProntuarioDTO;
 import br.com.tcc.agendasus.model.entity.Agendamento;
 import br.com.tcc.agendasus.model.entity.FichaMedica;
 import br.com.tcc.agendasus.model.entity.Medico;
 import br.com.tcc.agendasus.model.entity.Paciente;
-import br.com.tcc.agendasus.model.entity.Usuario;
+import br.com.tcc.agendasus.model.entity.Usuario; // Import necessário
 import br.com.tcc.agendasus.model.enums.Role;
 import br.com.tcc.agendasus.model.enums.StatusAgendamento;
-import br.com.tcc.agendasus.repository.AgendamentoRepository; // Import necessário
+import br.com.tcc.agendasus.repository.AgendamentoRepository;
+import br.com.tcc.agendasus.repository.ExameRepository;
 import br.com.tcc.agendasus.repository.FichaMedicaRepository;
 import br.com.tcc.agendasus.repository.MedicoRepository;
 import br.com.tcc.agendasus.repository.PacienteRepository;
+
 
 @Service
 public class AgendamentoService {
@@ -38,6 +43,8 @@ public class AgendamentoService {
     private final PacienteRepository pacienteRepository;
     private final MedicoRepository medicoRepository;
     private final ObjectMapper objectMapper;
+    private final ExameRepository exameRepository;
+
 
     private static final Map<DayOfWeek, String> DIAS_DA_SEMANA_MAP = Map.of(
         DayOfWeek.MONDAY, "SEGUNDA",
@@ -52,13 +59,18 @@ public class AgendamentoService {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FichaMedicaRepository fichaMedicaRepository, 
-                                PacienteRepository pacienteRepository, MedicoRepository medicoRepository, ObjectMapper objectMapper) {
+                                PacienteRepository pacienteRepository, MedicoRepository medicoRepository, ObjectMapper objectMapper,
+                                ExameRepository exameRepository) {
         this.agendamentoRepository = agendamentoRepository;
         this.fichaMedicaRepository = fichaMedicaRepository;
         this.pacienteRepository = pacienteRepository;
         this.medicoRepository = medicoRepository;
         this.objectMapper = objectMapper;
+        this.exameRepository = exameRepository;
+
     }
+
+    
 
     @Transactional
     public AgendamentoResponseDTO criarAgendamento(AgendamentoCadastroDTO dados, Authentication authentication) {
@@ -197,4 +209,63 @@ public class AgendamentoService {
 
         return new AgendamentoResponseDTO(agendamentoSalvo);
     }
+
+   // Em: AgendamentoService.java
+
+@Transactional(readOnly = true)
+public ProntuarioDTO getProntuarioDoAgendamento(Long agendamentoId, Authentication authentication) {
+    Usuario medicoLogado = (Usuario) authentication.getPrincipal();
+    Long medicoId = medicoLogado.getId();
+
+    Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
+            .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
+
+    if (!agendamento.getMedico().getIdUsuario().equals(medicoId)) {
+        throw new AccessDeniedException("Você não tem permissão para ver este prontuário.");
+    }
+
+    Paciente paciente = agendamento.getPaciente();
+    Long pacienteId = paciente.getIdUsuario();
+
+    // --- CÁLCULO DE IDADE SEGURO ---
+    Integer idade = null; // Começa como nulo
+    if (paciente.getDataNascimento() != null) {
+        idade = Period.between(paciente.getDataNascimento(), LocalDate.now()).getYears();
+    }
+
+    // O resto da lógica continua igual...
+    long totalConsultas = agendamentoRepository.countByPacienteIdUsuarioAndMedicoIdUsuarioAndStatus(pacienteId, medicoId, StatusAgendamento.ATENDIDO);
+    boolean temExames = exameRepository.existsByPacienteIdUsuario(pacienteId);
+    LocalDateTime proximaConsulta = agendamentoRepository
+        .findFirstByPacienteIdUsuarioAndMedicoIdUsuarioAndDataHoraAfterOrderByDataHoraAsc(pacienteId, medicoId, LocalDateTime.now())
+        .map(Agendamento::getDataHora).orElse(null);
+    List<ProntuarioDTO.ConsultaAnteriorDTO> historico = agendamentoRepository
+        .findAllByPacienteIdUsuarioAndMedicoIdUsuarioAndStatus(pacienteId, medicoId, StatusAgendamento.ATENDIDO)
+        .stream()
+        .map(ag -> new ProntuarioDTO.ConsultaAnteriorDTO(ag.getDataHora(), ag.getFichaMedica().getSintomas(), ag.getFichaMedica().getAlergias(), ag.getFichaMedica().getCirurgias()))
+        .collect(Collectors.toList());
+
+    FichaMedica fichaAtual = agendamento.getFichaMedica();
+    ProntuarioDTO.ConsultaAnteriorDTO fichaConsultaAtual = new ProntuarioDTO.ConsultaAnteriorDTO(
+        agendamento.getDataHora(),
+        fichaAtual.getSintomas(),
+        fichaAtual.getAlergias(),
+        fichaAtual.getCirurgias()
+    );
+
+    return new ProntuarioDTO(
+        paciente.getIdUsuario(),
+        paciente.getUsuario().getNome(),
+        paciente.getUsuario().getEmail(),
+        paciente.getTelefone(),
+        idade, // Agora pode ser nulo
+        totalConsultas,
+        temExames,
+        proximaConsulta,
+        fichaConsultaAtual,
+        historico
+    );
+}
+
+    
 }

@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -16,7 +17,6 @@
         <form id="reset-password-form" class="login-form">
             <h2>Redefinir Senha</h2>
             <p>Cole o token e defina sua nova senha.</p>
-            <div id="error-message" class="error-message" role="alert" aria-live="polite"></div>
             <div class="input-group">
                 <label for="token">Token de Redefinição</label>
                 <input type="text" id="token" required>
@@ -35,16 +35,8 @@
             </div>
         </form>
     </main>
-    <div vw class="enabled">
-        <div vw-access-button class="active"></div>
-        <div vw-plugin-wrapper>
-            <div class="vw-plugin-top-wrapper"></div>
-        </div>
-    </div>
-    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-    <script>
-        new window.VLibras.Widget('https://vlibras.gov.br/app');
-    </script>
+
+    <script src="js/common.js"></script>
     <script src="js/redefinir-senha.js"></script>
 </body>
 

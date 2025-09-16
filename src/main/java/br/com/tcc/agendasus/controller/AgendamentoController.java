@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.tcc.agendasus.dto.AgendamentoCadastroDTO;
 import br.com.tcc.agendasus.dto.AgendamentoResponseDTO;
 import br.com.tcc.agendasus.dto.AgendamentoStatusUpdateDTO;
+import br.com.tcc.agendasus.dto.ProntuarioDTO;
 import br.com.tcc.agendasus.service.AgendamentoService;
 import jakarta.validation.Valid;
 
@@ -46,6 +47,12 @@ public class AgendamentoController {
         List<AgendamentoResponseDTO> lista = agendamentoService.listarTodosAgendamentos();
         return ResponseEntity.ok(lista);
     }
+
+    @GetMapping("/{id}/prontuario")
+public ResponseEntity<ProntuarioDTO> getProntuarioDoAgendamento(@PathVariable Long id, Authentication authentication) {
+    ProntuarioDTO prontuario = agendamentoService.getProntuarioDoAgendamento(id, authentication);
+    return ResponseEntity.ok(prontuario);
+}
 
     @PutMapping("/{id}/status")
     public ResponseEntity<AgendamentoResponseDTO> atualizarStatus(

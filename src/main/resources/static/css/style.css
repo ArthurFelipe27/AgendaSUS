@@ -781,3 +781,51 @@ hr {
 .btn-new:hover {
     background-color: #004494;
 }
+
+/* ========================================= */
+/* === ESTILOS DO PRONTUÁRIO ELETRÔNICO === */
+/* ========================================= */
+.prontuario-header {
+    margin-bottom: 1.5rem;
+}
+
+.prontuario-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: #e9ecef;
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.stat-card .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0056b3;
+}
+
+.stat-card .label {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.historico-item {
+    border-left: 3px solid #0056b3;
+    padding-left: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.historico-item .data {
+    font-weight: 600;
+    color: #333;
+}
+
+.historico-item .sintomas {
+    margin-top: 0.5rem;
+    color: #555;
+}

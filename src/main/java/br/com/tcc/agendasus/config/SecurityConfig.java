@@ -65,7 +65,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/agendamentos/todos").hasRole("DIRETOR")
                         .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/status").hasRole("MEDICO")
                         .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/cancelar").hasRole("PACIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/agendamentos/{id}/prontuario").hasAnyRole("MEDICO", "DIRETOR")
+                        .requestMatchers(HttpMethod.GET, "/api/pacientes/{id}/prontuario").hasAnyRole("MEDICO", "DIRETOR")
                         .requestMatchers(HttpMethod.GET, "/api/fichas-medicas/agendamento/{agendamentoId}").hasAnyRole("MEDICO", "DIRETOR")
+                        
 
                         // Pós-Consulta
                         .requestMatchers(HttpMethod.POST, "/api/prescricoes").hasRole("MEDICO")

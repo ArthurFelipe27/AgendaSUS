@@ -20,8 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sexo = document.getElementById('sexo').value;
         const nomeSocial = document.getElementById('nomeSocial').value;
         const cep = document.getElementById('cep').value;
-        const cidade = document.getElementById('cidade').value;
-        const estado = document.getElementById('estado').value;
+        const estado = document.getElementById('regiao-administrativa').value;
         const numero = document.getElementById('numero').value;
         const complemento = document.getElementById('complemento').value;
 
