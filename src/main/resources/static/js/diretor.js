@@ -5,29 +5,23 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Seletores e Variáveis Globais ---
     const contentArea = document.getElementById('content-area');
-    let idUsuarioLogado = null; // Armazena o ID do diretor logado
+    let idUsuarioLogado = null;
 
     // --- FUNÇÃO DE INICIALIZAÇÃO ---
 
-    /**
-     * Função principal que constrói o dashboard do diretor
-     */
     async function initDiretorDashboard() {
         try {
             const responseMe = await fetchAuthenticated('/api/usuarios/me');
             if (!responseMe.ok) throw new Error('Falha ao buscar perfil do admin');
             const adminUser = await responseMe.json();
             idUsuarioLogado = adminUser.id;
-            renderDashboardDiretor(); // Renderiza o painel principal após pegar o ID
+            renderDashboardDiretor();
         } catch (e) {
             console.error(e);
             contentArea.innerHTML = "<p>Erro fatal ao carregar dados do administrador.</p>";
         }
     }
 
-    /**
-     * Renderiza a estrutura principal do dashboard com os cards de navegação
-     */
     function renderDashboardDiretor() {
         contentArea.innerHTML = `
             <h3>Painel Administrativo</h3>
@@ -42,42 +36,74 @@ document.addEventListener('DOMContentLoaded', () => {
             <div id="diretor-content-dinamico"></div> 
         `;
 
-        // Adiciona os listeners de clique para cada card
         document.getElementById('card-gerenciar-unidades').addEventListener('click', renderGerenciadorDeUnidades);
         document.getElementById('card-gerenciar-medicos').addEventListener('click', renderGerenciadorDeMedicos);
         document.getElementById('card-gerenciar-usuarios').addEventListener('click', renderGerenciadorDeUsuarios);
         document.getElementById('card-gerenciar-conteudo').addEventListener('click', renderGerenciadorDeConteudo);
         document.getElementById('card-meu-perfil').addEventListener('click', renderMeuPerfil);
+
+        // Carrega a primeira tela por padrão
+        renderGerenciadorDeUnidades();
     }
 
-    // --- SEÇÃO 1: GERENCIAR UNIDADES DE SAÚDE ---
+    // --- SEÇÃO 1: GERENCIAR UNIDADES DE SAÚDE (NOVO LAYOUT) ---
 
     async function renderGerenciadorDeUnidades() {
         const adminContent = document.getElementById('diretor-content-dinamico');
         adminContent.innerHTML = `
-            <h4>Gerenciamento de Unidades de Saúde</h4>
-            <div class="admin-form-container">
-                <div>
-                    <h5>Cadastrar Nova Unidade</h5>
-                    <form id="form-cad-unidade" class="login-form" style="padding: 0; box-shadow: none;">
-                        <div id="unidade-error-message" class="error-message" style="display: none;"></div>
-                        <div class="input-group"><label>Nome da Unidade</label><input type="text" id="unidade-nome" required></div>
-                        <div class="input-group"><label>Endereço</label><input type="text" id="unidade-endereco" required></div>
-                        <div class="input-group"><label>Cidade</label><input type="text" id="unidade-cidade" required></div>
-                        <div class="input-group"><label>UF</label><input type="text" id="unidade-uf" required maxlength="2"></div>
-                        <div class="input-group"><label>CEP</label><input type="text" id="unidade-cep" required maxlength="8"></div>
-                        <div class="input-group"><label>Telefone</label><input type="text" id="unidade-telefone"></div>
-                        <button type="submit" class="btn-login">Cadastrar Unidade</button>
-                    </form>
-                </div>
-                <div>
-                    <h5>Unidades Cadastradas</h5>
-                    <div id="lista-unidades" class="admin-table-container">Carregando...</div>
-                </div>
+            <div class="admin-section-header">
+                <h4>Unidades de Saúde</h4>
+                <button class="btn-new" id="btn-nova-unidade">Cadastrar Nova Unidade</button>
+            </div>
+            <div id="unidade-form-container" style="display: none;"></div>
+            <div id="lista-unidades" class="admin-table-container">Carregando...</div>
+        `;
+
+        document.getElementById('btn-nova-unidade').addEventListener('click', () => {
+            const formContainer = document.getElementById('unidade-form-container');
+            // Alterna a visibilidade do formulário
+            if (formContainer.style.display === 'none') {
+                renderFormCadastroUnidade();
+                formContainer.style.display = 'block';
+            } else {
+                formContainer.style.display = 'none';
+                formContainer.innerHTML = '';
+            }
+        });
+        await carregarListaUnidades();
+    }
+
+    function renderFormCadastroUnidade() {
+        const formContainer = document.getElementById('unidade-form-container');
+        formContainer.innerHTML = `
+            <div class="booking-form-container">
+                <h5>Cadastrar Nova Unidade</h5>
+                <form id="form-cad-unidade">
+                    <div id="unidade-error-message" class="error-message" style="display: none;"></div>
+                    <div class="input-group"><label>Nome</label><input type="text" id="unidade-nome" required></div>
+                    <div class="input-group"><label>Endereço</label><input type="text" id="unidade-endereco" required></div>
+                    <div class="input-group"><label>Cidade</label><input type="text" id="unidade-cidade" required></div>
+                    <div class="input-group"><label>UF</label>
+                        <select id="unidade-uf" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="AC">Acre</option><option value="AL">Alagoas</option><option value="AP">Amapá</option>
+                            <option value="AM">Amazonas</option><option value="BA">Bahia</option><option value="CE">Ceará</option>
+                            <option value="DF">Distrito Federal</option><option value="ES">Espírito Santo</option><option value="GO">Goiás</option>
+                            <option value="MA">Maranhão</option><option value="MT">Mato Grosso</option><option value="MS">Mato Grosso do Sul</option>
+                            <option value="MG">Minas Gerais</option><option value="PA">Pará</option><option value="PB">Paraíba</option>
+                            <option value="PR">Paraná</option><option value="PE">Pernambuco</option><option value="PI">Piauí</option>
+                            <option value="RJ">Rio de Janeiro</option><option value="RN">Rio Grande do Norte</option><option value="RS">Rio Grande do Sul</option>
+                            <option value="RO">Rondônia</option><option value="RR">Roraima</option><option value="SC">Santa Catarina</option>
+                            <option value="SP">São Paulo</option><option value="SE">Sergipe</option><option value="TO">Tocantins</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label>CEP</label><input type="text" id="unidade-cep" required maxlength="8"></div>
+                    <div class="input-group"><label>Telefone</label><input type="text" id="unidade-telefone"></div>
+                    <button type="submit" class="btn-login">Salvar Unidade</button>
+                </form>
             </div>
         `;
         document.getElementById('form-cad-unidade').addEventListener('submit', handleCadastroUnidadeSubmit);
-        await carregarListaUnidades();
     }
 
     async function carregarListaUnidades() {
@@ -90,9 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (unidades.length === 0) {
                 tableHTML += '<tr><td colspan="3">Nenhuma unidade cadastrada.</td></tr>';
             } else {
-                unidades.forEach(u => {
-                    tableHTML += `<tr><td>${u.id}</td><td>${u.nome}</td><td>${u.cidade}/${u.uf}</td></tr>`;
-                });
+                unidades.forEach(u => tableHTML += `<tr><td>${u.id}</td><td>${u.nome}</td><td>${u.cidade}/${u.uf}</td></tr>`);
             }
             tableHTML += '</tbody></table>';
             container.innerHTML = tableHTML;
@@ -105,64 +129,85 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleCadastroUnidadeSubmit(event) {
         event.preventDefault();
         const dados = {
-            nome: document.getElementById('unidade-nome').value,
-            endereco: document.getElementById('unidade-endereco').value,
-            cidade: document.getElementById('unidade-cidade').value,
-            uf: document.getElementById('unidade-uf').value.toUpperCase(),
-            cep: document.getElementById('unidade-cep').value,
-            telefone: document.getElementById('unidade-telefone').value
+            nome: document.getElementById('unidade-nome').value, endereco: document.getElementById('unidade-endereco').value,
+            cidade: document.getElementById('unidade-cidade').value, uf: document.getElementById('unidade-uf').value,
+            cep: document.getElementById('unidade-cep').value, telefone: document.getElementById('unidade-telefone').value
         };
         try {
             const response = await fetchAuthenticated('/api/unidades-saude', { method: 'POST', body: JSON.stringify(dados) });
             if (response.ok) {
                 showToast('Unidade cadastrada com sucesso!', 'success');
-                document.getElementById('form-cad-unidade').reset();
+                document.getElementById('unidade-form-container').style.display = 'none'; // Esconde o form
                 await carregarListaUnidades();
             } else {
                 await handleApiError(response, 'unidade-error-message');
             }
-        } catch (err) {
-            showToast('Erro de rede ao cadastrar unidade.', 'error');
-        }
+        } catch (err) { showToast('Erro de rede.', 'error'); }
     }
 
-    // --- SEÇÃO 2: GERENCIAR MÉDICOS ---
+    // --- SEÇÃO 2: GERENCIAR MÉDICOS (NOVO LAYOUT) ---
 
     async function renderGerenciadorDeMedicos() {
         const adminContent = document.getElementById('diretor-content-dinamico');
-        adminContent.innerHTML = `<h4>Gerenciamento de Médicos</h4><p>Carregando dados...</p>`;
-        try {
-            const responseUnidades = await fetchAuthenticated('/api/unidades-saude');
-            if (!responseUnidades.ok) throw new Error('Falha ao carregar unidades de saúde.');
-            const unidades = await responseUnidades.json();
-            renderFormCadastroMedico(unidades);
-        } catch (err) {
-            console.error(err);
-            adminContent.innerHTML = `<p>Erro: ${err.message}. Cadastre uma unidade de saúde primeiro.</p>`;
-        }
+        adminContent.innerHTML = `
+            <div class="admin-section-header">
+                <h4>Médicos</h4>
+                <button class="btn-new" id="btn-novo-medico">Cadastrar Novo Médico</button>
+            </div>
+            <div id="medico-form-container" style="display: none;"></div>
+            <div id="lista-medicos" class="admin-table-container">Carregando...</div>
+        `;
+
+        document.getElementById('btn-novo-medico').addEventListener('click', async () => {
+            const formContainer = document.getElementById('medico-form-container');
+            if (formContainer.style.display === 'none') {
+                try {
+                    const responseUnidades = await fetchAuthenticated('/api/unidades-saude');
+                    if (!responseUnidades.ok) throw new Error('Falha ao carregar unidades de saúde.');
+                    const unidades = await responseUnidades.json();
+                    renderFormCadastroMedico(unidades);
+                    formContainer.style.display = 'block';
+                } catch (err) {
+                    showToast(err.message, 'error');
+                }
+            } else {
+                formContainer.style.display = 'none';
+                formContainer.innerHTML = '';
+            }
+        });
+        await carregarListaMedicos();
+    }
+
+    async function carregarListaMedicos() {
+        // (Futuramente, criaríamos aqui uma tabela de médicos similar à de unidades)
+        document.getElementById('lista-medicos').innerHTML = "<p>A lista de médicos para gerenciamento será implementada aqui.</p>"
     }
 
     function renderFormCadastroMedico(unidades) {
-        const adminContent = document.getElementById('diretor-content-dinamico');
+        const formContainer = document.getElementById('medico-form-container');
         let optionsUnidades = '<option value="" disabled selected>Selecione uma unidade</option>';
-        if (unidades.length > 0) {
+        if (unidades.length === 0) {
+            optionsUnidades = '<option value="" disabled selected>Nenhuma unidade cadastrada</option>';
+        } else {
             unidades.forEach(u => {
                 optionsUnidades += `<option value="${u.id}">${u.nome} - ${u.cidade}/${u.uf}</option>`;
             });
         }
-        adminContent.innerHTML = `
-            <h4>Cadastrar Novo Médico</h4>
-            <form id="form-cad-medico" class="login-form" style="padding: 0; box-shadow: none;">
-                <div id="admin-med-error" class="error-message" style="display: none;"></div>
-                <div class="input-group"><label>Unidade de Saúde</label><select id="med-unidade" required>${optionsUnidades}</select></div>
-                <div class="input-group"><label>Nome</label><input type="text" id="med-nome" required></div>
-                <div class="input-group"><label>Email</label><input type="email" id="med-email" required></div>
-                <div class="input-group"><label>CPF</label><input type="text" id="med-cpf" required maxlength="11"></div>
-                <div class="input-group"><label>CRM</label><input type="text" id="med-crm" required></div>
-                <div class="input-group"><label>Especialidade</label><input type="text" id="med-especialidade" required></div>
-                <div class="input-group"><label>Senha</label><input type="password" id="med-senha" required minlength="6"></div>
-                <button type="submit" class="btn-login">Cadastrar Médico</button>
-            </form>
+        formContainer.innerHTML = `
+            <div class="booking-form-container">
+                <h5>Cadastrar Novo Médico</h5>
+                <form id="form-cad-medico">
+                    <div id="admin-med-error" class="error-message" style="display: none;"></div>
+                    <div class="input-group"><label>Unidade de Saúde</label><select id="med-unidade" required>${optionsUnidades}</select></div>
+                    <div class="input-group"><label>Nome</label><input type="text" id="med-nome" required></div>
+                    <div class="input-group"><label>Email</label><input type="email" id="med-email" required></div>
+                    <div class="input-group"><label>CPF</label><input type="text" id="med-cpf" required maxlength="11"></div>
+                    <div class="input-group"><label>CRM</label><input type="text" id="med-crm" required></div>
+                    <div class="input-group"><label>Especialidade</label><input type="text" id="med-especialidade" required></div>
+                    <div class="input-group"><label>Senha</label><input type="password" id="med-senha" required minlength="6"></div>
+                    <button type="submit" class="btn-login">Cadastrar Médico</button>
+                </form>
+            </div>
         `;
         document.getElementById('form-cad-medico').addEventListener('submit', handleCadastroMedicoSubmit);
     }
@@ -183,7 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetchAuthenticated('/api/medicos', { method: 'POST', body: JSON.stringify(dadosMedico) });
             if (response.ok) {
                 showToast('Médico cadastrado com sucesso!', 'success');
-                document.getElementById('form-cad-medico').reset();
+                document.getElementById('medico-form-container').style.display = 'none';
+                // Futuramente, chamaríamos aqui carregarListaMedicos()
             } else {
                 await handleApiError(response, 'admin-med-error');
             }
