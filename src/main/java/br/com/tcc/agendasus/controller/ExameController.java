@@ -31,8 +31,7 @@ public class ExameController {
 
     @PostMapping
     public ResponseEntity<ExameResponseDTO> criar(@RequestBody @Valid ExameCadastroDTO dados, Authentication auth) {
-        ExameResponseDTO response = service.criar(dados, auth);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(dados, auth));
     }
 
     @GetMapping("/meus")
@@ -46,12 +45,12 @@ public class ExameController {
     }
 
     @PutMapping("/{id}/resultado")
-public ResponseEntity<ExameResponseDTO> atualizarResultado(
-        @PathVariable Long id,
-        @RequestBody @Valid ExameResultadoUpdateDTO dados,
-        Authentication auth) {
-            
-    ExameResponseDTO exameAtualizado = service.atualizarResultado(id, dados, auth);
-    return ResponseEntity.ok(exameAtualizado);
-}
+    public ResponseEntity<ExameResponseDTO> atualizarResultado(@PathVariable Long id, @RequestBody @Valid ExameResultadoUpdateDTO dados, Authentication auth) {
+        return ResponseEntity.ok(service.atualizarResultado(id, dados, auth));
+    }
+
+    @GetMapping("/agendamento/{id}")
+    public ResponseEntity<List<ExameResponseDTO>> buscarPorAgendamento(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(service.buscarPorAgendamento(id, auth));
+    }
 }

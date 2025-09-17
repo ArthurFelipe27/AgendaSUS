@@ -31,6 +31,10 @@ public class Atestado {
     private Medico medico;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_agendamento")
+    private Agendamento agendamento;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_paciente", nullable = false)
     private Paciente paciente;
 

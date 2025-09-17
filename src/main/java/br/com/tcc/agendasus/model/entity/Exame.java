@@ -34,6 +34,10 @@ public class Exame {
     @JoinColumn(name = "id_paciente", nullable = false)
     private Paciente paciente;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_agendamento")
+    private Agendamento agendamento;
+
     @Column(nullable = false, length = 120)
     private String tipo;
 

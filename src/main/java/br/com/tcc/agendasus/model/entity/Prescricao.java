@@ -34,6 +34,10 @@ public class Prescricao {
     @JoinColumn(name = "id_paciente", nullable = false)
     private Paciente paciente;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_agendamento")
+    private Agendamento agendamento;
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String medicamentos;
 

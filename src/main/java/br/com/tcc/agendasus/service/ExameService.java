@@ -20,7 +20,6 @@ import br.com.tcc.agendasus.repository.ExameRepository;
 import br.com.tcc.agendasus.repository.MedicoRepository;
 import br.com.tcc.agendasus.repository.PacienteRepository;
 
-
 @Service
 public class ExameService {
 
@@ -56,7 +55,6 @@ public class ExameService {
     public List<ExameResponseDTO> listarMinhas(Authentication auth) {
         Usuario usuarioLogado = (Usuario) auth.getPrincipal();
         List<Exame> lista;
-
         if (usuarioLogado.getRole() == Role.PACIENTE) {
             lista = repository.findAllByPacienteIdUsuario(usuarioLogado.getId());
         } else if (usuarioLogado.getRole() == Role.MEDICO) {
@@ -73,18 +71,23 @@ public class ExameService {
     }
 
     @Transactional
-public ExameResponseDTO atualizarResultado(Long exameId, ExameResultadoUpdateDTO dados, Authentication auth) {
-    Usuario usuarioLogado = (Usuario) auth.getPrincipal();
-    Exame exame = repository.findById(exameId)
-            .orElseThrow(() -> new RuntimeException("Exame não encontrado."));
-
-    // REGRA DE SEGURANÇA: Apenas o médico que solicitou o exame pode atualizar o resultado.
-    if (!exame.getMedico().getIdUsuario().equals(usuarioLogado.getId())) {
-        throw new AccessDeniedException("Você não tem permissão para atualizar o resultado deste exame.");
+    public ExameResponseDTO atualizarResultado(Long exameId, ExameResultadoUpdateDTO dados, Authentication auth) {
+        Usuario usuarioLogado = (Usuario) auth.getPrincipal();
+        Exame exame = repository.findById(exameId)
+                .orElseThrow(() -> new RuntimeException("Exame não encontrado."));
+        if (!exame.getMedico().getIdUsuario().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem permissão para atualizar o resultado deste exame.");
+        }
+        exame.setResultado(dados.resultado());
+        Exame exameSalvo = repository.save(exame);
+        return new ExameResponseDTO(exameSalvo);
     }
 
-    exame.setResultado(dados.resultado());
-    Exame exameSalvo = repository.save(exame);
-    return new ExameResponseDTO(exameSalvo);
-}
+    @Transactional(readOnly = true)
+    public List<ExameResponseDTO> buscarPorAgendamento(Long agendamentoId, Authentication auth) {
+        return repository.findAllByAgendamentoId(agendamentoId)
+                .stream()
+                .map(ExameResponseDTO::new)
+                .collect(Collectors.toList());
+    }
 }

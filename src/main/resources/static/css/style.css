@@ -1,24 +1,69 @@
-/* === RESET E ESTILOS GLOBAIS === */
+/* ===================================================================
+   ARQUIVO DE ESTILOS PRINCIPAL - AgendaSUS TCC
+   Versão Final Organizada
+   =================================================================== */
+
+/* =======================================================
+   1. RESET E ESTILOS GLOBAIS
+   - Define a base para todos os elementos da página.
+   ======================================================= */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
     background-color: #f0f5f9;
+    color: #333;
+}
+
+/* Corpo para telas de formulário centralizadas (Login, Cadastro, etc.) */
+body.form-body {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
 }
 
-/* --- ESTILOS DO FORMULÁRIO DE LOGIN/CADASTRO --- */
+/* Corpo para telas de dashboard (tela cheia) */
+body.dashboard-body {
+    display: block;
+    min-height: 100vh;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: #dee2e6;
+    margin: 2.5rem 0;
+}
+
+a,
+a:visited {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* =======================================================
+   2. ESTILOS DE FORMULÁRIO (LOGIN, CADASTRO, ETC.)
+   - Usado em todas as telas que têm formulários.
+   ======================================================= */
 .login-container {
     width: 100%;
-    max-width: 400px;
-    padding: 2rem;
+    max-width: 450px;
+    padding: 1.5rem;
+}
+
+@media (min-width: 992px) {
+    .login-container.wide {
+        max-width: 800px;
+    }
 }
 
 .login-form {
@@ -42,7 +87,6 @@ body {
 
 .input-group {
     margin-bottom: 1.5rem;
-    position: relative;
 }
 
 .input-group label {
@@ -60,8 +104,16 @@ body {
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
-    font-family: Arial, Helvetica, sans-serif;
-    resize: vertical;
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-group input:focus,
+.input-group textarea:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: #0056b3;
+    box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
 }
 
 .input-group input::placeholder {
@@ -69,6 +121,46 @@ body {
     font-style: italic;
 }
 
+.footer-links {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.form-fieldset {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-fieldset legend {
+    font-weight: 600;
+    color: #0056b3;
+    padding: 0 0.5rem;
+    margin-left: -0.5rem;
+}
+
+/* Layout de grid para formulários complexos */
+.form-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-fieldset.full-width {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+    .form-sections {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =======================================================
+   3. BOTÕES (PADRÕES E VARIAÇÕES)
+   ======================================================= */
 .btn-login {
     width: 100%;
     padding: 0.85rem;
@@ -86,49 +178,94 @@ body {
     background-color: #004494;
 }
 
-.footer-links {
-    text-align: center;
+.btn-confirm {
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #28a745;
+    color: white;
+    transition: background-color 0.2s ease;
+}
+
+.btn-confirm:hover {
+    background-color: #218838;
+}
+
+.btn-cancel {
+    border: 1px solid #6c757d;
+    background-color: transparent;
+    color: #6c757d;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+.btn-delete:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-new {
+    background-color: #0056b3;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-new:hover {
+    background-color: #004494;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
     margin-top: 1.5rem;
 }
 
-.footer-links a,
-a:visited {
-    color: #0056b3;
-    text-decoration: none;
-    font-size: 0.9rem;
-}
 
-.footer-links a:hover {
-    text-decoration: underline;
-}
-
-.error-message {
-    color: #d93025;
-    background-color: #fdd;
-    padding: 0.75rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    text-align: center;
-    font-size: 0.9rem;
-    display: none;
-    /* Escondido por padrão */
-}
-
-
-/* === ESTILOS DO DASHBOARD (GERAL) === */
-
-.dashboard-body {
-    display: block;
-    min-height: 100vh;
-    background-color: #f4f7f6;
-}
-
+/* =======================================================
+   4. ESTILOS DO DASHBOARD (LAYOUT GERAL)
+   ======================================================= */
 .navbar {
     width: 100%;
     background-color: #ffffff;
     border-bottom: 1px solid #dee2e6;
     padding: 1rem 2rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .navbar-container {
@@ -174,7 +311,6 @@ a:visited {
 .welcome-header h2 {
     color: #333;
     font-size: 2rem;
-    font-weight: 600;
     margin-bottom: 0.25rem;
 }
 
@@ -183,35 +319,63 @@ a:visited {
     font-size: 1.1rem;
 }
 
-.content-card {
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.dashboard-card {
     background-color: #ffffff;
+    border: 1px solid #dee2e6;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     padding: 2rem;
-}
-
-.content-card h3 {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: #0056b3;
-    font-size: 1.25rem;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-/* --- Lista de Médicos / Agendamentos --- */
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-card.admin {
+    border-left: 5px solid #dc3545;
+    color: #dc3545;
+}
+
+
+/* =======================================================
+   5. COMPONENTES ESPECÍFICOS (LISTAS, TABELAS, MODAIS, ETC.)
+   ======================================================= */
+
+/* --- Feedback de Erro --- */
+.error-message {
+    color: #d93025;
+    background-color: #fdd;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    display: none;
+}
+
+.error-text {
+    color: #d93025;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
+/* --- Listas Clicáveis (Médicos, Agendamentos) --- */
 .medico-list {
     list-style: none;
     padding: 0;
-}
-
-.medico-list li {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    padding: 1.5rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    color: #333;
 }
 
 .medico-item-clicavel {
@@ -246,142 +410,21 @@ a:visited {
     font-weight: 600;
 }
 
-/* --- Grade de Horários --- */
-.dia-agenda {
-    margin-top: 1.5rem;
-}
-
-.dia-agenda strong {
-    display: block;
-    font-size: 1rem;
-    color: #333;
-    text-transform: capitalize;
-    margin-bottom: 0.75rem;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.5rem;
-}
-
-.horarios-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 0.75rem;
-}
-
-.btn-horario {
-    background-color: #f0f5f9;
-    border: 1px solid #cce0f5;
-    color: #0056b3;
-    padding: 0.75rem;
-    border-radius: 4px;
-    text-align: center;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-horario:hover {
-    background-color: #0056b3;
-    color: #ffffff;
-    border-color: #0056b3;
-}
-
-/* --- Cards de Navegação (Dashboard) --- */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-}
-
-.dashboard-card {
-    background-color: #ffffff;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #0056b3;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.dashboard-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-    background-color: #f8f9fa;
-}
-
-.dashboard-card.admin {
-    border-left: 5px solid #dc3545;
-    color: #dc3545;
-}
-
-hr {
-    border: 0;
-    height: 1px;
-    background-color: #dee2e6;
-    margin: 2.5rem 0;
-}
-
-/* --- Formulário de Agendamento --- */
-.booking-form-container {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 2rem;
-    margin-top: 1.5rem;
-}
-
-.booking-form-container h4 {
-    color: #0056b3;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.form-actions {
+/* --- Tabelas de Admin --- */
+.admin-section-header {
     display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1rem;
 }
 
-.btn-confirm {
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 4px;
-    cursor: pointer;
-    background-color: #28a745;
-    /* Verde */
-    color: white;
-    transition: background-color 0.2s ease;
+.admin-section-header h4 {
+    margin: 0;
+    color: #0056b3;
 }
 
-.btn-confirm:hover {
-    background-color: #218838;
-}
-
-.btn-cancel {
-    border: 1px solid #555;
-    background-color: transparent;
-    color: #555;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-cancel:hover {
-    background-color: #555;
-    color: white;
-}
-
-/* --- Tabela de Admin --- */
 .admin-table-container {
     width: 100%;
     overflow-x: auto;
@@ -391,7 +434,6 @@ hr {
     width: 100%;
     border-collapse: collapse;
     margin-top: 1.5rem;
-    font-size: 0.95rem;
 }
 
 .admin-table th,
@@ -399,7 +441,6 @@ hr {
     padding: 0.75rem 1rem;
     border: 1px solid #dee2e6;
     text-align: left;
-    vertical-align: middle;
 }
 
 .admin-table thead {
@@ -411,169 +452,13 @@ hr {
     color: #333;
 }
 
-.admin-table tr:nth-child(even) {
-    background-color: #fcfcfc;
-}
-
-.btn-delete {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.btn-delete:hover {
-    background-color: #c82333;
-}
-
-.btn-delete:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-/* ========================================= */
-/* === ESTILOS DOS BOTÕES DE DOCUMENTOS === */
-/* ========================================= */
-
-.btn-primary-doc,
-.btn-secondary-doc {
-    border: none;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s ease;
-}
-
-.btn-primary-doc {
-    background-color: #007bff;
-    /* Um azul diferente */
-    color: white;
-}
-
-.btn-primary-doc:hover {
-    background-color: #0069d9;
-}
-
-.btn-secondary-doc {
-    background-color: #6c757d;
-    /* Um cinza */
-    color: white;
-}
-
-.btn-secondary-doc:hover {
-    background-color: #5a6268;
-}
-
-/* ========================================= */
-/* === ESTILOS DO CONSTRUTOR DE HORÁRIOS === */
-/* ========================================= */
-
-.schedule-builder {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.schedule-day-card {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    padding: 1.5rem;
-}
-
-.schedule-day-card h5 {
-    font-size: 1.1rem;
-    color: #333;
-    margin-bottom: 1rem;
-    text-transform: capitalize;
-}
-
-.add-time-form {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.add-time-form input[type="time"] {
-    max-width: 120px;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.btn-add-time {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 0 1rem;
-}
-
-.time-tags-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.time-tag {
-    display: inline-flex;
-    align-items: center;
-    background-color: #0056b3;
-    color: white;
-    padding: 0.4rem 0.8rem;
-    border-radius: 15px;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.remove-tag {
-    display: inline-block;
-    background-color: white;
-    color: #0056b3;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    line-height: 18px;
-    text-align: center;
-    font-weight: 900;
-    margin-left: 0.5rem;
-    cursor: pointer;
-    font-family: 'Courier New', Courier, monospace;
-}
-
-.remove-tag:hover {
-    background-color: #eee;
-}
-
-/* ========================================= */
-/* === ESTILOS DA LISTA DE DOCUMENTOS === */
-/* ========================================= */
-
-.document-list-container {
-    margin-top: 1.5rem;
-}
-
-.document-list-container h4 {
-    font-size: 1.2rem;
-    color: #333;
-    margin-bottom: 1rem;
-}
-
+/* --- Documentos, Prontuário e Conteúdo --- */
 .document-item {
     background-color: #ffffff;
     border: 1px solid #e9ecef;
     padding: 1.5rem;
     border-radius: 6px;
     margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
 .document-item .meta {
@@ -585,16 +470,10 @@ hr {
 }
 
 .document-item .content {
-    font-family: 'Courier New', Courier, monospace;
     white-space: pre-wrap;
-    /* Mantém a formatação (quebras de linha) do texto */
     line-height: 1.6;
     color: #333;
 }
-
-/* ========================================= */
-/* === ESTILOS DA PÁGINA DE CONTEÚDO === */
-/* ========================================= */
 
 .content-title {
     font-size: 1.5rem;
@@ -606,12 +485,65 @@ hr {
     margin-top: 1rem;
     line-height: 1.7;
     white-space: pre-wrap;
-    /* Mantém as quebras de linha do texto do artigo */
 }
 
-/* ========================================= */
-/* === ESTILOS DO MODAL (POP-UP) === */
-/* ========================================= */
+.prontuario-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: #e9ecef;
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.stat-card .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0056b3;
+}
+
+.stat-card .label {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.historico-item {
+    position: relative;
+    padding-left: 25px;
+    margin-bottom: 1.5rem;
+}
+
+.historico-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #0056b3;
+}
+
+.historico-item::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 20px;
+    bottom: -10px;
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.historico-item:last-child::after {
+    display: none;
+}
+
+/* --- Modal (Pop-up) --- */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -670,6 +602,31 @@ hr {
     border: 1px solid #eee;
 }
 
+/* --- Checkboxes e Formulários Específicos --- */
+.checkbox-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.5rem;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-group input {
+    margin-right: 0.5rem;
+    width: auto;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    font-weight: normal;
+}
 
 .token-box {
     background-color: #e9ecef;
@@ -677,155 +634,54 @@ hr {
     border-radius: 4px;
     border: 1px solid #dee2e6;
     word-wrap: break-word;
-    /* Quebra o token longo */
     margin-top: 1rem;
     font-family: 'Courier New', Courier, monospace;
 }
 
-/* Em: static/css/style.css */
-.error-text {
-    color: #d93025;
-    font-size: 0.8rem;
-    margin-top: 4px;
-}
+/* ======================================================= */
+/* === ESTILOS DINÂMICOS PARA "MEUS AGENDAMENTOS" === */
+/* ======================================================= */
 
-/* Em: static/css/style.css */
-
-.admin-form-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    /* Duas colunas */
-    gap: 2rem;
-    align-items: flex-start;
-}
-
-/* Em telas menores, volta para uma coluna */
-@media (max-width: 768px) {
-    .admin-form-container {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Em: static/css/style.css */
-
-.form-fieldset {
-    border: 1px solid #dee2e6;
+.agendamento-card {
+    background-color: #fff;
+    border-left: 5px solid #6c757d;
+    /* Cor padrão (cinza) */
     border-radius: 6px;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.form-fieldset legend {
-    font-weight: 600;
-    color: #0056b3;
-    padding: 0 0.5rem;
-    margin-left: -0.5rem;
-}
-
-/* ========================================= */
-/* === ESTILOS PARA O FORMULÁRIO DE CADASTRO V2 === */
-/* ========================================= */
-
-/* Container para as seções do formulário */
-.form-sections {
-    display: grid;
-    /* Cria duas colunas de tamanho igual */
-    grid-template-columns: 1fr 1fr;
-    /* Espaçamento entre as colunas */
-    gap: 1.5rem;
-}
-
-/* Faz a seção de "Dados de Acesso" ocupar a largura total (as duas colunas) */
-.form-fieldset.full-width {
-    grid-column: 1 / -1;
-    /* Começa na linha 1 e vai até a última (-1) */
-}
-
-/* Ajuste para telas menores: volta a ser uma coluna só */
-@media (max-width: 768px) {
-    .form-sections {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ========================================= */
-/* === ESTILOS DO PAINEL DE ADMIN V2 === */
-/* ========================================= */
-
-.admin-section-header {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-.admin-section-header h4 {
-    margin: 0;
-    color: #0056b3;
+/* Cores por Status */
+.agendamento-card.status-PENDENTE {
+    border-color: #ffc107;
 }
 
-.btn-new {
-    background-color: #0056b3;
-    color: white;
-    border: none;
-    padding: 0.6rem 1.2rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+/* Amarelo */
+.agendamento-card.status-CONFIRMADO {
+    border-color: #007bff;
 }
 
-.btn-new:hover {
-    background-color: #004494;
+/* Azul */
+.agendamento-card.status-ATENDIDO {
+    border-color: #28a745;
 }
 
-/* ========================================= */
-/* === ESTILOS DO PRONTUÁRIO ELETRÔNICO === */
-/* ========================================= */
-.prontuario-header {
-    margin-bottom: 1.5rem;
+/* Verde */
+.agendamento-card.status-CANCELADO {
+    border-color: #dc3545;
 }
 
-.prontuario-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
+/* Vermelho */
 
-.stat-card {
-    background-color: #e9ecef;
-    padding: 1rem;
-    border-radius: 6px;
-    text-align: center;
-}
-
-.stat-card .value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #0056b3;
-}
-
-.stat-card .label {
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.historico-item {
-    border-left: 3px solid #0056b3;
-    padding-left: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.historico-item .data {
-    font-weight: 600;
+.agendamento-card strong {
+    font-size: 1.1rem;
     color: #333;
 }
 
-.historico-item .sintomas {
-    margin-top: 0.5rem;
+.agendamento-card small {
     color: #555;
 }

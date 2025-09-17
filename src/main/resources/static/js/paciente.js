@@ -209,34 +209,106 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderMeusAgendamentos() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meus Agendamentos</h3><ul id="lista-meus-agendamentos" class="medico-list"><li>Carregando...</li></ul>`;
+        contentDinamico.innerHTML = `<h3>Meus Agendamentos</h3><div id="agendamentos-container">Carregando...</div>`;
+
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
             if (!response.ok) throw new Error('Falha ao buscar agendamentos');
             const agendamentos = await response.json();
-            const listaUL = document.getElementById('lista-meus-agendamentos');
-            listaUL.innerHTML = '';
-            if (agendamentos.length === 0) {
-                listaUL.innerHTML = '<li>Você não possui agendamentos.</li>';
-                return;
+
+            const proximosAgendamentos = agendamentos.filter(ag => ag.status === 'PENDENTE' || ag.status === 'CONFIRMADO');
+            const historicoAgendamentos = agendamentos.filter(ag => ag.status !== 'PENDENTE' && ag.status !== 'CONFIRMADO');
+
+            proximosAgendamentos.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+            historicoAgendamentos.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+
+            let html = '<h4>Próximos Agendamentos</h4>';
+            if (proximosAgendamentos.length === 0) {
+                html += '<p>Nenhum próximo agendamento encontrado.</p>';
+            } else {
+                proximosAgendamentos.forEach(ag => {
+                    html += `
+                        <div class="agendamento-card status-${ag.status}">
+                            <div>
+                                <strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br>
+                                <small>Médico(a): ${ag.medico.nome} | Status: ${ag.status}</small>
+                            </div>
+                            <button class="btn-delete btn-cancelar-agendamento" data-id="${ag.idAgendamento}">Cancelar</button>
+                        </div>
+                    `;
+                });
             }
-            agendamentos.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
-            agendamentos.forEach(ag => {
-                const li = document.createElement('li');
-                li.className = 'medico-item';
-                li.style.display = 'flex'; li.style.justifyContent = 'space-between';
-                li.innerHTML = `<div><strong>[${ag.status}] ${new Date(ag.dataHora).toLocaleString('pt-BR')}</strong><br><small>Médico(a): ${ag.medico.nome}</small></div>`;
-                if (ag.status === 'PENDENTE' || ag.status === 'CONFIRMADO') {
-                    const btnCancel = document.createElement('button');
-                    btnCancel.className = 'btn-delete'; btnCancel.textContent = 'Cancelar';
-                    btnCancel.onclick = () => handleCancelarAgendamento(ag.idAgendamento);
-                    li.appendChild(btnCancel);
-                }
-                listaUL.appendChild(li);
-            });
+
+            html += '<hr><h4>Histórico de Agendamentos</h4>';
+            if (historicoAgendamentos.length === 0) {
+                html += '<p>Nenhum agendamento no seu histórico.</p>';
+            } else {
+                historicoAgendamentos.forEach(ag => {
+                    html += `
+                        <div class="agendamento-card status-${ag.status}">
+                            <div>
+                                <strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br>
+                                <small>Médico(a): ${ag.medico.nome} | Status: ${ag.status}</small>
+                            </div>
+                            ${ag.status === 'ATENDIDO' ? `<button class="btn-primary-doc btn-ver-detalhes" data-id="${ag.idAgendamento}">Ver Detalhes</button>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('agendamentos-container').innerHTML = html;
+
+            // Adiciona listeners aos botões
+            document.querySelectorAll('.btn-cancelar-agendamento').forEach(btn => btn.addEventListener('click', () => handleCancelarAgendamento(btn.dataset.id)));
+            document.querySelectorAll('.btn-ver-detalhes').forEach(btn => btn.addEventListener('click', () => handleVerDetalhesConsulta(btn.dataset.id)));
+
         } catch (err) {
             console.error(err);
-            contentDinamico.innerHTML = '<p>Erro ao carregar agendamentos.</p>';
+            contentDinamico.innerHTML = '<p>Erro ao carregar seus agendamentos.</p>';
+        }
+    }
+
+    // ADICIONE ESTA NOVA FUNÇÃO para lidar com o clique em "Ver Detalhes"
+    async function handleVerDetalhesConsulta(agendamentoId) {
+        try {
+            const [respPresc, respAtest, respExames] = await Promise.all([
+                fetchAuthenticated(`/api/prescricoes/agendamento/${agendamentoId}`),
+                fetchAuthenticated(`/api/atestados/agendamento/${agendamentoId}`),
+                fetchAuthenticated(`/api/exames/agendamento/${agendamentoId}`)
+            ]);
+
+            const prescricao = respPresc.ok ? await respPresc.json() : null;
+            const atestado = respAtest.ok ? await respAtest.json() : null;
+            const exames = respExames.ok ? await respExames.json() : [];
+
+            let modalHtml = `<div class="modal-content"><button class="modal-close">&times;</button><h4>Detalhes da Consulta</h4>`;
+
+            if (prescricao) {
+                modalHtml += `<div class="document-item"><h5>Prescrição</h5><pre class="content">${prescricao.medicamentos}</pre></div>`;
+            }
+            if (atestado) {
+                modalHtml += `<div class="document-item"><h5>Atestado</h5><pre class="content">${atestado.descricao}</pre></div>`;
+            }
+            if (exames.length > 0) {
+                modalHtml += `<div class="document-item"><h5>Exames Solicitados</h5><ul>`;
+                exames.forEach(ex => { modalHtml += `<li>${ex.tipo} - Resultado: ${ex.resultado || 'Aguardando'}</li>` });
+                modalHtml += `</ul></div>`;
+            }
+            if (!prescricao && !atestado && exames.length === 0) {
+                modalHtml += '<p>Nenhum documento foi gerado para esta consulta.</p>';
+            }
+
+            modalHtml += '</div>';
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = modalHtml;
+            document.body.appendChild(modal);
+            modal.querySelector('.modal-close').addEventListener('click', () => modal.remove());
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+        } catch (err) {
+            showToast('Erro ao carregar detalhes da consulta.', 'error');
         }
     }
 

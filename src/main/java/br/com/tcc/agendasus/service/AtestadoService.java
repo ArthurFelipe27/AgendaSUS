@@ -54,7 +54,6 @@ public class AtestadoService {
     public List<AtestadoResponseDTO> listarMinhas(Authentication auth) {
         Usuario usuarioLogado = (Usuario) auth.getPrincipal();
         List<Atestado> lista;
-
         if (usuarioLogado.getRole() == Role.PACIENTE) {
             lista = repository.findAllByPacienteIdUsuario(usuarioLogado.getId());
         } else if (usuarioLogado.getRole() == Role.MEDICO) {
@@ -68,5 +67,12 @@ public class AtestadoService {
     @Transactional(readOnly = true)
     public List<AtestadoResponseDTO> listarTodas() {
         return repository.findAll().stream().map(AtestadoResponseDTO::new).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public AtestadoResponseDTO buscarPorAgendamento(Long agendamentoId, Authentication auth) {
+        return repository.findByAgendamento_Id(agendamentoId)
+                .map(AtestadoResponseDTO::new)
+                .orElse(null);
     }
 }

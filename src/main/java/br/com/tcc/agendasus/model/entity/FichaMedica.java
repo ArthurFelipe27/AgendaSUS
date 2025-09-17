@@ -42,6 +42,9 @@ public class FichaMedica {
     @Column(columnDefinition = "TEXT")
     private String cirurgias;
     
+    @Column(name = "evolucao_medica", columnDefinition = "TEXT")
+    private String evolucaoMedica;
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 

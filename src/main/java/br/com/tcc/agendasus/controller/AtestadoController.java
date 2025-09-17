@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,8 +29,7 @@ public class AtestadoController {
 
     @PostMapping
     public ResponseEntity<AtestadoResponseDTO> criar(@RequestBody @Valid AtestadoCadastroDTO dados, Authentication auth) {
-        AtestadoResponseDTO response = service.criar(dados, auth);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(dados, auth));
     }
 
     @GetMapping("/meus")
@@ -40,5 +40,10 @@ public class AtestadoController {
     @GetMapping("/todas")
     public ResponseEntity<List<AtestadoResponseDTO>> listarTodas() {
         return ResponseEntity.ok(service.listarTodas());
+    }
+
+    @GetMapping("/agendamento/{id}")
+    public ResponseEntity<AtestadoResponseDTO> buscarPorAgendamento(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(service.buscarPorAgendamento(id, auth));
     }
 }

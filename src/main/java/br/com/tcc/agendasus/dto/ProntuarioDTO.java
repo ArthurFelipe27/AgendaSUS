@@ -5,28 +5,20 @@ import java.util.List;
 
 public record ProntuarioDTO(
     // Dados Pessoais
-    Long idPaciente,
-    String nome,
-    String email,
-    String telefone,
-    Integer idade,
-
+    Long idPaciente, String nome, String email, String telefone, Integer idade,
     // Estatísticas
-    long totalConsultasComMedico,
-    boolean temExames,
-    LocalDateTime proximaConsulta,
-
-    // NOVO CAMPO: Ficha da consulta mais recente
-    ConsultaAnteriorDTO fichaConsultaMaisRecente, 
-
-    // Histórico de consultas já atendidas
+    long totalConsultasComMedico, boolean temExames, LocalDateTime proximaConsulta,
+    // Detalhes da Consulta
+    ConsultaDetalhesDTO detalhesDaConsulta, // Campo principal agora
+    // Histórico de Outras Consultas
     List<ConsultaAnteriorDTO> historicoConsultas
 ) {
-    public record ConsultaAnteriorDTO(
-        LocalDateTime data,
-        String sintomas,
-        Integer diasSintomas, 
-        String alergias,
-        String cirurgias
+    // DTO para os detalhes da consulta SELECIONADA
+    public record ConsultaDetalhesDTO(
+        LocalDateTime data, String sintomas, String evolucaoMedica,
+        String prescricao, List<String> exames, String alergias, String cirurgias, Integer diasSintomas
     ) {}
+
+    // DTO para as consultas do histórico
+    public record ConsultaAnteriorDTO(LocalDateTime data, String sintomas) {}
 }

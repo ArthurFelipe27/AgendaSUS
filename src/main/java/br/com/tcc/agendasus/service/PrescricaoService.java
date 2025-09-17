@@ -69,4 +69,13 @@ public class PrescricaoService {
     public List<PrescricaoResponseDTO> listarTodas() {
         return repository.findAll().stream().map(PrescricaoResponseDTO::new).collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public PrescricaoResponseDTO buscarPorAgendamento(Long agendamentoId, Authentication auth) {
+        // Validação de segurança pode ser adicionada aqui para garantir que o usuário
+        // logado (paciente ou médico) tem permissão para ver este agendamento.
+        return repository.findByAgendamento_Id(agendamentoId)
+                .map(PrescricaoResponseDTO::new)
+                .orElse(null);
+    }
 }
