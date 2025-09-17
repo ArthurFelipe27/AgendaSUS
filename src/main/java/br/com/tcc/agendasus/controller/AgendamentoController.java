@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.Authentication; // <-- IMPORT NOVO
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,12 +48,6 @@ public class AgendamentoController {
         return ResponseEntity.ok(lista);
     }
 
-    @GetMapping("/{id}/prontuario")
-public ResponseEntity<ProntuarioDTO> getProntuarioDoAgendamento(@PathVariable Long id, Authentication authentication) {
-    ProntuarioDTO prontuario = agendamentoService.getProntuarioDoAgendamento(id, authentication);
-    return ResponseEntity.ok(prontuario);
-}
-
     @PutMapping("/{id}/status")
     public ResponseEntity<AgendamentoResponseDTO> atualizarStatus(
             @PathVariable Long id,
@@ -71,5 +65,12 @@ public ResponseEntity<ProntuarioDTO> getProntuarioDoAgendamento(@PathVariable Lo
         
         AgendamentoResponseDTO agendamentoCancelado = agendamentoService.cancelarAgendamentoPaciente(id, authentication);
         return ResponseEntity.ok(agendamentoCancelado);
+    }
+    
+    // --- O MÉTODO QUE ESTAVA FALTANDO ---
+    @GetMapping("/{id}/prontuario")
+    public ResponseEntity<ProntuarioDTO> getProntuarioDoAgendamento(@PathVariable Long id, Authentication authentication) {
+        ProntuarioDTO prontuario = agendamentoService.getProntuarioDoAgendamento(id, authentication);
+        return ResponseEntity.ok(prontuario);
     }
 }

@@ -98,48 +98,26 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar histórico.</li>'; }
     }
 
-    /**
-     * NOVA FUNÇÃO: Busca o prontuário completo e renderiza na tela
-     */
-    async function renderProntuarioPaciente(agendamentoId) { // Recebe ID do agendamento
+
+    async function renderProntuarioPaciente(agendamentoId) { // Recebe o ID do AGENDAMENTO
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<div>Carregando prontuário...</div>`;
 
         try {
-            // MUDANÇA AQUI: Chamando a nova API
+            // --- AQUI ESTÁ A CORREÇÃO ---
+            // A URL agora aponta para a API de agendamentos, não de pacientes.
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/prontuario`);
+            // -----------------------------
+
             if (!response || !response.ok) throw new Error('Falha ao carregar prontuário.');
 
-            // O resto da função continua o mesmo...
-            const prontuario = await response.json();
-            // ...
-            contentDinamico.innerHTML = `... (renderização do prontuário) ...`;
-            // ...
-            document.getElementById('btn-voltar-agenda').addEventListener('click', renderMinhaAgenda);
-        } catch (err) {
-            console.error(err);
-            contentDinamico.innerHTML = '<p>Erro ao carregar prontuário do paciente.</p>';
-        }
-    }
-
-    // Em: static/js/medico.js
-    // SUBSTITUA A FUNÇÃO INTEIRA ABAIXO:
-
-    async function renderProntuarioPaciente(pacienteId) {
-        const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div>Carregando prontuário...</div>`;
-
-        try {
-            const response = await fetchAuthenticated(`/api/pacientes/${pacienteId}/prontuario`);
-            if (!response || !response.ok) throw new Error('Falha ao carregar prontuário.');
             const prontuario = await response.json();
 
             const proximaConsultaStr = prontuario.proximaConsulta
                 ? new Date(prontuario.proximaConsulta).toLocaleString('pt-BR')
                 : 'Nenhuma';
 
-            // Constrói o HTML da ficha da consulta mais recente (se existir)
-            let fichaRecenteHtml = '<p>Nenhuma queixa recente registrada.</p>';
+            let fichaRecenteHtml = '<p>Nenhuma queixa principal registrada para esta consulta.</p>';
             if (prontuario.fichaConsultaMaisRecente) {
                 const ficha = prontuario.fichaConsultaMaisRecente;
                 fichaRecenteHtml = `
@@ -167,13 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="stat-card"><div class="value">${proximaConsultaStr}</div><div class="label">Próxima Consulta</div></div>
             </div>
             <hr>
-            
-            <h4>Queixa Principal (Último Registro)</h4>
+            <h4>Queixa Principal (Desta Consulta)</h4>
             <div class="document-item" style="background-color: #fffaf0;">
                 ${fichaRecenteHtml}
             </div>
             <hr>
-
             <h4>Histórico de Consultas Atendidas</h4>
             <div id="historico-consultas-container"></div>
         `;
