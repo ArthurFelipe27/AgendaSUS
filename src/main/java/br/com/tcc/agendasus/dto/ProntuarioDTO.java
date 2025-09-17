@@ -25,6 +25,7 @@ public record ProntuarioDTO(
     public record ConsultaAnteriorDTO(
         LocalDateTime data,
         String sintomas,
+        Integer diasSintomas, 
         String alergias,
         String cirurgias
     ) {}

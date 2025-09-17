@@ -212,6 +212,8 @@ public class AgendamentoService {
 
    // Em: AgendamentoService.java
 
+// Em: AgendamentoService.java
+
 @Transactional(readOnly = true)
 public ProntuarioDTO getProntuarioDoAgendamento(Long agendamentoId, Authentication authentication) {
     Usuario medicoLogado = (Usuario) authentication.getPrincipal();
@@ -227,45 +229,47 @@ public ProntuarioDTO getProntuarioDoAgendamento(Long agendamentoId, Authenticati
     Paciente paciente = agendamento.getPaciente();
     Long pacienteId = paciente.getIdUsuario();
 
-    // --- CÁLCULO DE IDADE SEGURO ---
-    Integer idade = null; // Começa como nulo
-    if (paciente.getDataNascimento() != null) {
-        idade = Period.between(paciente.getDataNascimento(), LocalDate.now()).getYears();
-    }
-
-    // O resto da lógica continua igual...
+    // --- Cálculos (sem alteração) ---
+    Integer idade = (paciente.getDataNascimento() != null) ? Period.between(paciente.getDataNascimento(), LocalDate.now()).getYears() : null;
     long totalConsultas = agendamentoRepository.countByPacienteIdUsuarioAndMedicoIdUsuarioAndStatus(pacienteId, medicoId, StatusAgendamento.ATENDIDO);
     boolean temExames = exameRepository.existsByPacienteIdUsuario(pacienteId);
     LocalDateTime proximaConsulta = agendamentoRepository
         .findFirstByPacienteIdUsuarioAndMedicoIdUsuarioAndDataHoraAfterOrderByDataHoraAsc(pacienteId, medicoId, LocalDateTime.now())
         .map(Agendamento::getDataHora).orElse(null);
+
+    // --- LÓGICA ATUALIZADA ---
+
+    // 1. Busca o histórico de consultas já ATENDIDAS
     List<ProntuarioDTO.ConsultaAnteriorDTO> historico = agendamentoRepository
         .findAllByPacienteIdUsuarioAndMedicoIdUsuarioAndStatus(pacienteId, medicoId, StatusAgendamento.ATENDIDO)
         .stream()
-        .map(ag -> new ProntuarioDTO.ConsultaAnteriorDTO(ag.getDataHora(), ag.getFichaMedica().getSintomas(), ag.getFichaMedica().getAlergias(), ag.getFichaMedica().getCirurgias()))
+        .map(ag -> new ProntuarioDTO.ConsultaAnteriorDTO(
+            ag.getDataHora(),
+            ag.getFichaMedica().getSintomas(),
+            ag.getFichaMedica().getDiasSintomas(), // <-- CORREÇÃO AQUI
+            ag.getFichaMedica().getAlergias(),
+            ag.getFichaMedica().getCirurgias()
+        ))
         .collect(Collectors.toList());
-
+        
+    // 2. Pega a ficha da consulta ATUAL
     FichaMedica fichaAtual = agendamento.getFichaMedica();
     ProntuarioDTO.ConsultaAnteriorDTO fichaConsultaAtual = new ProntuarioDTO.ConsultaAnteriorDTO(
         agendamento.getDataHora(),
         fichaAtual.getSintomas(),
+        fichaAtual.getDiasSintomas(), // <-- CORREÇÃO AQUI
         fichaAtual.getAlergias(),
         fichaAtual.getCirurgias()
     );
 
     return new ProntuarioDTO(
-        paciente.getIdUsuario(),
-        paciente.getUsuario().getNome(),
-        paciente.getUsuario().getEmail(),
-        paciente.getTelefone(),
-        idade, // Agora pode ser nulo
-        totalConsultas,
-        temExames,
-        proximaConsulta,
-        fichaConsultaAtual,
-        historico
+        paciente.getIdUsuario(), paciente.getUsuario().getNome(), paciente.getUsuario().getEmail(),
+        paciente.getTelefone(), idade, totalConsultas, temExames, proximaConsulta,
+        fichaConsultaAtual, historico
     );
 }
+
+   
 
     
 }

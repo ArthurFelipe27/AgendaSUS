@@ -117,15 +117,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? new Date(prontuario.proximaConsulta).toLocaleString('pt-BR')
                 : 'Nenhuma';
 
-            let fichaRecenteHtml = '<p>Nenhuma queixa principal registrada para esta consulta.</p>';
+            // Em: js/medico.js, dentro da função renderProntuarioPaciente
+
+            let fichaRecenteHtml = '<p>Nenhuma queixa recente registrada.</p>';
             if (prontuario.fichaConsultaMaisRecente) {
                 const ficha = prontuario.fichaConsultaMaisRecente;
                 fichaRecenteHtml = `
-                <div class="ficha-detalhe"><strong>Sintomas Relatados:</strong><p>${ficha.sintomas || 'Não informado'}</p></div>
-                <div class="ficha-detalhe"><strong>Dias com Sintomas:</strong><p>${ficha.diasSintomas || 'Não informado'}</p></div>
-                <div class="ficha-detalhe"><strong>Alergias Conhecidas:</strong><p>${ficha.alergias || 'Não informado'}</p></div>
-                <div class="ficha-detalhe"><strong>Cirurgias Prévias:</strong><p>${ficha.cirurgias || 'Não informado'}</p></div>
-            `;
+        <div class="ficha-detalhe"><strong>Sintomas Relatados:</strong><p>${ficha.sintomas || 'Não informado'}</p></div>
+        
+        <div class="ficha-detalhe"><strong>Dias com Sintomas:</strong><p>${ficha.diasSintomas || 'Não informado'}</p></div>
+        
+        <div class="ficha-detalhe"><strong>Alergias Conhecidas:</strong><p>${ficha.alergias || 'Não informado'}</p></div>
+        <div class="ficha-detalhe"><strong>Cirurgias Prévias:</strong><p>${ficha.cirurgias || 'Não informado'}</p></div>
+    `;
             }
 
             contentDinamico.innerHTML = `
