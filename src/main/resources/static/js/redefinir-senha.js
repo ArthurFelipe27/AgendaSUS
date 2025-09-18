@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tokenInput = document.getElementById('token');
     const novaSenhaInput = document.getElementById('novaSenha');
     const confirmaSenhaInput = document.getElementById('confirmaSenha');
-
     const API_URL = '/api/public/reset-password';
 
     resetPasswordForm.addEventListener('submit', async (event) => {
@@ -25,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await response.json();
             if (response.ok) {
-                showToast('Senha redefinida com sucesso! Redirecionando para o login...', 'success');
+                showToast('Senha redefinida com sucesso! Redirecionando...', 'success');
                 setTimeout(() => { window.location.href = 'login.html'; }, 2000);
             } else {
                 showToast(data.message || "Erro ao redefinir a senha.", 'error');

@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tokenDisplayDiv = document.getElementById('token-display');
     const emailInput = document.getElementById('email');
     const resetTokenCode = document.getElementById('reset-token-code');
-
     const API_URL = '/api/public/forgot-password';
 
     forgotPasswordForm.addEventListener('submit', async (event) => {

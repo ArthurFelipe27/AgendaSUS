@@ -1,38 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Seleciona o formulário
     const cadastroForm = document.getElementById('cadastro-form');
-
-    // --- URLs da API ---
     const API_URL_CADASTRO = '/api/usuarios';
     const API_URL_LOGIN = '/api/login';
 
-    // Adiciona o "ouvinte" de envio ao formulário
     cadastroForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-
-        // --- Coleta dos dados de todos os campos ---
         const nome = document.getElementById('nome').value;
         const email = document.getElementById('email').value;
         const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
         const senha = document.getElementById('senha').value;
-        const dataNascimento = document.getElementById('dataNascimento').value;
-        const telefone = document.getElementById('telefone').value;
-        const sexo = document.getElementById('sexo').value;
-        const nomeSocial = document.getElementById('nomeSocial').value;
-        const cep = document.getElementById('cep').value;
-        const estado = document.getElementById('regiao-administrativa').value;
-        const numero = document.getElementById('numero').value;
-        const complemento = document.getElementById('complemento').value;
+        const confirmaSenha = document.getElementById('confirmaSenha').value;
 
-        // Monta o DTO que o backend espera, com todos os novos campos
+        if (senha !== confirmaSenha) {
+            showToast("As senhas não coincidem.", "error");
+            return;
+        }
+
         const cadastroData = {
-            nome, email, cpf, senha, dataNascimento, telefone, sexo,
-            nomeSocial, cep, cidade, estado, numero, complemento
-            // A role será definida como PACIENTE no backend
+            nome: nome,
+            email: email,
+            cpf: cpf,
+            senha: senha,
+            dataNascimento: document.getElementById('dataNascimento').value,
+            telefone: document.getElementById('telefone').value,
+            sexo: document.getElementById('sexo').value,
+            nomeSocial: document.getElementById('nomeSocial').value,
+            cep: document.getElementById('cep').value,
+            regiaoAdministrativa: document.getElementById('regiao-administrativa').value,
+            numero: document.getElementById('numero').value,
+            complemento: document.getElementById('complemento').value
         };
 
         try {
-            // 1. Tenta realizar o CADASTRO
             const responseCadastro = await fetch(API_URL_CADASTRO, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -44,9 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast(errorData.message || "Falha no cadastro. Verifique os dados.", "error");
                 return;
             }
-            showToast("Cadastro realizado com sucesso! Fazendo login...", "success");
+            showToast("Cadastro realizado! Fazendo login...", "success");
 
-            // 2. SUCESSO! Faz o LOGIN AUTOMÁTICO
             const responseLogin = await fetch(API_URL_LOGIN, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -54,12 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!responseLogin.ok) {
-                showToast("Login automático falhou. Tente fazer login manualmente.", "error");
+                showToast("Login automático falhou. Tente fazer login.", "error");
                 setTimeout(() => { window.location.href = 'login.html'; }, 2000);
                 return;
             }
 
-            // 3. LOGIN OK! Salva tudo e redireciona
             const tokenData = await responseLogin.json();
             localStorage.setItem('jwtToken', tokenData.token);
             localStorage.setItem('userName', tokenData.nome);

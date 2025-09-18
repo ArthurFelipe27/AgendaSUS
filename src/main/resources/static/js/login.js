@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const emailInput = document.getElementById('email');
     const senhaInput = document.getElementById('senha');
-
     const API_URL_LOGIN = '/api/login';
 
     loginForm.addEventListener('submit', async (event) => {
@@ -20,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 localStorage.setItem('jwtToken', data.token);
                 localStorage.setItem('userName', data.nome);
-
                 switch (data.role) {
                     case 'PACIENTE':
                         window.location.href = 'paciente_dashboard.html';

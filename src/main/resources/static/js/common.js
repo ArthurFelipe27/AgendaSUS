@@ -5,9 +5,6 @@
 const token = localStorage.getItem('jwtToken');
 const userName = localStorage.getItem('userName');
 
-/**
- * Função auxiliar genérica para fazer requisições 'fetch' autenticadas.
- */
 async function fetchAuthenticated(url, options = {}) {
     const headers = {
         'Content-Type': 'application/json',
@@ -24,20 +21,13 @@ async function fetchAuthenticated(url, options = {}) {
     return response;
 }
 
-/**
- * Função de Logout Padrão
- */
 function logout() {
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('userName');
     window.location.href = 'login.html';
 }
 
-/**
- * Helper para exibir erros da API, priorizando uma div ou usando um toast.
- */
 async function handleApiError(response, errorDivId) {
-    const errorMessageDiv = document.getElementById(errorDivId);
     let errorMsg = 'Ocorreu um erro desconhecido.';
     try {
         const errorData = await response.json();
@@ -50,6 +40,7 @@ async function handleApiError(response, errorDivId) {
         errorMsg = `Erro ${response.status}: ${response.statusText}`;
     }
 
+    const errorMessageDiv = document.getElementById(errorDivId);
     if (errorMessageDiv) {
         errorMessageDiv.textContent = errorMsg;
         errorMessageDiv.style.display = 'block';
@@ -58,13 +49,10 @@ async function handleApiError(response, errorDivId) {
     }
 }
 
-/**
- * Função Reutilizável para buscar e renderizar o conteúdo público (Notícias)
- */
 async function renderNoticiasPublicas(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    container.innerHTML = `<h3>Notícias e Artigos</h3><div id="lista-noticias">Carregando...</div>`;
+    container.innerHTML = `<div class="admin-section-header"><h4>Notícias e Artigos</h4></div><div id="lista-noticias">Carregando...</div>`;
     try {
         const response = await fetch('/api/conteudo/publico');
         if (!response.ok) throw new Error('Falha ao buscar notícias.');
@@ -79,11 +67,7 @@ async function renderNoticiasPublicas(containerId) {
             const dataPublicacao = c.publicadoEm ? new Date(c.publicadoEm).toLocaleDateString('pt-BR') : 'Data não disponível';
             const item = document.createElement('div');
             item.className = 'document-item';
-            item.innerHTML = `
-                <h4 class="content-title">${c.titulo}</h4>
-                <p class="meta">Publicado por <strong>${c.autor.nome}</strong> em ${dataPublicacao} | Tipo: ${c.tipo}</p>
-                <div class="content-body">${c.corpo}</div>
-            `;
+            item.innerHTML = `<h4 class="content-title">${c.titulo}</h4><p class="meta">Publicado por <strong>${c.autor.nome}</strong> em ${dataPublicacao}</p><div class="content-body">${c.corpo}</div>`;
             listaDiv.appendChild(item);
         });
     } catch (err) {
@@ -92,9 +76,6 @@ async function renderNoticiasPublicas(containerId) {
     }
 }
 
-/**
- * Exibe uma notificação "Toast" na tela.
- */
 function showToast(message, type = 'info') {
     let backgroundColor;
     switch (type) {
@@ -109,11 +90,10 @@ function showToast(message, type = 'info') {
     }
     Toastify({
         text: message, duration: 3000, close: true, gravity: "top", position: "right", stopOnFocus: true,
-        style: { background: backgroundColor }
+        style: { background: backgroundColor, borderRadius: "6px" }
     }).showToast();
 }
 
-// Configuração Padrão de Boas-vindas e Logout
 document.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.getElementById('logout-button');
     const welcomeMessage = document.getElementById('welcome-message');
