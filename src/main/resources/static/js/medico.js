@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Seletores e Variáveis Globais ---
     const contentArea = document.getElementById('content-area');
-    let meuIdDeMedico = null; // Armazena o ID do médico logado para uso nas APIs
+    let meuIdDeMedico = null;
 
     // Constantes
     const DIAS_DA_SEMANA = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO", "DOMINGO"];
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initMedicoDashboard() {
         try {
             const respMe = await fetchAuthenticated('/api/usuarios/me');
-            if (!respMe.ok) throw new Error('Falha ao buscar perfil do médico.');
+            if (!respMe || !respMe.ok) throw new Error('Falha ao buscar perfil do médico.');
             const usuario = await respMe.json();
             meuIdDeMedico = usuario.id;
         } catch (e) {
@@ -45,13 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- SEÇÃO 1: VISUALIZAÇÃO DE AGENDAMENTOS E PRONTUÁRIOS ---
-
     async function renderMinhaAgenda() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<h3>Minha Agenda (Próximas Consultas)</h3><p>Clique em uma consulta para iniciar o atendimento.</p><ul id="lista-agendamentos-medico" class="medico-list"><li>Carregando...</li></ul>`;
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
-            if (!response.ok) throw new Error("Erro ao buscar agendamentos.");
+            if (!response) return;
             const todosAgendamentos = await response.json();
             const agendamentosAtivos = todosAgendamentos.filter(ag => ag.status === 'PENDENTE' || ag.status === 'CONFIRMADO');
             const listaUL = document.getElementById('lista-agendamentos-medico');
@@ -63,8 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
             agendamentosAtivos.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
             agendamentosAtivos.forEach(ag => {
                 const li = document.createElement('li');
-                li.className = 'medico-item-clicavel';
-                li.innerHTML = `<div><strong>[${ag.status}] ${new Date(ag.dataHora).toLocaleString('pt-BR')}</strong><br><small>Paciente: ${ag.paciente.nome}</small></div><span>Iniciar Atendimento &rarr;</span>`;
+                li.className = 'agendamento-card status-' + ag.status; // Usando o novo estilo
+                li.style.cursor = 'pointer';
+                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: ${ag.status}</small></div><span>Iniciar Atendimento &rarr;</span>`;
                 listaUL.appendChild(li);
                 li.addEventListener('click', () => renderTelaDeAtendimento(ag.idAgendamento));
             });
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         contentDinamico.innerHTML = `<h3>Histórico de Atendimentos</h3><p>Clique em um atendimento para rever o prontuário.</p><ul id="lista-historico-medico" class="medico-list"><li>Carregando...</li></ul>`;
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
-            if (!response.ok) throw new Error("Erro ao buscar agendamentos.");
+            if (!response) return;
             const todosAgendamentos = await response.json();
             const agendamentosInativos = todosAgendamentos.filter(ag => ag.status !== 'PENDENTE' && ag.status !== 'CONFIRMADO');
             const listaUL = document.getElementById('lista-historico-medico');
@@ -88,10 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
             agendamentosInativos.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
             agendamentosInativos.forEach(ag => {
                 const li = document.createElement('li');
-                li.className = 'medico-item-clicavel';
-                li.innerHTML = `<div><strong>[${ag.status}] ${new Date(ag.dataHora).toLocaleString('pt-BR')}</strong><br><small>Paciente: ${ag.paciente.nome}</small></div><span>Ver Prontuário &rarr;</span>`;
+                li.className = 'agendamento-card status-' + ag.status;
+                li.style.cursor = 'pointer';
+                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: ${ag.status}</small></div><span>Ver Prontuário &rarr;</span>`;
                 listaUL.appendChild(li);
-                li.addEventListener('click', () => renderTelaDeAtendimento(ag.idAgendamento, true)); // Passa 'true' para modo histórico
+                li.addEventListener('click', () => renderTelaDeAtendimento(ag.idAgendamento, true));
             });
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar histórico.</li>'; }
     }
@@ -101,68 +102,47 @@ document.addEventListener('DOMContentLoaded', () => {
         contentDinamico.innerHTML = `<div>Carregando atendimento...</div>`;
         try {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/prontuario`);
-            if (!response || !response.ok) throw new Error('Falha ao carregar dados do atendimento.');
+            if (!response) return;
             const prontuario = await response.json();
             const consulta = prontuario.detalhesDaConsulta;
 
             if (isHistorico) {
-                // --- MODO HISTÓRICO (SOMENTE LEITURA) ---
+                // MODO HISTÓRICO (SOMENTE LEITURA)
                 let examesHtml = '<h5>Exames Solicitados</h5>';
                 if (consulta.exames && consulta.exames.length > 0) {
                     examesHtml += '<ul>';
                     consulta.exames.forEach(exame => { examesHtml += `<li>${exame}</li>`; });
                     examesHtml += '</ul>';
-                } else {
-                    examesHtml += '<p>Nenhum exame solicitado nesta consulta.</p>';
-                }
+                } else { examesHtml += '<p>Nenhum exame solicitado nesta consulta.</p>'; }
 
                 let prescricaoHtml = '<h5>Prescrição</h5>';
                 if (consulta.prescricao) {
                     prescricaoHtml += `<pre class="content">${consulta.prescricao}</pre>`;
-                } else {
-                    prescricaoHtml += '<p>Nenhuma prescrição gerada para esta consulta.</p>';
-                }
+                } else { prescricaoHtml += '<p>Nenhuma prescrição gerada para esta consulta.</p>'; }
 
                 contentDinamico.innerHTML = `
-                    <div class="admin-section-header"><h3>Prontuário do Atendimento</h3><button class="btn-cancel" id="btn-voltar-historico">&larr; Voltar</button></div>
-                    <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nome}</p><p><strong>Data:</strong> ${new Date(consulta.data).toLocaleString('pt-BR')}</p></div>
-                    <hr>
-                    <div class="document-item" style="background-color: #fffaf0;">
-                        <div class="ficha-detalhe"><strong>Sintomas Relatados:</strong><p>${consulta.sintomas || 'N/A'}</p></div>
-                        <div class="ficha-detalhe"><strong>Evolução Médica:</strong><p>${consulta.evolucaoMedica || 'Nenhuma evolução registrada.'}</p></div>
-                    </div>
-                    <hr>
-                    <div class="document-item">${prescricaoHtml}</div>
-                    <hr>
-                    <div class="document-item">${examesHtml}</div>`;
+                    <div class="admin-section-header"><h3>Prontuário do Atendimento</h3><button class="btn btn-secondary" id="btn-voltar-historico">&larr; Voltar ao Histórico</button></div>
+                    <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nome}</p><p><strong>Data:</strong> ${new Date(consulta.data).toLocaleString('pt-BR')}</p></div><hr>
+                    <div class="document-item" style="background-color: #fffaf0;"><div class="ficha-detalhe"><strong>Sintomas Relatados:</strong><p>${consulta.sintomas || 'N/A'}</p></div><div class="ficha-detalhe"><strong>Evolução Médica:</strong><p>${consulta.evolucaoMedica || 'Nenhuma evolução registrada.'}</p></div></div><hr>
+                    <div class="document-item">${prescricaoHtml}</div><hr><div class="document-item">${examesHtml}</div>`;
                 document.getElementById('btn-voltar-historico').addEventListener('click', renderHistoricoDeAtendimentos);
-
             } else {
-                // --- MODO ATENDIMENTO (INTERATIVO) ---
+                // MODO ATENDIMENTO (INTERATIVO)
                 let examesCheckboxesHtml = '';
-                LISTA_EXAMES_COMUNS.forEach(exame => {
-                    examesCheckboxesHtml += `<div class="checkbox-group"><input type="checkbox" id="exame-${exame.replace(/\s+/g, '-')}" name="exames" value="${exame}"><label for="exame-${exame.replace(/\s+/g, '-')}">${exame}</label></div>`;
-                });
+                LISTA_EXAMES_COMUNS.forEach(exame => { examesCheckboxesHtml += `<div class="checkbox-group"><input type="checkbox" id="exame-${exame.replace(/\s+/g, '-')}" name="exames" value="${exame}"><label for="exame-${exame.replace(/\s+/g, '-')}">${exame}</label></div>`; });
                 contentDinamico.innerHTML = `
-                    <div class="admin-section-header"><h3>Atendimento em Andamento</h3><button class="btn-cancel" id="btn-voltar-agenda">&larr; Voltar</button></div>
+                    <div class="admin-section-header"><h3>Atendimento em Andamento</h3><button class="btn btn-secondary" id="btn-voltar-agenda">&larr; Voltar para Agenda</button></div>
                     <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nome} (${prontuario.idade} anos)</p><p><strong>Queixa Principal:</strong> ${consulta.sintomas}</p></div>
                     <form id="form-finalizar-consulta" class="booking-form-container">
-                        <div id="atendimento-error-message" class="error-message" style="display:none;"></div>
                         <div class="input-group"><label for="evolucao">Evolução Médica</label><textarea id="evolucao" rows="8"></textarea></div>
                         <div class="input-group"><label for="prescricao">Prescrição Médica</label><textarea id="prescricao" rows="8"></textarea></div>
                         <div class="input-group"><label>Solicitação de Exames</label><div class="checkbox-container">${examesCheckboxesHtml}</div></div>
-                        <div class="form-actions"><button type="submit" class="btn-confirm">Finalizar e Salvar Consulta</button></div>
+                        <div class="form-actions"><button type="submit" class="btn btn-success">Finalizar e Salvar Consulta</button></div>
                     </form>`;
                 document.getElementById('btn-voltar-agenda').addEventListener('click', renderMinhaAgenda);
-                document.getElementById('form-finalizar-consulta').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    handleFinalizarConsulta(agendamentoId);
-                });
+                document.getElementById('form-finalizar-consulta').addEventListener('submit', e => { e.preventDefault(); handleFinalizarConsulta(agendamentoId); });
             }
-        } catch (err) {
-            console.error(err);
-            contentDinamico.innerHTML = '<p>Erro ao carregar dados do atendimento.</p>';
-        }
+        } catch (err) { console.error(err); contentDinamico.innerHTML = '<p>Erro ao carregar dados do atendimento.</p>'; }
     }
 
     async function handleFinalizarConsulta(agendamentoId) {
@@ -174,24 +154,19 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/finalizar`, { method: 'POST', body: JSON.stringify(dto) });
-            if (response.ok) {
+            if (response && response.ok) {
                 showToast('Consulta finalizada com sucesso!', 'success');
                 renderHistoricoDeAtendimentos();
-            } else {
-                await handleApiError(response, 'atendimento-error-message');
-            }
-        } catch (err) {
-            showToast('Erro de rede ao finalizar a consulta.', 'error');
-        }
+            } else { await handleApiError(response, 'atendimento-error-message'); }
+        } catch (err) { showToast('Erro de rede ao finalizar a consulta.', 'error'); }
     }
 
     // --- SEÇÃO 2: GERENCIAMENTO DE HORÁRIOS, CONTEÚDO E PERFIL ---
-
     async function renderGerenciarHorarios() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         let htmlForm = `<h3>Meus Horários Disponíveis</h3><p>Adicione ou remova horários.</p><div id="horarios-error-message" class="error-message" style="display:none;"></div><div class="schedule-builder">`;
         DIAS_DA_SEMANA.forEach(dia => { htmlForm += `<div class="schedule-day-card" id="card-${dia}"><h5>${dia.charAt(0) + dia.slice(1).toLowerCase()}</h5><div class="add-time-form"><input type="time" class="time-input" data-dia="${dia}"><button type="button" class="btn-add-time" data-dia="${dia}">+</button></div><div class="time-tags-container" id="tags-${dia}"></div></div>`; });
-        htmlForm += `</div><div class="form-actions" style="margin-top: 1.5rem;"><button type="button" class="btn-confirm" id="btn-salvar-agenda">Salvar Agenda</button></div>`;
+        htmlForm += `</div><div class="form-actions" style="margin-top: 1.5rem;"><button type="button" class="btn btn-success" id="btn-salvar-agenda">Salvar Agenda</button></div>`;
         contentDinamico.innerHTML = htmlForm;
         try {
             const respHorarios = await fetchAuthenticated(`/api/medicos/${meuIdDeMedico}/horarios`);
@@ -244,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderFormularioConteudo() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Será salvo como rascunho para aprovação.</p><form id="form-conteudo"><div id="conteudo-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Será salvo como rascunho para aprovação.</p><form id="form-conteudo"><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions"><button type="submit" class="btn btn-success">Enviar para Aprovação</button></div></form></div>`;
         document.getElementById('form-conteudo').addEventListener('submit', handleConteudoSubmit);
     }
 
@@ -260,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderMeuPerfil() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meu Perfil</h3><div id="perfil-info" class="document-item">Carregando...</div><hr><h4>Alterar Senha</h4><div class="booking-form-container"><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn-confirm">Salvar</button></div></form></div>`;
+        contentDinamico.innerHTML = `<h3>Meu Perfil</h3><div id="perfil-info" class="document-item">Carregando...</div><hr><h4>Alterar Senha</h4><div class="booking-form-container"><form id="form-alterar-senha"><div class="input-group"><label for="nova-senha">Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label for="confirma-senha">Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
         try {
             fetchAuthenticated('/api/usuarios/me').then(response => response.json()).then(usuario => {
                 document.getElementById('perfil-info').innerHTML = `<p><strong>Nome:</strong> ${usuario.nome}</p><p><strong>Email:</strong> ${usuario.email}</p><p><strong>CPF:</strong> ${usuario.cpf}</p>${usuario.crm ? `<p><strong>CRM:</strong> ${usuario.crm}</p>` : ''}`;
@@ -293,6 +268,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- INICIALIZAÇÃO ---
     initMedicoDashboard();
 });
