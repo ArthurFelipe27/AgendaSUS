@@ -34,6 +34,7 @@ public class Exame {
     @JoinColumn(name = "id_paciente", nullable = false)
     private Paciente paciente;
 
+    // --- CAMPO QUE FALTAVA ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_agendamento")
     private Agendamento agendamento;
