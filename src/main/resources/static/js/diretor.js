@@ -67,19 +67,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const regioesAdmin = ["Plano Piloto", "Gama", "Taguatinga", "Brazlândia", "Sobradinho", "Planaltina", "Paranoá", "Núcleo Bandeirante", "Ceilândia", "Guará", "Cruzeiro", "Samambaia", "Santa Maria", "São Sebastião", "Recanto das Emas", "Lago Sul", "Riacho Fundo", "Lago Norte", "Candangolândia", "Águas Claras", "Riacho Fundo II", "Sudoeste/Octogonal", "Varjão", "Park Way", "SCIA (Estrutural)", "Sobradinho II", "Jardim Botânico", "Itapoã", "SIA", "Vicente Pires", "Fercal", "Sol Nascente/Pôr do Sol", "Arniqueira"];
         let optionsHtml = '<option value="" disabled selected>Selecione...</option>';
         regioesAdmin.sort().forEach(ra => { optionsHtml += `<option value="${ra}">${ra}</option>`; });
+
         formContainer.innerHTML = `
-            <div class="booking-form-container">
-                <h5>Cadastrar Nova Unidade</h5>
-                <form id="form-cad-unidade">
-                    <div class="input-group"><label>Nome da Unidade</label><input type="text" id="unidade-nome" required></div>
-                    <div class="input-group"><label>Endereço</label><input type="text" id="unidade-endereco" required></div>
-                    <div class="input-group"><label>Região Administrativa</label><select id="unidade-ra" required>${optionsHtml}</select></div>
-                    <div class="input-group"><label>UF</label><input type="text" id="unidade-uf" value="DF" required readonly></div>
-                    <div class="input-group"><label>CEP</label><input type="text" id="unidade-cep" required maxlength="8"></div>
-                    <div class="input-group"><label>Telefone</label><input type="text" id="unidade-telefone"></div>
-                    <button type="submit" class="btn btn-success">Salvar Unidade</button>
-                </form>
-            </div>`;
+        <div class="booking-form-container">
+            <h5>Cadastrar Nova Unidade</h5>
+            <form id="form-cad-unidade">
+                <div class="input-group"><label>Nome da Unidade</label><input type="text" id="unidade-nome" required></div>
+                <div class="input-group"><label>Endereço</label><input type="text" id="unidade-endereco" required></div>
+                <div class="input-group"><label>Região Administrativa</label><select id="unidade-ra" required>${optionsHtml}</select></div>
+                <div class="input-group"><label>CEP</label><input type="text" id="unidade-cep" placeholder="Apenas números" required maxlength="8"></div>
+                <div class="input-group"><label>Telefone</label><input type="text" id="unidade-telefone"></div>
+                <button type="submit" class="btn btn-success">Salvar Unidade</button>
+            </form>
+        </div>`;
         document.getElementById('form-cad-unidade').addEventListener('submit', handleCadastroUnidadeSubmit);
     }
 
@@ -89,10 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Falha ao buscar unidades');
             const unidades = await response.json();
             const container = document.getElementById('lista-unidades');
+
+            // CORREÇÃO NA COLUNA DA TABELA
             let tableHTML = `<table class="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>Região Administrativa</th></tr></thead><tbody>`;
+
             if (unidades.length === 0) {
                 tableHTML += '<tr><td colspan="3">Nenhuma unidade cadastrada.</td></tr>';
             } else {
+                // CORREÇÃO NO CAMPO EXIBIDO
                 unidades.forEach(u => tableHTML += `<tr><td>${u.id}</td><td>${u.nome}</td><td>${u.regiaoAdministrativa}</td></tr>`);
             }
             tableHTML += '</tbody></table>';
@@ -106,9 +110,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleCadastroUnidadeSubmit(event) {
         event.preventDefault();
         const dados = {
-            nome: document.getElementById('unidade-nome').value, endereco: document.getElementById('unidade-endereco').value,
-            regiaoAdministrativa: document.getElementById('unidade-ra').value, uf: document.getElementById('unidade-uf').value,
-            cep: document.getElementById('unidade-cep').value, telefone: document.getElementById('unidade-telefone').value
+            nome: document.getElementById('unidade-nome').value,
+            endereco: document.getElementById('unidade-endereco').value,
+            regiaoAdministrativa: document.getElementById('unidade-ra').value,
+            cep: document.getElementById('unidade-cep').value,
+            telefone: document.getElementById('unidade-telefone').value
         };
         try {
             const response = await fetchAuthenticated('/api/unidades-saude', { method: 'POST', body: JSON.stringify(dados) });
@@ -116,7 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Unidade cadastrada com sucesso!', 'success');
                 document.getElementById('unidade-form-container').style.display = 'none';
                 await carregarListaUnidades();
-            } else { await handleApiError(response, 'unidade-error-message'); }
+            } else {
+                await handleApiError(response, 'unidade-error-message');
+            }
         } catch (err) { showToast('Erro de rede.', 'error'); }
     }
 

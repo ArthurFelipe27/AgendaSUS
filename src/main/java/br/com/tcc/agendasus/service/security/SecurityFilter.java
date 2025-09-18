@@ -5,16 +5,17 @@ import java.util.Optional;
 
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter; // Import para corrigir o aviso
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import br.com.tcc.agendasus.model.entity.Usuario;
-import br.com.tcc.agendasus.repository.UsuarioRepository; 
+import br.com.tcc.agendasus.model.entity.Usuario; // Import necessário
+import br.com.tcc.agendasus.repository.UsuarioRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse; 
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
@@ -36,11 +37,8 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         if (tokenJWT != null) {
             var subject = tokenService.getSubject(tokenJWT);
-            
-            // Só tentamos autenticar se o token for válido E o subject (email) existir
             if (subject != null) {
                 Optional<Usuario> optionalUsuario = usuarioRepository.findByEmail(subject);
-                
                 if (optionalUsuario.isPresent()) {
                     var usuario = optionalUsuario.get();
                     var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
@@ -48,6 +46,20 @@ public class SecurityFilter extends OncePerRequestFilter {
                 }
             }
         }
+
+        // --- NOSSO NOVO CÓDIGO DE DEBUG ---
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("==================== DEBUG SPRING SECURITY ====================");
+        System.out.println("URL da Requisição: " + request.getMethod() + " " + request.getRequestURI());
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            System.out.println("Usuário Autenticado: " + authentication.getName());
+            System.out.println("Permissões (Authorities): " + authentication.getAuthorities());
+        } else {
+            System.out.println("Usuário: ANÔNIMO");
+        }
+        System.out.println("=============================================================");
+        // --- FIM DO CÓDIGO DE DEBUG ---
 
         filterChain.doFilter(request, response);
     }

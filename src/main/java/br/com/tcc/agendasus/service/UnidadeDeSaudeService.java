@@ -20,19 +20,18 @@ public class UnidadeDeSaudeService {
         this.repository = repository;
     }
 
-    @Transactional
-    public UnidadeSaudeResponseDTO criar(UnidadeSaudeCadastroDTO dados) {
-        UnidadeDeSaude novaUnidade = new UnidadeDeSaude();
-        novaUnidade.setNome(dados.nome());
-        novaUnidade.setEndereco(dados.endereco());
-        novaUnidade.setCidade(dados.cidade());
-        novaUnidade.setUf(dados.uf());
-        novaUnidade.setCep(dados.cep());
-        novaUnidade.setTelefone(dados.telefone());
+@Transactional
+public UnidadeSaudeResponseDTO criar(UnidadeSaudeCadastroDTO dados) {
+    UnidadeDeSaude novaUnidade = new UnidadeDeSaude();
+    novaUnidade.setNome(dados.nome());
+    novaUnidade.setEndereco(dados.endereco());
+    novaUnidade.setRegiaoAdministrativa(dados.regiaoAdministrativa()); // Define o campo correto
+    novaUnidade.setCep(dados.cep());
+    novaUnidade.setTelefone(dados.telefone());
 
-        UnidadeDeSaude unidadeSalva = repository.save(novaUnidade);
-        return new UnidadeSaudeResponseDTO(unidadeSalva);
-    }
+    UnidadeDeSaude unidadeSalva = repository.save(novaUnidade);
+    return new UnidadeSaudeResponseDTO(unidadeSalva);
+}
 
     @Transactional(readOnly = true)
     public List<UnidadeSaudeResponseDTO> listarTodas() {

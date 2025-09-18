@@ -29,11 +29,9 @@ public class UnidadeDeSaude {
     @Column(nullable = false)
     private String endereco;
     
-    @Column(nullable = false)
-    private String cidade;
-
-    @Column(nullable = false, length = 2)
-    private String uf;
+    // GARANTA QUE O NOME DO CAMPO ESTEJA CORRETO (camelCase)
+    @Column(name = "regiao_administrativa", nullable = false)
+    private String regiaoAdministrativa;
     
     @Column(nullable = false, length = 10)
     private String cep;
@@ -47,8 +45,13 @@ public class UnidadeDeSaude {
     private LocalDateTime atualizadoEm;
 
     @PrePersist
-    protected void onCreate() { criadoEm = LocalDateTime.now(); atualizadoEm = LocalDateTime.now(); }
+    protected void onCreate() {
+        criadoEm = LocalDateTime.now();
+        atualizadoEm = LocalDateTime.now();
+    }
 
     @PreUpdate
-    protected void onUpdate() { atualizadoEm = LocalDateTime.now(); }
+    protected void onUpdate() {
+        atualizadoEm = LocalDateTime.now();
+    }
 }
