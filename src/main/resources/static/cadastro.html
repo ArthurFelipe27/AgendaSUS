@@ -5,18 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - AgendaSUS</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>
-    <main class="login-container" style="max-width: 800px;">
+<body class="form-body">
+    <main class="login-container wide">
         <form id="cadastro-form" class="login-form">
             <h2>Crie sua Conta no AgendaSUS</h2>
             <p>Preencha seus dados para começar a agendar.</p>
-            <div id="error-message" class="error-message" role="alert" aria-live="polite" style="display: none;"></div>
-
             <div class="form-sections">
-
                 <fieldset class="form-fieldset">
                     <legend>Dados Pessoais</legend>
                     <div class="input-group"><label for="nome">Nome Completo</label><input type="text" id="nome"
@@ -37,13 +36,11 @@
                     <div class="input-group"><label for="telefone">Telefone / Celular</label><input type="tel"
                             id="telefone" required></div>
                 </fieldset>
-
                 <fieldset class="form-fieldset">
                     <legend>Endereço (Opcional)</legend>
                     <div class="input-group"><label for="cep">CEP</label><input type="text" id="cep" maxlength="8">
                     </div>
-                    <div class="input-group">
-                        <label for="regiao-administrativa">Região Administrativa</label>
+                    <div class="input-group"><label for="regiao-administrativa">Região Administrativa (DF)</label>
                         <select id="regiao-administrativa">
                             <option value="" selected>Selecione sua RA...</option>
                             <option value="Plano Piloto">Plano Piloto</option>
@@ -85,7 +82,6 @@
                     <div class="input-group"><label for="complemento">Complemento</label><input type="text"
                             id="complemento"></div>
                 </fieldset>
-
                 <fieldset class="form-fieldset full-width">
                     <legend>Dados de Acesso</legend>
                     <div class="input-group"><label for="email">E-mail</label><input type="email" id="email" required>
@@ -98,18 +94,12 @@
                             id="confirmaSenha" required></div>
                 </fieldset>
             </div>
-
             <button type="submit" class="btn-login" style="margin-top: 1rem;">Finalizar Cadastro</button>
-
-            <div class="footer-links">
-                <a href="login.html">Já tem uma conta? Faça login</a>
-            </div>
+            <div class="footer-links"><a href="login.html">Já tem uma conta? Faça login</a></div>
         </form>
     </main>
-
     <script src="js/common.js"></script>
     <script src="js/cadastro.js"></script>
-
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>
@@ -117,9 +107,7 @@
         </div>
     </div>
     <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-    <script>
-        new window.VLibras.Widget('https://vlibras.gov.br/app');
-    </script>
+    <script> new window.VLibras.Widget('https://vlibras.gov.br/app'); </script>
 </body>
 
 </html>

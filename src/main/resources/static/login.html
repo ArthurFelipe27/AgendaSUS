@@ -12,27 +12,30 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>
+<body class="form-body">
     <main class="login-container">
         <form id="login-form" class="login-form">
             <h2>AgendaSUS</h2>
             <p>Acesse sua conta para continuar</p>
             <div class="input-group">
                 <label for="email">E-mail</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" required autocomplete="email">
             </div>
             <div class="input-group">
                 <label for="senha">Senha</label>
-                <input type="password" id="senha" name="senha" required>
+                <input type="password" id="senha" required autocomplete="current-password">
             </div>
-            <div id="error-message" class="error-message" role="alert" aria-live="polite"></div>
-            <button type="submit" class="btn-login">Entrar</button>
             <div class="footer-links">
                 <a href="cadastro.html">Não tem uma conta? Cadastre-se</a>
                 <a href="esqueci-senha.html" style="margin-top: 10px; display: block;">Esqueci minha senha</a>
             </div>
+            <button type="submit" class="btn-login" style="margin-top: 1.5rem;">Entrar</button>
         </form>
     </main>
+
+    <script src="js/common.js"></script>
+    <script src="js/login.js"></script>
+
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>
@@ -40,11 +43,7 @@
         </div>
     </div>
     <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-    <script>
-        new window.VLibras.Widget('https://vlibras.gov.br/app');
-    </script>
-    <script src="js/common.js"></script>
-    <script src="js/login.js"></script>
+    <script> new window.VLibras.Widget('https://vlibras.gov.br/app'); </script>
 </body>
 
 </html>
