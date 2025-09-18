@@ -324,6 +324,65 @@ a:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.btn-full-width {
+    width: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Variações de Cor */
+.btn-primary {
+    background: linear-gradient(90deg, #0056b3, #007bff);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(90deg, #004494, #0069d9);
+}
+
+.btn-success {
+    background: #198754;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #157347;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #bb2d3b;
+}
+
+.btn-secondary {
+    border: 1px solid #6c757d;
+    background-color: transparent;
+    color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
 /* === 6. DASHBOARD E COMPONENTES === */
 .welcome-header h2 {
     color: #212529;
@@ -648,13 +707,6 @@ a:hover {
         transform: rotate(360deg);
     }
 }
-
-/* ===================================================================
-   AGENDA SUS - ESTILOS GERAIS
-   Versão Final Polida + Ajustes Extras + Estilos Médico
-   =================================================================== */
-
-/* (O restante do CSS anterior permanece igual até a seção 10 - LOADING SPINNER) */
 
 /* === 11. AGENDA DO MÉDICO === */
 .medico-list {
@@ -984,4 +1036,43 @@ a:hover {
         transform: scale(1);
         opacity: 1;
     }
+}
+
+.token-box {
+    background-color: #e9ecef;
+    padding: 1rem;
+    border-radius: 8px;
+    /* Borda um pouco mais suave */
+    border: 1px solid #dee2e6;
+    margin-top: 1rem;
+    display: flex;
+    /* Para alinhar o token e o botão */
+    align-items: center;
+    gap: 1rem;
+}
+
+.token-box code {
+    font-family: 'Courier New', Courier, monospace;
+    flex-grow: 1;
+    /* Faz o token ocupar o espaço disponível */
+    overflow-wrap: break-word;
+    /* A propriedade mágica que quebra o texto longo */
+    word-break: break-all;
+}
+
+.btn-copy {
+    flex-shrink: 0;
+    /* Impede que o botão encolha */
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-copy:hover {
+    background-color: #5a6268;
 }
