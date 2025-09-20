@@ -6,10 +6,12 @@ import java.util.List;
 public record ProntuarioDTO(
     // Dados Pessoais
     Long idPaciente, String nome, String email, String telefone, Integer idade,
+     String nomeUnidade,
+    String regiaoAdministrativaUnidade,
     // Estatísticas
     long totalConsultasComMedico, boolean temExames, LocalDateTime proximaConsulta,
     // Detalhes da Consulta
-    ConsultaDetalhesDTO detalhesDaConsulta, // Campo principal agora
+    ConsultaDetalhesDTO detalhesDaConsulta, 
     // Histórico de Outras Consultas
     List<ConsultaAnteriorDTO> historicoConsultas
 ) {

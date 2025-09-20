@@ -23,15 +23,18 @@ import br.com.tcc.agendasus.dto.FinalizarConsultaDTO;
 import br.com.tcc.agendasus.dto.HorarioDisponivelDTO;
 import br.com.tcc.agendasus.dto.ProntuarioDTO;
 import br.com.tcc.agendasus.model.entity.Agendamento;
+import br.com.tcc.agendasus.model.entity.Atestado;
 import br.com.tcc.agendasus.model.entity.Exame;
 import br.com.tcc.agendasus.model.entity.FichaMedica;
 import br.com.tcc.agendasus.model.entity.Medico;
 import br.com.tcc.agendasus.model.entity.Paciente;
 import br.com.tcc.agendasus.model.entity.Prescricao;
+import br.com.tcc.agendasus.model.entity.UnidadeDeSaude;
 import br.com.tcc.agendasus.model.entity.Usuario;
 import br.com.tcc.agendasus.model.enums.Role;
 import br.com.tcc.agendasus.model.enums.StatusAgendamento;
 import br.com.tcc.agendasus.repository.AgendamentoRepository;
+import br.com.tcc.agendasus.repository.AtestadoRepository;
 import br.com.tcc.agendasus.repository.ExameRepository;
 import br.com.tcc.agendasus.repository.FichaMedicaRepository;
 import br.com.tcc.agendasus.repository.MedicoRepository;
@@ -48,6 +51,7 @@ public class AgendamentoService {
     private final ObjectMapper objectMapper;
     private final ExameRepository exameRepository;
     private final PrescricaoRepository prescricaoRepository;
+    private final AtestadoRepository atestadoRepository; // Dependência necessária para o atestado
 
     private static final Map<DayOfWeek, String> DIAS_DA_SEMANA_MAP = Map.of(
         DayOfWeek.MONDAY, "SEGUNDA", DayOfWeek.TUESDAY, "TERCA", DayOfWeek.WEDNESDAY, "QUARTA",
@@ -60,7 +64,7 @@ public class AgendamentoService {
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FichaMedicaRepository fichaMedicaRepository,
                               PacienteRepository pacienteRepository, MedicoRepository medicoRepository,
                               ObjectMapper objectMapper, ExameRepository exameRepository,
-                              PrescricaoRepository prescricaoRepository) {
+                              PrescricaoRepository prescricaoRepository, AtestadoRepository atestadoRepository) {
         this.agendamentoRepository = agendamentoRepository;
         this.fichaMedicaRepository = fichaMedicaRepository;
         this.pacienteRepository = pacienteRepository;
@@ -68,6 +72,7 @@ public class AgendamentoService {
         this.objectMapper = objectMapper;
         this.exameRepository = exameRepository;
         this.prescricaoRepository = prescricaoRepository;
+        this.atestadoRepository = atestadoRepository; // Injeção de dependência
     }
 
     @Transactional
@@ -80,9 +85,7 @@ public class AgendamentoService {
             .orElseThrow(() -> new RuntimeException("Paciente não encontrado."));
         Medico medico = medicoRepository.findById(dados.idMedico())
             .orElseThrow(() -> new RuntimeException("Médico não encontrado."));
-
         validarDisponibilidadeHorario(medico, dados.dataHora());
-
         FichaMedica novaFicha = new FichaMedica();
         novaFicha.setPaciente(paciente);
         novaFicha.setSintomas(dados.sintomas());
@@ -90,7 +93,6 @@ public class AgendamentoService {
         novaFicha.setAlergias(dados.alergias());
         novaFicha.setCirurgias(dados.cirurgias());
         FichaMedica fichaSalva = fichaMedicaRepository.save(novaFicha);
-
         Agendamento novoAgendamento = new Agendamento();
         novoAgendamento.setPaciente(paciente);
         novoAgendamento.setMedico(medico);
@@ -98,10 +100,9 @@ public class AgendamentoService {
         novoAgendamento.setDataHora(dados.dataHora());
         novoAgendamento.setStatus(StatusAgendamento.PENDENTE);
         Agendamento agendamentoSalvo = agendamentoRepository.save(novoAgendamento);
-        
         return new AgendamentoResponseDTO(agendamentoSalvo);
     }
-
+    
     private void validarDisponibilidadeHorario(Medico medico, LocalDateTime dataHora) {
         String horariosJson = medico.getHorariosDisponiveis();
         boolean horarioDisponivelNoJson = false;
@@ -163,37 +164,31 @@ public class AgendamentoService {
     @Transactional(readOnly = true)
     public ProntuarioDTO getProntuarioDoAgendamento(Long agendamentoId, Authentication authentication) {
         Usuario usuarioLogado = (Usuario) authentication.getPrincipal();
-        Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
+        Agendamento agendamento = agendamentoRepository.findById(agendamentoId).orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
         boolean isMedicoDoAgendamento = usuarioLogado.getRole() == Role.MEDICO && agendamento.getMedico().getIdUsuario().equals(usuarioLogado.getId());
         boolean isDiretor = usuarioLogado.getRole() == Role.DIRETOR;
         if (!isMedicoDoAgendamento && !isDiretor) {
             throw new AccessDeniedException("Você não tem permissão para visualizar esta ficha médica.");
         }
         Paciente paciente = agendamento.getPaciente();
+        UnidadeDeSaude unidade = agendamento.getMedico().getUnidade();
         Long pacienteId = paciente.getIdUsuario();
         Long medicoId = agendamento.getMedico().getIdUsuario();
         Integer idade = (paciente.getDataNascimento() != null) ? Period.between(paciente.getDataNascimento(), LocalDate.now()).getYears() : null;
         long totalConsultas = agendamentoRepository.countByPacienteIdUsuarioAndMedicoIdUsuarioAndStatus(pacienteId, medicoId, StatusAgendamento.ATENDIDO);
         boolean temExames = exameRepository.existsByPacienteIdUsuario(pacienteId);
         LocalDateTime proximaConsulta = agendamentoRepository.findFirstByPacienteIdUsuarioAndMedicoIdUsuarioAndDataHoraAfterOrderByDataHoraAsc(pacienteId, medicoId, LocalDateTime.now()).map(Agendamento::getDataHora).orElse(null);
-        List<ProntuarioDTO.ConsultaAnteriorDTO> historico = agendamentoRepository
-            .findAllByPacienteIdUsuarioAndMedicoIdUsuarioAndStatus(pacienteId, medicoId, StatusAgendamento.ATENDIDO)
-            .stream()
-            .filter(ag -> !ag.getId().equals(agendamentoId))
-            .map(ag -> new ProntuarioDTO.ConsultaAnteriorDTO(ag.getDataHora(), ag.getFichaMedica().getSintomas()))
-            .collect(Collectors.toList());
+        List<ProntuarioDTO.ConsultaAnteriorDTO> historico = agendamentoRepository.findAllByPacienteIdUsuarioAndMedicoIdUsuarioAndStatus(pacienteId, medicoId, StatusAgendamento.ATENDIDO).stream().filter(ag -> !ag.getId().equals(agendamentoId)).map(ag -> new ProntuarioDTO.ConsultaAnteriorDTO(ag.getDataHora(), ag.getFichaMedica().getSintomas())).collect(Collectors.toList());
         FichaMedica fichaAtual = agendamento.getFichaMedica();
         String prescricaoTexto = prescricaoRepository.findByAgendamento_Id(agendamentoId).map(Prescricao::getMedicamentos).orElse(null);
         List<String> examesSolicitados = exameRepository.findAllByAgendamentoId(agendamentoId).stream().map(Exame::getTipo).collect(Collectors.toList());
-        ProntuarioDTO.ConsultaDetalhesDTO detalhesDaConsulta = new ProntuarioDTO.ConsultaDetalhesDTO(
-            agendamento.getDataHora(), fichaAtual.getSintomas(), fichaAtual.getEvolucaoMedica(),
-            prescricaoTexto, examesSolicitados, fichaAtual.getAlergias(),
-            fichaAtual.getCirurgias(), fichaAtual.getDiasSintomas()
-        );
+        ProntuarioDTO.ConsultaDetalhesDTO detalhesDaConsulta = new ProntuarioDTO.ConsultaDetalhesDTO(agendamento.getDataHora(), fichaAtual.getSintomas(), fichaAtual.getEvolucaoMedica(), prescricaoTexto, examesSolicitados, fichaAtual.getAlergias(), fichaAtual.getCirurgias(), fichaAtual.getDiasSintomas());
         return new ProntuarioDTO(
             pacienteId, paciente.getUsuario().getNome(), paciente.getUsuario().getEmail(),
-            paciente.getTelefone(), idade, totalConsultas, temExames, proximaConsulta,
+            paciente.getTelefone(), idade,
+            unidade != null ? unidade.getNome() : "N/A",
+            unidade != null ? unidade.getRegiaoAdministrativa() : "N/A",
+            totalConsultas, temExames, proximaConsulta,
             detalhesDaConsulta, historico
         );
     }
@@ -201,8 +196,7 @@ public class AgendamentoService {
     @Transactional
     public void finalizarConsulta(Long agendamentoId, FinalizarConsultaDTO dados, Authentication authentication) {
         Usuario medicoLogado = (Usuario) authentication.getPrincipal();
-        Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
+        Agendamento agendamento = agendamentoRepository.findById(agendamentoId).orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
         if (!agendamento.getMedico().getIdUsuario().equals(medicoLogado.getId())) {
             throw new AccessDeniedException("Você não tem permissão para finalizar este agendamento.");
         }
@@ -229,6 +223,24 @@ public class AgendamentoService {
                 novoExame.setDataRealizacao(LocalDate.now());
                 exameRepository.save(novoExame);
             }
+        }
+        if (dados.diasDeRepouso() != null && dados.diasDeRepouso() > 0) {
+            Paciente paciente = agendamento.getPaciente();
+            UnidadeDeSaude unidade = agendamento.getMedico().getUnidade();
+            String descricaoAtestado = String.format("Atestado para os devidos fins que o(a) %s foi atendido(a) na unidade %s da região de %s no dia %s às %s horas. Necessitando de %d dias de repouso.",
+                paciente.getUsuario().getNome(),
+                unidade != null ? unidade.getNome() : "[Unidade não informada]",
+                unidade != null ? unidade.getRegiaoAdministrativa() : "[Região não informada]",
+                agendamento.getDataHora().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                agendamento.getDataHora().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                dados.diasDeRepouso());
+            Atestado novoAtestado = new Atestado();
+            novoAtestado.setAgendamento(agendamento);
+            novoAtestado.setMedico(agendamento.getMedico());
+            novoAtestado.setPaciente(paciente);
+            novoAtestado.setDescricao(descricaoAtestado);
+            novoAtestado.setDataEmissao(LocalDate.now());
+            atestadoRepository.save(novoAtestado);
         }
         agendamentoRepository.save(agendamento);
     }

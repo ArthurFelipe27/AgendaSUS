@@ -1,17 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Seletores e Variáveis Globais ---
     const contentArea = document.getElementById('content-area');
     let meuIdDeMedico = null;
-
-    // Constantes
     const DIAS_DA_SEMANA = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO", "DOMINGO"];
-    const LISTA_EXAMES_COMUNS = [
-        "Hemograma Completo", "Colesterol Total e Frações", "Glicemia de Jejum",
-        "Ureia e Creatinina", "Exame de Urina (EAS)", "Eletrocardiograma (ECG)",
-        "Raio-X do Tórax", "Ultrassonografia Abdominal"
-    ];
+    const LISTA_EXAMES_COMUNS = ["Hemograma Completo", "Colesterol Total e Frações", "Glicemia de Jejum", "Ureia e Creatinina", "Exame de Urina (EAS)", "Eletrocardiograma (ECG)", "Raio-X do Tórax", "Ultrassonografia Abdominal"];
 
-    // --- FUNÇÃO DE INICIALIZAÇÃO ---
     async function initMedicoDashboard() {
         try {
             const respMe = await fetchAuthenticated('/api/usuarios/me');
@@ -44,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
         await renderMinhaAgenda();
     }
 
-    // --- SEÇÃO 1: VISUALIZAÇÃO DE AGENDAMENTOS E PRONTUÁRIOS ---
     async function renderMinhaAgenda() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<h3>Minha Agenda (Próximas Consultas)</h3><p>Clique em uma consulta para iniciar o atendimento.</p><ul id="lista-agendamentos-medico" class="medico-list"><li>Carregando...</li></ul>`;
@@ -62,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             agendamentosAtivos.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
             agendamentosAtivos.forEach(ag => {
                 const li = document.createElement('li');
-                li.className = 'agendamento-card status-' + ag.status; // Usando o novo estilo
+                li.className = 'agendamento-card status-' + ag.status;
                 li.style.cursor = 'pointer';
                 li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: ${ag.status}</small></div><span>Iniciar Atendimento &rarr;</span>`;
                 listaUL.appendChild(li);
@@ -102,12 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
         contentDinamico.innerHTML = `<div>Carregando atendimento...</div>`;
         try {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/prontuario`);
-            if (!response) return;
+            if (!response || !response.ok) throw new Error('Falha ao carregar dados do atendimento.');
             const prontuario = await response.json();
             const consulta = prontuario.detalhesDaConsulta;
 
             if (isHistorico) {
-                // MODO HISTÓRICO (SOMENTE LEITURA)
                 let examesHtml = '<h5>Exames Solicitados</h5>';
                 if (consulta.exames && consulta.exames.length > 0) {
                     examesHtml += '<ul>';
@@ -127,9 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="document-item">${prescricaoHtml}</div><hr><div class="document-item">${examesHtml}</div>`;
                 document.getElementById('btn-voltar-historico').addEventListener('click', renderHistoricoDeAtendimentos);
             } else {
-                // MODO ATENDIMENTO (INTERATIVO)
                 let examesCheckboxesHtml = '';
                 LISTA_EXAMES_COMUNS.forEach(exame => { examesCheckboxesHtml += `<div class="checkbox-group"><input type="checkbox" id="exame-${exame.replace(/\s+/g, '-')}" name="exames" value="${exame}"><label for="exame-${exame.replace(/\s+/g, '-')}">${exame}</label></div>`; });
+
                 contentDinamico.innerHTML = `
                     <div class="admin-section-header"><h3>Atendimento em Andamento</h3><button class="btn btn-secondary" id="btn-voltar-agenda">&larr; Voltar para Agenda</button></div>
                     <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nome} (${prontuario.idade} anos)</p><p><strong>Queixa Principal:</strong> ${consulta.sintomas}</p></div>
@@ -137,31 +127,52 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="input-group"><label for="evolucao">Evolução Médica</label><textarea id="evolucao" rows="8"></textarea></div>
                         <div class="input-group"><label for="prescricao">Prescrição Médica</label><textarea id="prescricao" rows="8"></textarea></div>
                         <div class="input-group"><label>Solicitação de Exames</label><div class="checkbox-container">${examesCheckboxesHtml}</div></div>
+                        <div class="input-group"><label>Necessita de Atestado?</label><div class="radio-group"><input type="radio" id="atestado-nao" name="necessitaAtestado" value="nao" checked> <label for="atestado-nao">Não</label><input type="radio" id="atestado-sim" name="necessitaAtestado" value="sim" style="margin-left: 1rem;"> <label for="atestado-sim">Sim</label></div></div>
+                        <div id="atestado-dias-container" class="input-group" style="display: none;"><label for="dias-repouso">Dias de Repouso</label><input type="number" id="dias-repouso" min="1" placeholder="Informe o número de dias"></div>
                         <div class="form-actions"><button type="submit" class="btn btn-success">Finalizar e Salvar Consulta</button></div>
                     </form>`;
+
                 document.getElementById('btn-voltar-agenda').addEventListener('click', renderMinhaAgenda);
-                document.getElementById('form-finalizar-consulta').addEventListener('submit', e => { e.preventDefault(); handleFinalizarConsulta(agendamentoId); });
+                document.getElementById('form-finalizar-consulta').addEventListener('submit', (e) => { e.preventDefault(); handleFinalizarConsulta(agendamentoId); });
+                document.querySelectorAll('input[name="necessitaAtestado"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        document.getElementById('atestado-dias-container').style.display = e.target.value === 'sim' ? 'block' : 'none';
+                    });
+                });
             }
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<p>Erro ao carregar dados do atendimento.</p>'; }
     }
 
     async function handleFinalizarConsulta(agendamentoId) {
-        const examesSelecionados = Array.from(document.querySelectorAll('input[name="exames"]:checked')).map(cb => cb.value);
+        const necessitaAtestado = document.querySelector('input[name="necessitaAtestado"]:checked').value === 'sim';
+        const diasRepousoInput = document.getElementById('dias-repouso');
+        let diasDeRepouso = null;
+        if (necessitaAtestado) {
+            if (!diasRepousoInput.value || diasRepousoInput.value < 1) {
+                showToast("Por favor, informe um número válido de dias para o atestado.", "error");
+                return;
+            }
+            diasDeRepouso = parseInt(diasRepousoInput.value);
+        }
         const dto = {
             evolucaoMedica: document.getElementById('evolucao').value,
             prescricao: document.getElementById('prescricao').value,
-            exames: examesSelecionados
+            exames: Array.from(document.querySelectorAll('input[name="exames"]:checked')).map(cb => cb.value),
+            diasDeRepouso: diasDeRepouso
         };
         try {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/finalizar`, { method: 'POST', body: JSON.stringify(dto) });
-            if (response && response.ok) {
+            if (response.ok) {
                 showToast('Consulta finalizada com sucesso!', 'success');
                 renderHistoricoDeAtendimentos();
-            } else { await handleApiError(response, 'atendimento-error-message'); }
-        } catch (err) { showToast('Erro de rede ao finalizar a consulta.', 'error'); }
+            } else {
+                await handleApiError(response, 'atendimento-error-message');
+            }
+        } catch (err) {
+            showToast('Erro de rede ao finalizar a consulta.', 'error');
+        }
     }
 
-    // --- SEÇÃO 2: GERENCIAMENTO DE HORÁRIOS, CONTEÚDO E PERFIL ---
     async function renderGerenciarHorarios() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
         let htmlForm = `<h3>Meus Horários Disponíveis</h3><p>Adicione ou remova horários.</p><div id="horarios-error-message" class="error-message" style="display:none;"></div><div class="schedule-builder">`;
@@ -219,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderFormularioConteudo() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Será salvo como rascunho para aprovação.</p><form id="form-conteudo"><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions"><button type="submit" class="btn btn-success">Enviar para Aprovação</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Será salvo como rascunho para aprovação.</p><form id="form-conteudo"><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions"><button type="submit" class="btn btn-primary">Enviar para Aprovação</button></div></form></div>`;
         document.getElementById('form-conteudo').addEventListener('submit', handleConteudoSubmit);
     }
 
@@ -235,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderMeuPerfil() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meu Perfil</h3><div id="perfil-info" class="document-item">Carregando...</div><hr><h4>Alterar Senha</h4><div class="booking-form-container"><form id="form-alterar-senha"><div class="input-group"><label for="nova-senha">Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label for="confirma-senha">Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
+        contentDinamico.innerHTML = `<h3>Meu Perfil</h3><div id="perfil-info" class="document-item">Carregando...</div><hr><h4>Alterar Senha</h4><div class="booking-form-container"><form id="form-alterar-senha"><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
         try {
             fetchAuthenticated('/api/usuarios/me').then(response => response.json()).then(usuario => {
                 document.getElementById('perfil-info').innerHTML = `<p><strong>Nome:</strong> ${usuario.nome}</p><p><strong>Email:</strong> ${usuario.email}</p><p><strong>CPF:</strong> ${usuario.cpf}</p>${usuario.crm ? `<p><strong>CRM:</strong> ${usuario.crm}</p>` : ''}`;
