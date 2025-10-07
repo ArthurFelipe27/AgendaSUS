@@ -1,5 +1,5 @@
 // ===================================================================
-// COMMON.JS (VERSÃO FINAL COM TOASTS)
+// COMMON.JS (VERSÃO COM CORREÇÃO NO RENDER DE NOTÍCIAS)
 // ===================================================================
 
 const token = localStorage.getItem('jwtToken');
@@ -52,29 +52,45 @@ async function handleApiError(response, errorDivId) {
 async function renderNoticiasPublicas(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    container.innerHTML = `<div class="admin-section-header"><h4>Notícias e Artigos</h4></div><div id="lista-noticias">Carregando...</div>`;
+
+    // CORREÇÃO: Substitui o conteúdo do container em vez de adicionar (innerHTML = ...)
+    container.innerHTML = `<div class="content-list">Carregando...</div>`;
+    const listContainer = container.querySelector('.content-list');
+
     try {
         const response = await fetch('/api/conteudo/publico');
         if (!response.ok) throw new Error('Falha ao buscar notícias.');
         const conteudos = await response.json();
-        const listaDiv = document.getElementById('lista-noticias');
-        listaDiv.innerHTML = '';
+
+        listContainer.innerHTML = '';
         if (conteudos.length === 0) {
-            listaDiv.innerHTML = '<p>Nenhuma notícia publicada no momento.</p>';
+            listContainer.innerHTML = '<p>Nenhuma notícia publicada no momento.</p>';
             return;
         }
+
         conteudos.forEach(c => {
-            const dataPublicacao = c.publicadoEm ? new Date(c.publicadoEm).toLocaleDateString('pt-BR') : 'Data não disponível';
-            const item = document.createElement('div');
-            item.className = 'document-item';
-            item.innerHTML = `<h4 class="content-title">${c.titulo}</h4><p class="meta">Publicado por <strong>${c.autor.nome}</strong> em ${dataPublicacao}</p><div class="content-body">${c.corpo}</div>`;
-            listaDiv.appendChild(item);
+            const dataPublicacao = c.publicadoEm ? new Date(c.publicadoEm).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Data não disponível';
+            const item = document.createElement('article');
+            item.className = 'content-item';
+            item.innerHTML = `
+                <div class="content-item-header">
+                    <h4>${c.titulo}</h4>
+                    <p class="content-item-meta">
+                        Publicado por <strong>${c.autor.nome}</strong> em ${dataPublicacao}
+                    </p>
+                </div>
+                <div class="content-item-body">
+                    ${c.corpo.replace(/\n/g, '<br>')}
+                </div>
+            `;
+            listContainer.appendChild(item);
         });
     } catch (err) {
         console.error("Erro ao buscar conteúdo público:", err);
-        container.innerHTML = '<p>Erro ao carregar o conteúdo.</p>';
+        listContainer.innerHTML = '<p>Erro ao carregar o conteúdo.</p>';
     }
 }
+
 
 function showToast(message, type = 'info') {
     let backgroundColor;
@@ -104,3 +120,4 @@ document.addEventListener('DOMContentLoaded', () => {
         welcomeMessage.textContent = `Seja bem-vindo(a), ${userName}!`;
     }
 });
+

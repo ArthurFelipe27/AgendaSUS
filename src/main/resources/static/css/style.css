@@ -1,5 +1,5 @@
 /* ===================================================================
-   AGENDA SUS - PROJETO DE REESTILIZAÇÃO VISUAL v2
+   AGENDA SUS - PROJETO DE REESTILIZAÇÃO VISUAL v3
    Estilos alinhados com a renderização dinâmica do JavaScript.
    =================================================================== */
 
@@ -320,10 +320,11 @@ a:hover {
 }
 
 .btn-secondary:hover {
-    background-color: var(--cor-texto-secundario);
-    color: white;
+    background-color: #e2e8f0;
+    color: var(--cor-texto-principal);
     text-decoration: none;
 }
+
 
 .btn-logout {
     border: 1px solid var(--cor-perigo);
@@ -602,8 +603,206 @@ a:hover {
 }
 
 /* ===================================================================
-   6. Componentes Específicos e Utilitários
+   6. COMPONENTES ESPECÍFICOS E UTILITÁRIOS (NOVOS ESTILOS)
    =================================================================== */
+
+/* --- [NOVO] Histórico de Agendamento (Paciente) --- */
+.history-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.history-card {
+    background-color: var(--cor-fundo-container);
+    border-radius: var(--raio-borda);
+    box-shadow: var(--sombra-card);
+    border-left: 5px solid;
+    display: flex;
+    flex-direction: column;
+}
+
+.history-card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.history-card-header strong {
+    font-size: 1.1rem;
+}
+
+.history-card-header small {
+    color: var(--cor-texto-secundario);
+}
+
+.history-card-footer {
+    padding: 1rem 1.5rem;
+    margin-top: auto;
+    background-color: #f8fafc;
+    border-top: 1px solid var(--cor-borda);
+}
+
+.history-card.status-ATENDIDO {
+    border-color: var(--cor-sucesso);
+}
+
+.history-card.status-CANCELADO {
+    border-color: var(--cor-perigo);
+}
+
+.history-card.status-NAO_COMPARECEU {
+    border-color: var(--cor-texto-secundario);
+}
+
+#detalhes-consulta-container {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.document-view {
+    background-color: var(--cor-fundo-container);
+    padding: 2rem;
+    border-radius: var(--raio-borda);
+    box-shadow: var(--sombra-card);
+}
+
+.document-view h4 {
+    color: var(--cor-primaria);
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.document-section {
+    margin-bottom: 2rem;
+}
+
+.document-section h5 {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.document-section pre,
+.document-section ul {
+    background-color: #f8fafc;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--cor-borda);
+    white-space: pre-wrap;
+    /* Garante a quebra de linha em <pre> */
+    word-wrap: break-word;
+    font-size: 0.95rem;
+}
+
+.document-section ul {
+    list-style-position: inside;
+    padding-left: 1.5rem;
+}
+
+/* --- [NOVO] Estilo para Notícias e Artigos --- */
+.content-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.content-item {
+    background-color: var(--cor-fundo-container);
+    border-radius: var(--raio-borda);
+    box-shadow: var(--sombra-card);
+    overflow: hidden;
+    /* Garante que a borda colorida fique contida */
+    border-left: 5px solid var(--cor-primaria);
+    transition: box-shadow 0.3s ease;
+}
+
+.content-item:hover {
+    box-shadow: var(--sombra-card-hover);
+}
+
+.content-item-header {
+    padding: 1.5rem;
+}
+
+.content-item-header h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    color: var(--cor-texto-principal);
+}
+
+.content-item-meta {
+    font-size: 0.9rem;
+    color: var(--cor-texto-secundario);
+}
+
+.content-item-body {
+    padding: 0 1.5rem 1.5rem;
+    line-height: 1.7;
+}
+
+/* --- [NOVO] Estilo para Prontuário do Médico --- */
+.prontuario-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.prontuario-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+.info-card {
+    background-color: var(--cor-fundo-body);
+    padding: 1.5rem;
+    border-radius: var(--raio-borda);
+    border: 1px solid var(--cor-borda);
+}
+
+.info-card h5 {
+    font-size: 1rem;
+    color: var(--cor-texto-secundario);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+
+.info-card p {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.atendimento-form-section {
+    background-color: var(--cor-fundo-container);
+    padding: 2rem;
+    border-radius: var(--raio-borda);
+    box-shadow: var(--sombra-card);
+}
+
+.atendimento-form-section h4 {
+    font-size: 1.25rem;
+    color: var(--cor-primaria);
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.checkbox-container,
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+
+/* ===================================================================
+   7. COMPONENTES ANTIGOS E DIVERSOS (SEM MUDANÇAS)
+   =================================================================== */
+
 .token-box {
     background-color: var(--cor-fundo-body);
     padding: 1rem;
@@ -639,47 +838,52 @@ a:hover {
     background-color: var(--cor-texto-principal);
 }
 
-/* ===================================================================
-   7. Stepper (Recuperação de Senha)
-   =================================================================== */
-.stepper-container {
-    width: 100%;
+.password-criteria-container {
+    margin: -0.5rem 0 1.5rem 0;
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid var(--cor-borda);
 }
 
-.stepper-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2.5rem;
+.password-criteria-container ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
 }
 
-.token-box .btn-copy {
-    background-color: var(--cor-texto-secundario);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.token-box .btn-copy:hover {
-    background-color: var(--cor-texto-principal);
-}
-
-/* ===================================================================
-   7. Stepper (Recuperação de Senha) - REMOVIDO
-   =================================================================== */
-
-/* ===================================================================
-   8. Gerenciador de Horários (Médico)
-   =================================================================== */
-.form-description {
+.password-criteria-container li {
+    font-size: 0.85rem;
     color: var(--cor-texto-secundario);
-    margin-bottom: 2rem;
-    max-width: 80%;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
+.password-criteria-container li+li {
+    margin-top: 0.5rem;
+}
+
+.password-criteria-container li::before {
+    content: '✖';
+    color: var(--cor-perigo);
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.password-criteria-container li.valid {
+    color: var(--cor-sucesso);
+    text-decoration: line-through;
+}
+
+.password-criteria-container li.valid::before {
+    content: '✔';
+    color: var(--cor-sucesso);
+}
+
+
+/* Gerenciador de Horários (Médico) */
 .schedule-builder {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -775,6 +979,30 @@ a:hover {
     animation: scaleUp 0.3s ease;
 }
 
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 .remove-tag {
     background: transparent;
     border: none;
@@ -792,70 +1020,4 @@ a:hover {
 .remove-tag:hover {
     background-color: #c7d2fe;
     color: #312e81;
-}
-
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.5);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    animation: fadeIn 0.25s ease-in-out;
-}
-
-/* ... (todo o CSS anterior) ... */
-
-/* ===================================================================
-   9. Validação de Senha (Página Redefinir)
-   =================================================================== */
-.password-criteria-container {
-    margin: -0.5rem 0 1.5rem 0;
-    padding: 0.75rem 1rem;
-    background-color: #f8f9fa;
-    /* Um fundo sutil */
-    border-radius: var(--raio-borda-pequeno);
-    border: 1px solid var(--cor-borda);
-}
-
-.password-criteria-container ul {
-    list-style: none;
-    padding-left: 0;
-    margin: 0;
-}
-
-.password-criteria-container li {
-    font-size: 0.85rem;
-    color: var(--cor-texto-secundario);
-    transition: all 0.2s ease-in-out;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.password-criteria-container li+li {
-    margin-top: 0.5rem;
-}
-
-/* Ícone de 'não-atendido' */
-.password-criteria-container li::before {
-    content: '✖';
-    color: var(--cor-perigo);
-    font-weight: bold;
-    font-size: 0.9rem;
-}
-
-/* Estilo para quando o critério é atendido */
-.password-criteria-container li.valid {
-    color: var(--cor-sucesso);
-    text-decoration: line-through;
-}
-
-/* Ícone de 'atendido' */
-.password-criteria-container li.valid::before {
-    content: '✔';
-    color: var(--cor-sucesso);
 }

@@ -1,3 +1,7 @@
+// ===================================================================
+// MEDICO.JS (VERSÃO COM MELHORIAS VISUAIS NO PRONTUÁRIO)
+// ===================================================================
+
 document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
     let meuIdDeMedico = null;
@@ -57,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.style.cursor = 'pointer';
                 li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status}</span></small></div><span>Iniciar Atendimento &rarr;</span>`;
                 listaUL.appendChild(li);
-                // CORREÇÃO: Usando ag.id em vez de ag.idAgendamento
                 li.addEventListener('click', () => renderTelaDeAtendimento(ag.id));
             });
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar agendamentos.</li>'; }
@@ -84,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.style.cursor = 'pointer';
                 li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status}</span></small></div><span>Ver Prontuário &rarr;</span>`;
                 listaUL.appendChild(li);
-                // CORREÇÃO: Usando ag.id em vez de ag.idAgendamento
                 li.addEventListener('click', () => renderTelaDeAtendimento(ag.id, true));
             });
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar histórico.</li>'; }
@@ -100,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const consulta = prontuario.detalhesDaConsulta;
 
             if (isHistorico) {
+                // ... (código do histórico continua o mesmo)
                 let examesHtml = '<h5>Exames Solicitados</h5>';
                 if (consulta.exames && consulta.exames.length > 0) {
                     examesHtml += '<ul>';
@@ -118,21 +121,72 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="document-item" style="background-color: #f0f9ff;"><div class="ficha-detalhe"><strong>Sintomas Relatados:</strong><p>${consulta.sintomas || 'N/A'}</p></div><div class="ficha-detalhe"><strong>Evolução Médica:</strong><p>${consulta.evolucaoMedica || 'Nenhuma evolução registrada.'}</p></div></div><hr>
                     <div class="document-item">${prescricaoHtml}</div><hr><div class="document-item">${examesHtml}</div>`;
                 document.getElementById('btn-voltar-historico').addEventListener('click', renderHistoricoDeAtendimentos);
+
             } else {
+                // --- [NOVO] Layout do Prontuário de Atendimento ---
                 let examesCheckboxesHtml = '';
                 LISTA_EXAMES_COMUNS.forEach(exame => { examesCheckboxesHtml += `<div class="checkbox-group"><input type="checkbox" id="exame-${exame.replace(/\s+/g, '-')}" name="exames" value="${exame}"><label for="exame-${exame.replace(/\s+/g, '-')}">${exame}</label></div>`; });
 
+                const diasSintomas = consulta.diasSintomas ? `${consulta.diasSintomas} dia(s)` : 'Não informado';
+
                 contentDinamico.innerHTML = `
-                    <div class="admin-section-header"><h3>Atendimento em Andamento</h3><button class="btn btn-secondary" id="btn-voltar-agenda">&larr; Voltar para Agenda</button></div>
-                    <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nomePaciente} (${prontuario.idade} anos)</p><p><strong>Queixa Principal:</strong> ${consulta.sintomas}</p></div>
-                    <form id="form-finalizar-consulta" class="booking-form-container">
-                        <div class="input-group"><label for="evolucao">Evolução Médica</label><textarea id="evolucao" rows="8"></textarea></div>
-                        <div class="input-group"><label for="prescricao">Prescrição Médica</label><textarea id="prescricao" rows="8"></textarea></div>
-                        <div class="input-group"><label>Solicitação de Exames</label><div class="checkbox-container">${examesCheckboxesHtml}</div></div>
-                        <div class="input-group"><label>Necessita de Atestado?</label><div class="radio-group"><input type="radio" id="atestado-nao" name="necessitaAtestado" value="nao" checked> <label for="atestado-nao">Não</label><input type="radio" id="atestado-sim" name="necessitaAtestado" value="sim" style="margin-left: 1rem;"> <label for="atestado-sim">Sim</label></div></div>
-                        <div id="atestado-dias-container" class="input-group" style="display: none;"><label for="dias-repouso">Dias de Repouso</label><input type="number" id="dias-repouso" min="1" placeholder="Informe o número de dias"></div>
-                        <div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-success">Finalizar e Salvar Consulta</button></div>
-                    </form>`;
+                    <div class="admin-section-header">
+                        <h3>Atendimento em Andamento</h3>
+                        <button class="btn btn-secondary" id="btn-voltar-agenda">&larr; Voltar para Agenda</button>
+                    </div>
+
+                    <div class="prontuario-grid">
+                        <div class="info-card">
+                            <h5>Paciente</h5>
+                            <p>${prontuario.nomePaciente} (${prontuario.idade || 'N/A'} anos)</p>
+                        </div>
+                        <div class="info-card">
+                            <h5>Telefone</h5>
+                            <p>${prontuario.telefone || 'Não informado'}</p>
+                        </div>
+                        <div class="info-card full-width">
+                            <h5>Queixa Principal</h5>
+                            <p>${consulta.sintomas} (há ${diasSintomas})</p>
+                        </div>
+                    </div>
+
+                    <form id="form-finalizar-consulta" style="margin-top: 1.5rem;">
+                        <div class="atendimento-form-section">
+                            <h4>Evolução e Conduta</h4>
+                            <div class="input-group">
+                                <label for="evolucao">Evolução Médica</label>
+                                <textarea id="evolucao" rows="6" placeholder="Descreva a evolução do paciente, exame físico, etc."></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label for="prescricao">Prescrição Médica</label>
+                                <textarea id="prescricao" rows="6" placeholder="Ex: Dipirona 500mg, 1 comprimido de 6/6h por 3 dias se dor ou febre."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="atendimento-form-section" style="margin-top: 1.5rem;">
+                             <h4>Exames e Atestado</h4>
+                             <div class="input-group">
+                                <label>Solicitação de Exames</label>
+                                <div class="checkbox-container">${examesCheckboxesHtml}</div>
+                             </div>
+                             <div class="input-group">
+                                <label>Necessita de Atestado?</label>
+                                <div class="radio-group">
+                                    <input type="radio" id="atestado-nao" name="necessitaAtestado" value="nao" checked> <label for="atestado-nao">Não</label>
+                                    <input type="radio" id="atestado-sim" name="necessitaAtestado" value="sim" style="margin-left: 1rem;"> <label for="atestado-sim">Sim</label>
+                                </div>
+                            </div>
+                            <div id="atestado-dias-container" class="input-group" style="display: none;">
+                                <label for="dias-repouso">Dias de Repouso</label>
+                                <input type="number" id="dias-repouso" min="1" placeholder="Informe o número de dias">
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions" style="margin-top: 2rem; justify-content: flex-end;">
+                            <button type="submit" class="btn btn-success">Finalizar e Salvar Consulta</button>
+                        </div>
+                    </form>
+                `;
 
                 document.getElementById('btn-voltar-agenda').addEventListener('click', renderMinhaAgenda);
                 document.getElementById('form-finalizar-consulta').addEventListener('submit', (e) => { e.preventDefault(); handleFinalizarConsulta(agendamentoId); });
@@ -325,3 +379,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initMedicoDashboard();
 });
+

@@ -36,7 +36,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('card-gerenciar-usuarios').addEventListener('click', renderGerenciadorDeUsuarios);
         document.getElementById('card-gerenciar-conteudo').addEventListener('click', renderGerenciadorDeConteudo);
         document.getElementById('card-meu-perfil').addEventListener('click', renderMeuPerfil);
-        document.getElementById('card-noticias').addEventListener('click', () => renderNoticiasPublicas('diretor-content-dinamico'));
+
+        // CORREÇÃO: Estrutura a seção de notícias antes de chamar a função de renderização
+        document.getElementById('card-noticias').addEventListener('click', () => {
+            const adminContent = document.getElementById('diretor-content-dinamico');
+            adminContent.innerHTML = `
+                <div class="admin-section-header">
+                    <h3>Notícias e Artigos Públicos</h3>
+                </div>
+                <div id="public-news-container"></div>
+            `;
+            renderNoticiasPublicas('public-news-container');
+        });
+
         renderGerenciadorDeUnidades();
     }
 
@@ -90,13 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const unidades = await response.json();
             const container = document.getElementById('lista-unidades');
 
-            // CORREÇÃO NA COLUNA DA TABELA
             let tableHTML = `<table class="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>Região Administrativa</th></tr></thead><tbody>`;
 
             if (unidades.length === 0) {
                 tableHTML += '<tr><td colspan="3">Nenhuma unidade cadastrada.</td></tr>';
             } else {
-                // CORREÇÃO NO CAMPO EXIBIDO
                 unidades.forEach(u => tableHTML += `<tr><td>${u.id}</td><td>${u.nome}</td><td>${u.regiaoAdministrativa}</td></tr>`);
             }
             tableHTML += '</tbody></table>';
@@ -291,7 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             tableHTML += `</tbody></table>`;
-            adminContent.innerHTML += tableHTML;
+            // Use innerHTML += to append to the existing header
+            document.getElementById('admin-content-list').innerHTML = tableHTML;
             document.querySelectorAll('.btn-aprovar-conteudo').forEach(btn => btn.addEventListener('click', () => handleUpdateConteudoStatus(btn.dataset.id, 'PUBLICADO')));
             document.querySelectorAll('.btn-desativar-conteudo').forEach(btn => btn.addEventListener('click', () => handleUpdateConteudoStatus(btn.dataset.id, 'DESATIVADO')));
             document.querySelectorAll('.btn-deletar-conteudo').forEach(btn => btn.addEventListener('click', () => handleDeletarConteudo(btn.dataset.id)));
