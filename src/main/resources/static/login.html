@@ -5,37 +5,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgendaSUS - Login</title>
-
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="form-body">
-    <main class="login-container">
-        <form id="login-form" class="login-form">
-            <h2>AgendaSUS</h2>
-            <p>Acesse sua conta para continuar</p>
-            <div class="input-group">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" required autocomplete="email">
-            </div>
-            <div class="input-group">
-                <label for="senha">Senha</label>
-                <input type="password" id="senha" required autocomplete="current-password">
-            </div>
-            <div class="footer-links">
-                <a href="cadastro.html">Não tem uma conta? Cadastre-se</a>
-                <a href="esqueci-senha.html" style="margin-top: 10px; display: block;">Esqueci minha senha</a>
-            </div>
-            <button type="submit" class="btn-login" style="margin-top: 1.5rem;">Entrar</button>
-        </form>
-    </main>
+<body>
+    <div class="auth-container">
+        <!-- Painel de Branding -->
+        <div class="auth-branding-panel">
+            <h1>AgendaSUS</h1>
+            <p>Sua saúde, simplificada. Agende suas consultas de forma rápida e segura.</p>
+        </div>
 
+        <!-- Painel do Formulário -->
+        <div class="auth-form-panel">
+            <main class="auth-form-container">
+                <form id="login-form" class="auth-form">
+                    <h2>Bem-vindo de volta!</h2>
+                    <p>Acesse sua conta para continuar.</p>
+
+                    <div class="input-group">
+                        <label for="email">E-mail</label>
+                        <input type="email" id="email" required autocomplete="email" placeholder="seuemail@exemplo.com">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="senha">Senha</label>
+                        <input type="password" id="senha" required autocomplete="current-password"
+                            placeholder="Sua senha">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full-width"
+                        style="margin-top: 1rem;">Entrar</button>
+
+                    <div class="footer-links">
+                        <a href="esqueci-senha.html">Esqueci minha senha</a>
+                        <a href="cadastro.html">Não tem uma conta? <strong>Cadastre-se</strong></a>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="js/common.js"></script>
     <script src="js/login.js"></script>
 
+    <!-- VLibras -->
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>

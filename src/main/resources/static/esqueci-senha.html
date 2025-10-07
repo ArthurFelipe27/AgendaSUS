@@ -6,42 +6,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar Senha - AgendaSUS</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="form-body">
-    <main class="login-container">
-        <form id="forgot-password-form" class="login-form">
-            <h2>Recuperar Senha</h2>
-            <p>Insira seu e-mail para receber o token de redefinição.</p>
-            <div class="input-group">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" required autocomplete="email">
-            </div>
-            <button type="submit" class="btn btn-primary btn-full-width">Enviar</button>
-            <div class="footer-links">
-                <a href="login.html">Voltar para o Login</a>
-            </div>
-        </form>
-
-        <div id="token-display" class="login-form" style="display: none;">
-            <h2>Token Gerado</h2>
-            <p style="color: #198754;"><strong>Sucesso!</strong> Em um sistema real, este token seria enviado para seu
-                e-mail.</p>
-            <p>Copie o token abaixo e vá para a página de redefinição.</p>
-
-            <div class="token-box">
-                <code id="reset-token-code"></code>
-                <button id="btn-copy-token" class="btn-copy">Copiar</button>
-            </div>
-
-            <a href="redefinir-senha.html" class="btn btn-primary btn-full-width"
-                style="text-align: center; text-decoration: none; display: block; margin-top: 1.5rem;">
-                Ir para Redefinir Senha &rarr;
-            </a>
+<body>
+    <div class="auth-container">
+        <!-- Painel de Branding -->
+        <div class="auth-branding-panel">
+            <h1>Recupere seu Acesso</h1>
+            <p>Insira seu e-mail para receber um token de recuperação.</p>
         </div>
-    </main>
+
+        <!-- Painel do Formulário -->
+        <div class="auth-form-panel">
+            <main class="auth-form-container">
+                <!-- Formulário de Email (Inicialmente visível) -->
+                <form id="forgot-password-form" class="auth-form">
+                    <h2>Recuperar Senha</h2>
+                    <p>Insira seu e-mail para receber o token de redefinição.</p>
+                    <div class="input-group">
+                        <label for="email">E-mail</label>
+                        <input type="email" id="email" required autocomplete="email" placeholder="seuemail@exemplo.com">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full-width">Enviar</button>
+                    <div class="footer-links">
+                        <a href="login.html">Voltar para o Login</a>
+                    </div>
+                </form>
+
+                <!-- Display do Token (Inicialmente oculto) -->
+                <div id="token-display" class="auth-form" style="display: none;">
+                    <h2>Token Gerado</h2>
+                    <p style="color: var(--cor-sucesso);"><strong>Sucesso!</strong> Em um sistema real, este token seria
+                        enviado para seu e-mail.</p>
+                    <p>Copie o token abaixo e vá para a página de redefinição.</p>
+
+                    <div class="token-box">
+                        <code id="reset-token-code"></code>
+                        <button id="btn-copy-token" class="btn-copy">Copiar</button>
+                    </div>
+
+                    <a href="redefinir-senha.html" class="btn btn-primary btn-full-width"
+                        style="text-align: center; text-decoration: none; display: block; margin-top: 1.5rem;">
+                        Ir para Redefinir Senha &rarr;
+                    </a>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="js/common.js"></script>
     <script src="js/esqueci-senha.js"></script>
     <div vw class="enabled">

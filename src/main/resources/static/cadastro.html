@@ -6,98 +6,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - AgendaSUS</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="form-body">
-    <main class="login-container wide">
-        <form id="cadastro-form" class="login-form">
-            <h2>Crie sua Conta no AgendaSUS</h2>
-            <p>Preencha seus dados para começar a agendar.</p>
-            <div class="form-sections">
-                <fieldset class="form-fieldset">
-                    <legend>Dados Pessoais</legend>
-                    <div class="input-group"><label for="nome">Nome Completo</label><input type="text" id="nome"
-                            required></div>
-                    <div class="input-group"><label for="nomeSocial">Nome Social (Opcional)</label><input type="text"
-                            id="nomeSocial"></div>
-                    <div class="input-group"><label for="dataNascimento">Data de Nascimento</label><input type="date"
-                            id="dataNascimento" required></div>
-                    <div class="input-group"><label for="sexo">Gênero</label>
-                        <select id="sexo" required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option value="M">Masculino</option>
-                            <option value="F">Feminino</option>
-                            <option value="OUTRO">Outro</option>
-                            <option value="NAO_INFORMAR">Prefiro não informar</option>
-                        </select>
+<body>
+    <div class="auth-container">
+        <!-- Painel de Branding -->
+        <div class="auth-branding-panel">
+            <h1>Junte-se ao AgendaSUS</h1>
+            <p>Crie sua conta e tenha acesso fácil ao agendamento de consultas no SUS.</p>
+        </div>
+
+        <!-- Painel do Formulário -->
+        <div class="auth-form-panel">
+            <main class="auth-form-container wide">
+                <form id="cadastro-form" class="auth-form">
+                    <h2>Crie sua Conta</h2>
+                    <p>Preencha seus dados para começar a agendar.</p>
+                    <div class="form-sections">
+                        <fieldset class="form-fieldset">
+                            <legend>Dados Pessoais</legend>
+                            <div class="input-group"><label for="nome">Nome Completo</label><input type="text" id="nome"
+                                    required></div>
+                            <div class="input-group"><label for="nomeSocial">Nome Social (Opcional)</label><input
+                                    type="text" id="nomeSocial"></div>
+                            <div class="input-group"><label for="dataNascimento">Data de Nascimento</label><input
+                                    type="date" id="dataNascimento" required></div>
+                            <div class="input-group"><label for="sexo">Gênero</label>
+                                <select id="sexo" required>
+                                    <option value="" disabled selected>Selecione...</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Feminino</option>
+                                    <option value="OUTRO">Outro</option>
+                                    <option value="NAO_INFORMAR">Prefiro não informar</option>
+                                </select>
+                            </div>
+                            <div class="input-group"><label for="telefone">Telefone / Celular</label><input type="tel"
+                                    id="telefone" required></div>
+                        </fieldset>
+                        <fieldset class="form-fieldset">
+                            <legend>Endereço (Opcional)</legend>
+                            <div class="input-group"><label for="cep">CEP</label><input type="text" id="cep"
+                                    maxlength="8"></div>
+                            <div class="input-group"><label for="regiao-administrativa">Região Administrativa
+                                    (DF)</label>
+                                <select id="regiao-administrativa">
+                                    <option value="" selected>Selecione sua RA...</option>
+                                    <option value="Plano Piloto">Plano Piloto</option>
+                                    <option value="Gama">Gama</option>
+                                    <option value="Taguatinga">Taguatinga</option>
+                                    <option value="Brazlândia">Brazlândia</option>
+                                    <option value="Sobradinho">Sobradinho</option>
+                                    <option value="Planaltina">Planaltina</option>
+                                    <option value="Paranoá">Paranoá</option>
+                                    <option value="Núcleo Bandeirante">Núcleo Bandeirante</option>
+                                    <option value="Ceilândia">Ceilândia</option>
+                                    <option value="Guará">Guará</option>
+                                    <option value="Cruzeiro">Cruzeiro</option>
+                                    <option value="Samambaia">Samambaia</option>
+                                    <option value="Santa Maria">Santa Maria</option>
+                                    <option value="São Sebastião">São Sebastião</option>
+                                    <option value="Recanto das Emas">Recanto das Emas</option>
+                                    <option value="Lago Sul">Lago Sul</option>
+                                    <option value="Riacho Fundo">Riacho Fundo</option>
+                                    <option value="Lago Norte">Lago Norte</option>
+                                    <option value="Candangolândia">Candangolândia</option>
+                                    <option value="Águas Claras">Águas Claras</option>
+                                    <option value="Riacho Fundo II">Riacho Fundo II</option>
+                                    <option value="Sudoeste/Octogonal">Sudoeste/Octogonal</option>
+                                    <option value="Varjão">Varjão</option>
+                                    <option value="Park Way">Park Way</option>
+                                    <option value="SCIA (Estrutural)">SCIA (Estrutural)</option>
+                                    <option value="Sobradinho II">Sobradinho II</option>
+                                    <option value="Jardim Botânico">Jardim Botânico</option>
+                                    <option value="Itapoã">Itapoã</option>
+                                    <option value="SIA">SIA</option>
+                                    <option value="Vicente Pires">Vicente Pires</option>
+                                    <option value="Fercal">Fercal</option>
+                                    <option value="Sol Nascente/Pôr do Sol">Sol Nascente/Pôr do Sol</option>
+                                    <option value="Arniqueira">Arniqueira</option>
+                                </select>
+                            </div>
+                            <div class="input-group"><label for="numero">Número</label><input type="text" id="numero">
+                            </div>
+                            <div class="input-group"><label for="complemento">Complemento</label><input type="text"
+                                    id="complemento"></div>
+                        </fieldset>
+                        <fieldset class="form-fieldset full-width">
+                            <legend>Dados de Acesso</legend>
+                            <div class="input-group"><label for="email">E-mail</label><input type="email" id="email"
+                                    required></div>
+                            <div class="input-group"><label for="cpf">CPF (apenas números)</label><input type="text"
+                                    id="cpf" required maxlength="11"></div>
+                            <div class="input-group"><label for="senha">Senha (mín. 6 caracteres)</label><input
+                                    type="password" id="senha" required minlength="6"></div>
+                            <div class="input-group"><label for="confirmaSenha">Confirme a Senha</label><input
+                                    type="password" id="confirmaSenha" required></div>
+                        </fieldset>
                     </div>
-                    <div class="input-group"><label for="telefone">Telefone / Celular</label><input type="tel"
-                            id="telefone" required></div>
-                </fieldset>
-                <fieldset class="form-fieldset">
-                    <legend>Endereço (Opcional)</legend>
-                    <div class="input-group"><label for="cep">CEP</label><input type="text" id="cep" maxlength="8">
+                    <button type="submit" class="btn btn-primary btn-full-width" style="margin-top: 1.5rem;">Finalizar
+                        Cadastro</button>
+                    <div class="footer-links"><a href="login.html">Já tem uma conta? <strong>Faça login</strong></a>
                     </div>
-                    <div class="input-group"><label for="regiao-administrativa">Região Administrativa (DF)</label>
-                        <select id="regiao-administrativa">
-                            <option value="" selected>Selecione sua RA...</option>
-                            <option value="Plano Piloto">Plano Piloto</option>
-                            <option value="Gama">Gama</option>
-                            <option value="Taguatinga">Taguatinga</option>
-                            <option value="Brazlândia">Brazlândia</option>
-                            <option value="Sobradinho">Sobradinho</option>
-                            <option value="Planaltina">Planaltina</option>
-                            <option value="Paranoá">Paranoá</option>
-                            <option value="Núcleo Bandeirante">Núcleo Bandeirante</option>
-                            <option value="Ceilândia">Ceilândia</option>
-                            <option value="Guará">Guará</option>
-                            <option value="Cruzeiro">Cruzeiro</option>
-                            <option value="Samambaia">Samambaia</option>
-                            <option value="Santa Maria">Santa Maria</option>
-                            <option value="São Sebastião">São Sebastião</option>
-                            <option value="Recanto das Emas">Recanto das Emas</option>
-                            <option value="Lago Sul">Lago Sul</option>
-                            <option value="Riacho Fundo">Riacho Fundo</option>
-                            <option value="Lago Norte">Lago Norte</option>
-                            <option value="Candangolândia">Candangolândia</option>
-                            <option value="Águas Claras">Águas Claras</option>
-                            <option value="Riacho Fundo II">Riacho Fundo II</option>
-                            <option value="Sudoeste/Octogonal">Sudoeste/Octogonal</option>
-                            <option value="Varjão">Varjão</option>
-                            <option value="Park Way">Park Way</option>
-                            <option value="SCIA (Estrutural)">SCIA (Estrutural)</option>
-                            <option value="Sobradinho II">Sobradinho II</option>
-                            <option value="Jardim Botânico">Jardim Botânico</option>
-                            <option value="Itapoã">Itapoã</option>
-                            <option value="SIA">SIA</option>
-                            <option value="Vicente Pires">Vicente Pires</option>
-                            <option value="Fercal">Fercal</option>
-                            <option value="Sol Nascente/Pôr do Sol">Sol Nascente/Pôr do Sol</option>
-                            <option value="Arniqueira">Arniqueira</option>
-                        </select>
-                    </div>
-                    <div class="input-group"><label for="numero">Número</label><input type="text" id="numero"></div>
-                    <div class="input-group"><label for="complemento">Complemento</label><input type="text"
-                            id="complemento"></div>
-                </fieldset>
-                <fieldset class="form-fieldset full-width">
-                    <legend>Dados de Acesso</legend>
-                    <div class="input-group"><label for="email">E-mail</label><input type="email" id="email" required>
-                    </div>
-                    <div class="input-group"><label for="cpf">CPF (apenas números)</label><input type="text" id="cpf"
-                            required maxlength="11"></div>
-                    <div class="input-group"><label for="senha">Senha (mín. 6 caracteres)</label><input type="password"
-                            id="senha" required minlength="6"></div>
-                    <div class="input-group"><label for="confirmaSenha">Confirme a Senha</label><input type="password"
-                            id="confirmaSenha" required></div>
-                </fieldset>
-            </div>
-            <button type="submit" class="btn-login" style="margin-top: 1rem;">Finalizar Cadastro</button>
-            <div class="footer-links"><a href="login.html">Já tem uma conta? Faça login</a></div>
-        </form>
-    </main>
+                </form>
+            </main>
+        </div>
+    </div>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="js/common.js"></script>
     <script src="js/cadastro.js"></script>
     <div vw class="enabled">

@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderMinhaAgenda() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Minha Agenda (Próximas Consultas)</h3><p>Clique em uma consulta para iniciar o atendimento.</p><ul id="lista-agendamentos-medico" class="medico-list"><li>Carregando...</li></ul>`;
+        contentDinamico.innerHTML = `<div class="section-card"><h3>Minha Agenda (Próximas Consultas)</h3><p>Clique em uma consulta para iniciar o atendimento.</p><ul id="lista-agendamentos-medico" class="medico-list" style="margin-top: 1.5rem;"><li>Carregando...</li></ul></div>`;
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
             if (!response) return;
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const li = document.createElement('li');
                 li.className = 'agendamento-card status-' + ag.status;
                 li.style.cursor = 'pointer';
-                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: ${ag.status}</small></div><span>Iniciar Atendimento &rarr;</span>`;
+                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status}</span></small></div><span>Iniciar Atendimento &rarr;</span>`;
                 listaUL.appendChild(li);
                 li.addEventListener('click', () => renderTelaDeAtendimento(ag.idAgendamento));
             });
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderHistoricoDeAtendimentos() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Histórico de Atendimentos</h3><p>Clique em um atendimento para rever o prontuário.</p><ul id="lista-historico-medico" class="medico-list"><li>Carregando...</li></ul>`;
+        contentDinamico.innerHTML = `<div class="section-card"><h3>Histórico de Atendimentos</h3><p>Clique em um atendimento para rever o prontuário.</p><ul id="lista-historico-medico" class="medico-list" style="margin-top: 1.5rem;"><li>Carregando...</li></ul></div>`;
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
             if (!response) return;
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const li = document.createElement('li');
                 li.className = 'agendamento-card status-' + ag.status;
                 li.style.cursor = 'pointer';
-                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: ${ag.status}</small></div><span>Ver Prontuário &rarr;</span>`;
+                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status}</span></small></div><span>Ver Prontuário &rarr;</span>`;
                 listaUL.appendChild(li);
                 li.addEventListener('click', () => renderTelaDeAtendimento(ag.idAgendamento, true));
             });
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderTelaDeAtendimento(agendamentoId, isHistorico = false) {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div>Carregando atendimento...</div>`;
+        contentDinamico.innerHTML = `<div class="section-card">Carregando atendimento...</div>`;
         try {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/prontuario`);
             if (!response || !response.ok) throw new Error('Falha ao carregar dados do atendimento.');
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 contentDinamico.innerHTML = `
                     <div class="admin-section-header"><h3>Prontuário do Atendimento</h3><button class="btn btn-secondary" id="btn-voltar-historico">&larr; Voltar ao Histórico</button></div>
                     <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nome}</p><p><strong>Data:</strong> ${new Date(consulta.data).toLocaleString('pt-BR')}</p></div><hr>
-                    <div class="document-item" style="background-color: #fffaf0;"><div class="ficha-detalhe"><strong>Sintomas Relatados:</strong><p>${consulta.sintomas || 'N/A'}</p></div><div class="ficha-detalhe"><strong>Evolução Médica:</strong><p>${consulta.evolucaoMedica || 'Nenhuma evolução registrada.'}</p></div></div><hr>
+                    <div class="document-item" style="background-color: #f0f9ff;"><div class="ficha-detalhe"><strong>Sintomas Relatados:</strong><p>${consulta.sintomas || 'N/A'}</p></div><div class="ficha-detalhe"><strong>Evolução Médica:</strong><p>${consulta.evolucaoMedica || 'Nenhuma evolução registrada.'}</p></div></div><hr>
                     <div class="document-item">${prescricaoHtml}</div><hr><div class="document-item">${examesHtml}</div>`;
                 document.getElementById('btn-voltar-historico').addEventListener('click', renderHistoricoDeAtendimentos);
             } else {
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="input-group"><label>Solicitação de Exames</label><div class="checkbox-container">${examesCheckboxesHtml}</div></div>
                         <div class="input-group"><label>Necessita de Atestado?</label><div class="radio-group"><input type="radio" id="atestado-nao" name="necessitaAtestado" value="nao" checked> <label for="atestado-nao">Não</label><input type="radio" id="atestado-sim" name="necessitaAtestado" value="sim" style="margin-left: 1rem;"> <label for="atestado-sim">Sim</label></div></div>
                         <div id="atestado-dias-container" class="input-group" style="display: none;"><label for="dias-repouso">Dias de Repouso</label><input type="number" id="dias-repouso" min="1" placeholder="Informe o número de dias"></div>
-                        <div class="form-actions"><button type="submit" class="btn btn-success">Finalizar e Salvar Consulta</button></div>
+                        <div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-success">Finalizar e Salvar Consulta</button></div>
                     </form>`;
 
                 document.getElementById('btn-voltar-agenda').addEventListener('click', renderMinhaAgenda);
@@ -175,9 +175,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderGerenciarHorarios() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        let htmlForm = `<h3>Meus Horários Disponíveis</h3><p>Adicione ou remova horários.</p><div id="horarios-error-message" class="error-message" style="display:none;"></div><div class="schedule-builder">`;
-        DIAS_DA_SEMANA.forEach(dia => { htmlForm += `<div class="schedule-day-card" id="card-${dia}"><h5>${dia.charAt(0) + dia.slice(1).toLowerCase()}</h5><div class="add-time-form"><input type="time" class="time-input" data-dia="${dia}"><button type="button" class="btn-add-time" data-dia="${dia}">+</button></div><div class="time-tags-container" id="tags-${dia}"></div></div>`; });
-        htmlForm += `</div><div class="form-actions" style="margin-top: 1.5rem;"><button type="button" class="btn btn-success" id="btn-salvar-agenda">Salvar Agenda</button></div>`;
+
+        const clockIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+        const plusIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`;
+
+        let htmlForm = `
+            <div class="section-card">
+                <div class="admin-section-header">
+                    <h3>Meus Horários Disponíveis</h3>
+                </div>
+                <p class="form-description">Adicione os horários em que você está disponível para atendimento em cada dia da semana. As alterações são salvas para as próximas semanas.</p>
+                <div id="horarios-error-message" class="error-message" style="display:none;"></div>
+                <div class="schedule-builder">`;
+
+        DIAS_DA_SEMANA.forEach(dia => {
+            htmlForm += `
+                <div class="schedule-day-card" id="card-${dia}">
+                    <h5>${dia.charAt(0) + dia.slice(1).toLowerCase()}</h5>
+                    <div class="add-time-form">
+                        <div class="time-input-wrapper">
+                            ${clockIcon}
+                            <input type="time" class="time-input" data-dia="${dia}">
+                        </div>
+                        <button type="button" class="btn-add-time" data-dia="${dia}" title="Adicionar horário">${plusIcon}</button>
+                    </div>
+                    <div class="time-tags-container" id="tags-${dia}"></div>
+                </div>`;
+        });
+
+        htmlForm += `</div>
+            <div class="form-actions" style="margin-top: 2rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-primary" id="btn-salvar-agenda">Salvar Agenda</button>
+            </div>
+        </div>`;
         contentDinamico.innerHTML = htmlForm;
         try {
             const respHorarios = await fetchAuthenticated(`/api/medicos/${meuIdDeMedico}/horarios`);
@@ -186,13 +216,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (agendaAtual.dias) { agendaAtual.dias.forEach(diaInfo => diaInfo.horarios.forEach(hora => criarTagDeHorario(diaInfo.dia, hora))); }
             }
         } catch (e) { console.error("Erro ao buscar agenda atual", e); }
+
         document.querySelectorAll('.btn-add-time').forEach(button => {
             button.addEventListener('click', e => {
-                const dia = e.target.dataset.dia;
+                const dia = e.currentTarget.dataset.dia;
                 const input = document.querySelector(`.time-input[data-dia="${dia}"]`);
-                if (input.value) { criarTagDeHorario(dia, input.value); input.value = ''; }
+                if (input && input.value) {
+                    criarTagDeHorario(dia, input.value);
+                    input.value = '';
+                }
             });
         });
+
         document.getElementById('btn-salvar-agenda').addEventListener('click', handleSalvarHorarios);
     }
 
@@ -201,12 +236,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (container.querySelector(`[data-hora="${horaString}"]`)) return;
         const tag = document.createElement('div');
         tag.className = 'time-tag';
-        tag.textContent = horaString;
         tag.dataset.hora = horaString;
-        const removeBtn = document.createElement('span');
+
+        const timeText = document.createElement('span');
+        timeText.textContent = horaString;
+
+        const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-tag';
-        removeBtn.textContent = '×';
+        removeBtn.title = 'Remover horário';
+        removeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
         removeBtn.onclick = () => tag.remove();
+
+        tag.appendChild(timeText);
         tag.appendChild(removeBtn);
         container.appendChild(tag);
     }
@@ -230,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderFormularioConteudo() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Será salvo como rascunho para aprovação.</p><form id="form-conteudo"><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions"><button type="submit" class="btn btn-primary">Enviar para Aprovação</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Será salvo como rascunho para aprovação.</p><form id="form-conteudo"><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary">Enviar para Aprovação</button></div></form></div>`;
         document.getElementById('form-conteudo').addEventListener('submit', handleConteudoSubmit);
     }
 
@@ -246,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderMeuPerfil() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meu Perfil</h3><div id="perfil-info" class="document-item">Carregando...</div><hr><h4>Alterar Senha</h4><div class="booking-form-container"><form id="form-alterar-senha"><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="section-card"><h3>Meu Perfil</h3><div id="perfil-info">Carregando...</div></div><div class="section-card" style="margin-top: 1.5rem;"><h4>Alterar Senha</h4><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
         try {
             fetchAuthenticated('/api/usuarios/me').then(response => response.json()).then(usuario => {
                 document.getElementById('perfil-info').innerHTML = `<p><strong>Nome:</strong> ${usuario.nome}</p><p><strong>Email:</strong> ${usuario.email}</p><p><strong>CPF:</strong> ${usuario.cpf}</p>${usuario.crm ? `<p><strong>CRM:</strong> ${usuario.crm}</p>` : ''}`;
@@ -281,3 +323,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initMedicoDashboard();
 });
+

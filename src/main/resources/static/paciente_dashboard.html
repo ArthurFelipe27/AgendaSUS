@@ -6,24 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Paciente - AgendaSUS</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <script src="js/auth-guard.js"></script>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/auth-guard.js" defer></script>
+    <script src="js/common.js" defer></script>
+    <script src="js/paciente.js" defer></script>
 </head>
 
 <body class="dashboard-body">
     <header class="navbar">
         <div class="navbar-container">
-            <h1 class="navbar-brand">AgendaSUS (Paciente)</h1>
-            <button id="logout-button" class="btn btn-logout">Sair</button>
+            <h1 class="navbar-brand">AgendaSUS</h1>
+            <button id="logout-button" class="btn-logout">Sair</button>
         </div>
     </header>
     <main class="page-container">
-        <h2 id="welcome-message">Carregando...</h2>
-        <div id="content-area"></div>
+        <div id="welcome-message-container" class="page-header">
+            <h2 id="welcome-message">Carregando...</h2>
+            <p>Agende e gerencie suas consultas de forma simples.</p>
+        </div>
+        <div id="content-area">
+            <!-- O conteúdo principal do dashboard será renderizado aqui pelo paciente.js -->
+        </div>
     </main>
-    <script src="js/common.js"></script>
-    <script src="js/paciente.js"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <!-- VLibras -->
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>

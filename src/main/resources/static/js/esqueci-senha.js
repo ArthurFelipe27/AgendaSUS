@@ -19,15 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Sucesso! Mostra a seção do token.
+                // Sucesso! Mostra a seção do token e esconde o formulário.
                 resetTokenCode.textContent = data.resetToken;
                 forgotPasswordForm.style.display = 'none';
                 tokenDisplayDiv.style.display = 'block';
 
-                // --- NOVA LÓGICA DO BOTÃO COPIAR ---
                 const copyButton = document.getElementById('btn-copy-token');
                 copyButton.addEventListener('click', () => {
-                    // Usa a API de Clipboard do navegador (moderna e segura)
                     navigator.clipboard.writeText(data.resetToken).then(() => {
                         showToast('Token copiado para a área de transferência!', 'success');
                         copyButton.textContent = 'Copiado!';
@@ -47,3 +45,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
