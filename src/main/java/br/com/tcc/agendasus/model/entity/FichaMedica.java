@@ -26,6 +26,11 @@ public class FichaMedica {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * CORREÇÃO: A relação com o Paciente foi adicionada de volta.
+     * Isso é necessário para que o FichaMedicaResponseDTO possa ser construído
+     * corretamente sem precisar passar pelo Agendamento.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_paciente", nullable = false)
     private Paciente paciente;
@@ -41,7 +46,7 @@ public class FichaMedica {
 
     @Column(columnDefinition = "TEXT")
     private String cirurgias;
-    
+
     @Column(name = "evolucao_medica", columnDefinition = "TEXT")
     private String evolucaoMedica;
 
@@ -56,8 +61,10 @@ public class FichaMedica {
         criadoEm = LocalDateTime.now();
         atualizadoEm = LocalDateTime.now();
     }
+
     @PreUpdate
     protected void onUpdate() {
         atualizadoEm = LocalDateTime.now();
     }
 }
+

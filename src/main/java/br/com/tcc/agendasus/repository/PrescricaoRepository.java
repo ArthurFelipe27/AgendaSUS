@@ -10,7 +10,10 @@ import br.com.tcc.agendasus.model.entity.Prescricao;
 
 @Repository
 public interface PrescricaoRepository extends JpaRepository<Prescricao, Long> {
+
     List<Prescricao> findAllByPacienteIdUsuario(Long pacienteId);
+
     List<Prescricao> findAllByMedicoIdUsuario(Long medicoId);
-    Optional<Prescricao> findByAgendamento_Id(Long agendamentoId);
+
+    Optional<Prescricao> findByAgendamentoId(Long agendamentoId);
 }

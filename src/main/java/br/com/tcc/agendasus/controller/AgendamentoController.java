@@ -13,11 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.tcc.agendasus.dto.AgendamentoCadastroDTO;
-import br.com.tcc.agendasus.dto.AgendamentoResponseDTO;
-import br.com.tcc.agendasus.dto.AgendamentoStatusUpdateDTO;
-import br.com.tcc.agendasus.dto.FinalizarConsultaDTO;
-import br.com.tcc.agendasus.dto.ProntuarioDTO;
+import br.com.tcc.agendasus.dto.DTOs.*;
+import br.com.tcc.agendasus.dto.DTOs.AgendamentoCadastroDTO;
+import br.com.tcc.agendasus.dto.DTOs.AgendamentoResponseDTO;
+import br.com.tcc.agendasus.dto.DTOs.AgendamentoStatusUpdateDTO;
+import br.com.tcc.agendasus.dto.DTOs.FinalizarConsultaDTO;
+import br.com.tcc.agendasus.dto.DTOs.ProntuarioDTO;
 import br.com.tcc.agendasus.service.AgendamentoService;
 import jakarta.validation.Valid;
 
@@ -25,46 +26,41 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/agendamentos")
 public class AgendamentoController {
 
-    private final AgendamentoService agendamentoService;
+    private final AgendamentoService service;
 
-    public AgendamentoController(AgendamentoService agendamentoService) {
-        this.agendamentoService = agendamentoService;
+    public AgendamentoController(AgendamentoService service) {
+        this.service = service;
     }
 
     @PostMapping
-    public ResponseEntity<AgendamentoResponseDTO> criarAgendamento(@RequestBody @Valid AgendamentoCadastroDTO dados, Authentication authentication) {
-        AgendamentoResponseDTO agendamentoCriado = agendamentoService.criarAgendamento(dados, authentication);
-        return ResponseEntity.status(HttpStatus.CREATED).body(agendamentoCriado);
+    public ResponseEntity<AgendamentoResponseDTO> criar(@RequestBody @Valid AgendamentoCadastroDTO dados, Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.criarAgendamento(dados, auth));
     }
 
     @GetMapping("/meus")
-    public ResponseEntity<List<AgendamentoResponseDTO>> listarMeusAgendamentos(Authentication authentication) {
-        return ResponseEntity.ok(agendamentoService.listarMeusAgendamentos(authentication));
+    public ResponseEntity<List<AgendamentoResponseDTO>> listarMeus(Authentication auth) {
+        return ResponseEntity.ok(service.listarMeusAgendamentos(auth));
     }
 
     @GetMapping("/todos")
-    public ResponseEntity<List<AgendamentoResponseDTO>> listarTodosAgendamentos() {
-        return ResponseEntity.ok(agendamentoService.listarTodosAgendamentos());
+    public ResponseEntity<List<AgendamentoResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(service.listarTodosAgendamentos());
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<AgendamentoResponseDTO> atualizarStatus(@PathVariable Long id, @RequestBody @Valid AgendamentoStatusUpdateDTO dados, Authentication authentication) {
-        return ResponseEntity.ok(agendamentoService.atualizarStatus(id, dados, authentication));
+    public ResponseEntity<AgendamentoResponseDTO> atualizarStatus(@PathVariable Long id, @RequestBody @Valid AgendamentoStatusUpdateDTO dados, Authentication auth) {
+        return ResponseEntity.ok(service.atualizarStatus(id, dados, auth));
     }
-
-    @PutMapping("/{id}/cancelar")
-    public ResponseEntity<AgendamentoResponseDTO> cancelarAgendamentoPaciente(@PathVariable Long id, Authentication authentication) {
-        return ResponseEntity.ok(agendamentoService.cancelarAgendamentoPaciente(id, authentication));
+    
+    @PostMapping("/{id}/finalizar")
+    public ResponseEntity<Void> finalizarConsulta(@PathVariable Long id, @RequestBody @Valid FinalizarConsultaDTO dados, Authentication auth) {
+        service.finalizarConsulta(id, dados, auth);
+        return ResponseEntity.noContent().build();
     }
     
     @GetMapping("/{id}/prontuario")
-    public ResponseEntity<ProntuarioDTO> getProntuarioDoAgendamento(@PathVariable Long id, Authentication authentication) {
-        return ResponseEntity.ok(agendamentoService.getProntuarioDoAgendamento(id, authentication));
-    }
-
-    @PostMapping("/{id}/finalizar")
-    public ResponseEntity<Void> finalizarConsulta(@PathVariable Long id, @RequestBody @Valid FinalizarConsultaDTO dados, Authentication authentication) {
-        agendamentoService.finalizarConsulta(id, dados, authentication);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<ProntuarioDTO> getProntuario(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(service.getProntuarioDoAgendamento(id, auth));
     }
 }
+

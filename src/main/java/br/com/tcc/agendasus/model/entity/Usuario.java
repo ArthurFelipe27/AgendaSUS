@@ -19,20 +19,25 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
-@EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "usuario")
-public class Usuario implements UserDetails { 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id")
+public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ... (todos os seus campos existentes: nome, email, senha, etc.)
     @Column(nullable = false, length = 150)
     private String nome;
 
@@ -55,13 +60,11 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private boolean ativo = true;
 
-    // --- NOVOS CAMPOS PARA RECUPERAÇÃO DE SENHA ---
     @Column(name = "reset_token")
     private String resetToken;
 
     @Column(name = "reset_token_expiry")
     private LocalDateTime resetTokenExpiry;
-    // --- FIM DOS NOVOS CAMPOS ---
 
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
@@ -80,21 +83,39 @@ public class Usuario implements UserDetails {
         atualizadoEm = LocalDateTime.now();
     }
 
-    // --- MÉTODOS UserDetails (sem alteração) ---
+    // Métodos do UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
+
     @Override
-    public String getPassword() { return this.senha; }
+    public String getPassword() {
+        return this.senha;
+    }
+
     @Override
-    public String getUsername() { return this.email; }
+    public String getUsername() {
+        return this.email;
+    }
+
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
     @Override
-    public boolean isEnabled() { return this.ativo; }
+    public boolean isEnabled() {
+        return this.ativo;
+    }
 }

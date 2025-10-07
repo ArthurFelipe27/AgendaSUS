@@ -13,13 +13,19 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
-@EqualsAndHashCode(of = "idUsuario")
 @Entity
 @Table(name = "medico")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = "idUsuario")
 public class Medico {
 
     @Id
@@ -34,9 +40,13 @@ public class Medico {
     @Column(nullable = false, length = 120)
     private String especialidade;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_unidade")
+    private UnidadeDeSaude unidade;
+
     @Column(name = "horarios_disponiveis", columnDefinition = "json")
     private String horariosDisponiveis;
-    
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 
@@ -48,12 +58,9 @@ public class Medico {
         criadoEm = LocalDateTime.now();
         atualizadoEm = LocalDateTime.now();
     }
+
     @PreUpdate
     protected void onUpdate() {
         atualizadoEm = LocalDateTime.now();
     }
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_unidade")
-    private UnidadeDeSaude unidade;
 }

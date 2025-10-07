@@ -3,6 +3,7 @@ package br.com.tcc.agendasus.model.entity;
 import java.time.LocalDateTime;
 
 import br.com.tcc.agendasus.model.enums.StatusAgendamento;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -41,7 +42,14 @@ public class Agendamento {
     @JoinColumn(name = "id_medico", nullable = false)
     private Medico medico;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    /**
+     * CORREÇÃO: Adicionado 'cascade = CascadeType.ALL'.
+     * Isso instrui o JPA a salvar (persistir) a entidade FichaMedica
+     * automaticamente quando o Agendamento for salvo.
+     * 'orphanRemoval = true' garante que se um agendamento for deletado,
+     * a ficha médica associada também será.
+     */
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "id_ficha", nullable = false, unique = true)
     private FichaMedica fichaMedica;
 
@@ -68,3 +76,4 @@ public class Agendamento {
         atualizadoEm = LocalDateTime.now();
     }
 }
+

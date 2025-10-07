@@ -4,47 +4,49 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.tcc.agendasus.dto.ForgotPasswordRequestDTO;
-import br.com.tcc.agendasus.dto.ResetPasswordRequestDTO;
-import br.com.tcc.agendasus.dto.UsuarioCadastroDTO;
-import br.com.tcc.agendasus.dto.UsuarioResponseDTO;
-import br.com.tcc.agendasus.dto.UsuarioUpdateDTO;
+import br.com.tcc.agendasus.dto.DTOs.*;
+import br.com.tcc.agendasus.dto.DTOs.ForgotPasswordRequestDTO;
+import br.com.tcc.agendasus.dto.DTOs.ResetPasswordRequestDTO;
+import br.com.tcc.agendasus.dto.DTOs.UsuarioCadastroDTO;
+import br.com.tcc.agendasus.dto.DTOs.UsuarioResponseDTO;
+import br.com.tcc.agendasus.dto.DTOs.UsuarioUpdateDTO;
 import br.com.tcc.agendasus.model.entity.Paciente;
 import br.com.tcc.agendasus.model.entity.Usuario;
 import br.com.tcc.agendasus.model.enums.Role;
 import br.com.tcc.agendasus.repository.PacienteRepository;
 import br.com.tcc.agendasus.repository.UsuarioRepository;
 import br.com.tcc.agendasus.service.security.TokenService;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PacienteRepository pacienteRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
-    private final PacienteRepository pacienteRepository; // NOVA DEPENDÊNCIA
+    private final AuthorizationService authorizationService;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-                          TokenService tokenService, PacienteRepository pacienteRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PacienteRepository pacienteRepository,
+                          PasswordEncoder passwordEncoder, TokenService tokenService,
+                          AuthorizationService authorizationService) {
         this.usuarioRepository = usuarioRepository;
+        this.pacienteRepository = pacienteRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
-        this.pacienteRepository = pacienteRepository; // INJETADA AQUI
+        this.authorizationService = authorizationService;
     }
 
     @Transactional
     public UsuarioResponseDTO cadastrarUsuario(UsuarioCadastroDTO dados) {
-        if (usuarioRepository.findByEmail(dados.email()).isPresent()) {
+        if (usuarioRepository.existsByEmail(dados.email())) {
             throw new IllegalArgumentException("E-mail já cadastrado.");
         }
-        if (usuarioRepository.findByCpf(dados.cpf()).isPresent()) {
+        if (usuarioRepository.existsByCpf(dados.cpf())) {
             throw new IllegalArgumentException("CPF já cadastrado.");
         }
 
@@ -55,8 +57,7 @@ public class UsuarioService {
         novoUsuario.setSenha(passwordEncoder.encode(dados.senha()));
         novoUsuario.setRole(Role.PACIENTE); // Cadastro público é sempre PACIENTE
         Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
-        
-        // CRIA E SALVA A ENTIDADE PACIENTE COM OS DADOS COMPLETOS
+
         Paciente novoPaciente = new Paciente();
         novoPaciente.setUsuario(usuarioSalvo);
         novoPaciente.setNomeSocial(dados.nomeSocial());
@@ -70,31 +71,19 @@ public class UsuarioService {
         novoPaciente.setComplemento(dados.complemento());
         pacienteRepository.save(novoPaciente);
 
-
         return new UsuarioResponseDTO(usuarioSalvo);
-    }
-
-    @Transactional(readOnly = true)
-    public List<UsuarioResponseDTO> listarTodos() {
-        return usuarioRepository.findAll()
-                .stream()
-                .map(UsuarioResponseDTO::new)
-                .collect(Collectors.toList());
     }
     
     @Transactional(readOnly = true)
-    public UsuarioResponseDTO getMeuPerfil(Authentication authentication) {
-        Usuario usuarioLogado = (Usuario) authentication.getPrincipal();
-        return new UsuarioResponseDTO(usuarioLogado); 
+    public List<UsuarioResponseDTO> listarTodos() {
+        return usuarioRepository.findAll().stream()
+                .map(UsuarioResponseDTO::new)
+                .collect(Collectors.toList());
     }
-
 
     @Transactional
     public UsuarioResponseDTO atualizarUsuario(Long id, UsuarioUpdateDTO dadosUpdate) {
-        verificarPermissao(id);
-
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + id));
+        Usuario usuario = findById(id);
 
         if (dadosUpdate.nome() != null && !dadosUpdate.nome().isBlank()) {
             usuario.setNome(dadosUpdate.nome());
@@ -103,32 +92,22 @@ public class UsuarioService {
             usuario.setSenha(passwordEncoder.encode(dadosUpdate.senha()));
         }
 
-        Usuario usuarioAtualizado = usuarioRepository.save(usuario);
-        return new UsuarioResponseDTO(usuarioAtualizado);
+        return new UsuarioResponseDTO(usuarioRepository.save(usuario));
     }
 
     @Transactional
     public void desativarUsuario(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o ID: " + id));
+        Usuario usuario = findById(id);
         usuario.setAtivo(false);
         usuarioRepository.save(usuario);
     }
-
-    private void verificarPermissao(Long idDoRecurso) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Usuario usuarioAutenticado = (Usuario) authentication.getPrincipal();
-
-        if (usuarioAutenticado.getRole() != Role.DIRETOR && !usuarioAutenticado.getId().equals(idDoRecurso)) {
-            throw new AccessDeniedException("Acesso negado: você não tem permissão para modificar este recurso.");
-        }
-    }
-
+    
     @Transactional
     public String gerarTokenResetSenha(ForgotPasswordRequestDTO dados) {
         Usuario usuario = usuarioRepository.findByEmail(dados.email())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com o e-mail fornecido."));
-        String token = tokenService.gerarToken(usuario); 
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com o e-mail fornecido."));
+
+        String token = tokenService.gerarToken(usuario);
         usuario.setResetToken(token);
         usuario.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
         usuarioRepository.save(usuario);
@@ -139,15 +118,22 @@ public class UsuarioService {
     public void redefinirSenha(ResetPasswordRequestDTO dados) {
         Usuario usuario = usuarioRepository.findByResetToken(dados.token())
                 .orElseThrow(() -> new IllegalArgumentException("Token inválido ou não encontrado."));
+
         if (usuario.getResetTokenExpiry() == null || usuario.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
             usuario.setResetToken(null);
             usuario.setResetTokenExpiry(null);
             usuarioRepository.save(usuario);
             throw new IllegalArgumentException("Token expirado. Por favor, solicite um novo.");
         }
+        
         usuario.setSenha(passwordEncoder.encode(dados.novaSenha()));
         usuario.setResetToken(null);
         usuario.setResetTokenExpiry(null);
         usuarioRepository.save(usuario);
+    }
+
+    public Usuario findById(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com o ID: " + id));
     }
 }

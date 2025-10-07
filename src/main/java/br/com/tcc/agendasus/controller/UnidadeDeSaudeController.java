@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.tcc.agendasus.dto.UnidadeSaudeCadastroDTO;
-import br.com.tcc.agendasus.dto.UnidadeSaudeResponseDTO;
+import br.com.tcc.agendasus.dto.DTOs.UnidadeSaudeCadastroDTO;
+import br.com.tcc.agendasus.dto.DTOs.UnidadeSaudeResponseDTO;
 import br.com.tcc.agendasus.service.UnidadeDeSaudeService;
 import jakarta.validation.Valid;
 
@@ -27,8 +27,7 @@ public class UnidadeDeSaudeController {
 
     @PostMapping
     public ResponseEntity<UnidadeSaudeResponseDTO> criar(@RequestBody @Valid UnidadeSaudeCadastroDTO dados) {
-        UnidadeSaudeResponseDTO novaUnidade = service.criar(dados);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novaUnidade);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(dados));
     }
 
     @GetMapping

@@ -1,14 +1,13 @@
 package br.com.tcc.agendasus.controller;
 
+import br.com.tcc.agendasus.dto.DTOs.*;
+import br.com.tcc.agendasus.service.FichaMedicaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import br.com.tcc.agendasus.dto.FichaMedicaResponseDTO;
-import br.com.tcc.agendasus.service.FichaMedicaService;
 
 @RestController
 @RequestMapping("/api/fichas-medicas")

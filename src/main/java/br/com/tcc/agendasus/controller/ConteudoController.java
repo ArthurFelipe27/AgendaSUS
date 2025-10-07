@@ -14,9 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.tcc.agendasus.dto.ConteudoCadastroDTO;
-import br.com.tcc.agendasus.dto.ConteudoResponseDTO;
-import br.com.tcc.agendasus.dto.ConteudoUpdateDTO;
+import br.com.tcc.agendasus.dto.DTOs.*;
+import br.com.tcc.agendasus.dto.DTOs.ConteudoCadastroDTO;
+import br.com.tcc.agendasus.dto.DTOs.ConteudoResponseDTO;
+import br.com.tcc.agendasus.dto.DTOs.ConteudoUpdateDTO;
 import br.com.tcc.agendasus.service.ConteudoService;
 import jakarta.validation.Valid;
 
@@ -30,20 +31,11 @@ public class ConteudoController {
         this.service = service;
     }
 
-    // --- Endpoints Públicos ---
-
     @GetMapping("/publico")
     public ResponseEntity<List<ConteudoResponseDTO>> listarPublicados() {
         return ResponseEntity.ok(service.listarPublicados());
     }
-
-    @GetMapping("/publico/{id}")
-    public ResponseEntity<ConteudoResponseDTO> getPublicadoPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getPublicadoPorId(id));
-    }
-
-    // --- Endpoints de Admin (Diretor) ---
-
+    
     @PostMapping("/admin")
     public ResponseEntity<ConteudoResponseDTO> criar(@RequestBody @Valid ConteudoCadastroDTO dados, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(dados, auth));
@@ -65,3 +57,4 @@ public class ConteudoController {
         return ResponseEntity.noContent().build();
     }
 }
+

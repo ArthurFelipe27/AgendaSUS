@@ -57,7 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.style.cursor = 'pointer';
                 li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status}</span></small></div><span>Iniciar Atendimento &rarr;</span>`;
                 listaUL.appendChild(li);
-                li.addEventListener('click', () => renderTelaDeAtendimento(ag.idAgendamento));
+                // CORREÇÃO: Usando ag.id em vez de ag.idAgendamento
+                li.addEventListener('click', () => renderTelaDeAtendimento(ag.id));
             });
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar agendamentos.</li>'; }
     }
@@ -83,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.style.cursor = 'pointer';
                 li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status}</span></small></div><span>Ver Prontuário &rarr;</span>`;
                 listaUL.appendChild(li);
-                li.addEventListener('click', () => renderTelaDeAtendimento(ag.idAgendamento, true));
+                // CORREÇÃO: Usando ag.id em vez de ag.idAgendamento
+                li.addEventListener('click', () => renderTelaDeAtendimento(ag.id, true));
             });
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar histórico.</li>'; }
     }
@@ -112,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 contentDinamico.innerHTML = `
                     <div class="admin-section-header"><h3>Prontuário do Atendimento</h3><button class="btn btn-secondary" id="btn-voltar-historico">&larr; Voltar ao Histórico</button></div>
-                    <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nome}</p><p><strong>Data:</strong> ${new Date(consulta.data).toLocaleString('pt-BR')}</p></div><hr>
+                    <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nomePaciente}</p><p><strong>Data:</strong> ${new Date(consulta.data).toLocaleString('pt-BR')}</p></div><hr>
                     <div class="document-item" style="background-color: #f0f9ff;"><div class="ficha-detalhe"><strong>Sintomas Relatados:</strong><p>${consulta.sintomas || 'N/A'}</p></div><div class="ficha-detalhe"><strong>Evolução Médica:</strong><p>${consulta.evolucaoMedica || 'Nenhuma evolução registrada.'}</p></div></div><hr>
                     <div class="document-item">${prescricaoHtml}</div><hr><div class="document-item">${examesHtml}</div>`;
                 document.getElementById('btn-voltar-historico').addEventListener('click', renderHistoricoDeAtendimentos);
@@ -122,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 contentDinamico.innerHTML = `
                     <div class="admin-section-header"><h3>Atendimento em Andamento</h3><button class="btn btn-secondary" id="btn-voltar-agenda">&larr; Voltar para Agenda</button></div>
-                    <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nome} (${prontuario.idade} anos)</p><p><strong>Queixa Principal:</strong> ${consulta.sintomas}</p></div>
+                    <div class="document-item"><p><strong>Paciente:</strong> ${prontuario.nomePaciente} (${prontuario.idade} anos)</p><p><strong>Queixa Principal:</strong> ${consulta.sintomas}</p></div>
                     <form id="form-finalizar-consulta" class="booking-form-container">
                         <div class="input-group"><label for="evolucao">Evolução Médica</label><textarea id="evolucao" rows="8"></textarea></div>
                         <div class="input-group"><label for="prescricao">Prescrição Médica</label><textarea id="prescricao" rows="8"></textarea></div>
@@ -323,4 +325,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initMedicoDashboard();
 });
-

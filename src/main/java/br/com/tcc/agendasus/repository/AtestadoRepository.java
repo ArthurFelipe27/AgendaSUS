@@ -10,7 +10,10 @@ import br.com.tcc.agendasus.model.entity.Atestado;
 
 @Repository
 public interface AtestadoRepository extends JpaRepository<Atestado, Long> {
+
     List<Atestado> findAllByPacienteIdUsuario(Long pacienteId);
+
     List<Atestado> findAllByMedicoIdUsuario(Long medicoId);
-    Optional<Atestado> findByAgendamento_Id(Long agendamentoId);
+
+    Optional<Atestado> findByAgendamentoId(Long agendamentoId);
 }

@@ -1,6 +1,5 @@
 package br.com.tcc.agendasus.config;
 
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -32,75 +31,55 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // Endpoints Públicos
+                        .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll() // Cadastro de Paciente
+                        .requestMatchers("/api/public/**").permitAll()
                         
-                        // --- 1. REGRAS PÚBLICAS (PERMIT ALL) ---
-                        // APIs Públicas
-                        .requestMatchers(HttpMethod.POST, "/api/login", "/api/usuarios").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/public/**").permitAll() // Para recuperação de senha
+                        // Conteúdo Público
                         .requestMatchers(HttpMethod.GET, "/api/conteudo/publico/**").permitAll()
-                        
-                        // Arquivos Estáticos do Frontend
-                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll() 
-                        .requestMatchers("/", "/*.html").permitAll() // Permite todos os HTMLs na raiz
 
-                        // --- 2. REGRAS AUTENTICADAS (API) ---
-                        // Usuário
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/{id}").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/{id}").authenticated() // Para alterar a própria senha
+                        // Arquivos Estáticos (HTML, CSS, JS, favicon)
+                        .requestMatchers("/", "/*.html", "/favicon.ico", "/css/**", "/js/**").permitAll()
 
-                        // Unidade de Saúde
-                        .requestMatchers(HttpMethod.POST, "/api/unidades-saude").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.GET, "/api/unidades-saude").authenticated()
-                        
-                        // Médicos
-                        .requestMatchers(HttpMethod.PUT, "/api/medicos/horarios").hasRole("MEDICO") 
+                        // Endpoints de Admin (Diretor)
+                        .requestMatchers("/api/usuarios", "/api/usuarios/{id:\\d+}").hasRole("DIRETOR")
                         .requestMatchers(HttpMethod.POST, "/api/medicos").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.GET, "/api/medicos", "/api/medicos/{id}", "/api/medicos/{id}/horarios").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/medicos/{id}").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/medicos/{id}").hasRole("DIRETOR") 
-                        
-                        // Agendamentos e Prontuário
-                        .requestMatchers(HttpMethod.POST, "/api/agendamentos").hasRole("PACIENTE") 
-                        .requestMatchers(HttpMethod.GET, "/api/agendamentos/meus").hasAnyRole("PACIENTE", "MEDICO")
+                        .requestMatchers(HttpMethod.PUT, "/api/medicos/{id:\\d+}").hasRole("DIRETOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/medicos/{id:\\d+}").hasRole("DIRETOR")
+                        .requestMatchers(HttpMethod.POST, "/api/unidades-saude").hasRole("DIRETOR")
                         .requestMatchers(HttpMethod.GET, "/api/agendamentos/todos").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/status").hasRole("MEDICO")
-                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/cancelar").hasRole("PACIENTE")
-                        .requestMatchers(HttpMethod.GET, "/api/agendamentos/{id}/prontuario").hasAnyRole("MEDICO", "DIRETOR")
-                        .requestMatchers(HttpMethod.POST, "/api/agendamentos/{id}/finalizar").hasRole("MEDICO")
-
-                        // Ficha Médica
-                        .requestMatchers(HttpMethod.GET, "/api/fichas-medicas/agendamento/{agendamentoId}").hasAnyRole("MEDICO", "DIRETOR")
-
-                        // Pós-Consulta
-                        .requestMatchers(HttpMethod.POST, "/api/prescricoes").hasRole("MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/prescricoes/meus").hasAnyRole("PACIENTE", "MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/prescricoes/todas").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.GET, "/api/prescricoes/agendamento/{id}").hasAnyRole("PACIENTE", "MEDICO")
                         
-                        .requestMatchers(HttpMethod.POST, "/api/atestados").hasRole("MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/atestados/meus").hasAnyRole("PACIENTE", "MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/atestados/todas").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.GET, "/api/atestados/agendamento/{id}").hasAnyRole("PACIENTE", "MEDICO")
-                        
-                        .requestMatchers(HttpMethod.PUT, "/api/exames/{id}/resultado").hasRole("MEDICO")
-                        .requestMatchers(HttpMethod.POST, "/api/exames").hasRole("MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/exames/meus").hasAnyRole("PACIENTE", "MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/exames/todas").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.GET, "/api/exames/agendamento/{id}").hasAnyRole("PACIENTE", "MEDICO")
-                        
-                        // Conteúdo Admin
-                        .requestMatchers(HttpMethod.POST, "/api/conteudo/admin").hasAnyRole("DIRETOR", "MEDICO")
-                        .requestMatchers(HttpMethod.GET, "/api/conteudo/admin/todos").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/conteudo/admin/{id}").hasRole("DIRETOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/conteudo/admin/{id}").hasRole("DIRETOR")
+                        // CORREÇÃO: Endpoint de criação de conteúdo para Médico e Diretor
+                        .requestMatchers(HttpMethod.POST, "/api/conteudo/admin").hasAnyRole("MEDICO", "DIRETOR")
+                        // Demais endpoints de conteúdo apenas para Diretor
+                        .requestMatchers("/api/conteudo/admin/**").hasRole("DIRETOR")
 
-                        // --- 3. REGRA FINAL ---
-                        .anyRequest().authenticated() 
+                        // Endpoints de Médico
+                        .requestMatchers(HttpMethod.PUT, "/api/medicos/horarios").hasRole("MEDICO")
+                        .requestMatchers(HttpMethod.POST, "/api/agendamentos/{id:\\d+}/finalizar").hasRole("MEDICO")
+                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id:\\d+}/status").hasRole("MEDICO")
+                        .requestMatchers(HttpMethod.PUT, "/api/exames/{id:\\d+}/resultado").hasRole("MEDICO")
+
+                        // Endpoints de Paciente
+                        .requestMatchers(HttpMethod.POST, "/api/agendamentos").hasRole("PACIENTE")
+                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id:\\d+}/cancelar").hasRole("PACIENTE")
+                        
+                        // Endpoints para múltiplos perfis (Médico E Diretor)
+                        .requestMatchers(HttpMethod.GET, "/api/agendamentos/{id:\\d+}/prontuario").hasAnyRole("MEDICO", "DIRETOR")
+
+                        // Endpoints para QUALQUER usuário autenticado
+                        .requestMatchers("/api/usuarios/me").authenticated()
+                        .requestMatchers("/api/medicos/**").authenticated() 
+                        .requestMatchers("/api/unidades-saude").authenticated()
+                        .requestMatchers("/api/agendamentos/meus").authenticated()
+                        .requestMatchers("/api/prescricoes/**").authenticated()
+                        .requestMatchers("/api/atestados/**").authenticated()
+                        .requestMatchers("/api/exames/**").authenticated()
+
+                        // Todas as outras requisições devem ser autenticadas
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
@@ -116,3 +95,4 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+

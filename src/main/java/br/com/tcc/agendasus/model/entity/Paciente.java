@@ -16,13 +16,19 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
-@EqualsAndHashCode(of = "idUsuario")
 @Entity
 @Table(name = "paciente")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = "idUsuario")
 public class Paciente {
 
     @Id
@@ -30,7 +36,7 @@ public class Paciente {
     private Long idUsuario;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @MapsId 
+    @MapsId
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
@@ -40,11 +46,19 @@ public class Paciente {
     @Column(length = 30)
     private String telefone;
 
-    private String endereco;
-
     @Enumerated(EnumType.STRING)
     private Sexo sexo;
+
+    @Column(name = "nome_social")
+    private String nomeSocial;
     
+    private String endereco;
+    private String cep;
+    private String cidade;
+    private String estado;
+    private String numero;
+    private String complemento;
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 
@@ -56,17 +70,9 @@ public class Paciente {
         criadoEm = LocalDateTime.now();
         atualizadoEm = LocalDateTime.now();
     }
+
     @PreUpdate
     protected void onUpdate() {
         atualizadoEm = LocalDateTime.now();
     }
-
-    @Column(name = "nome_social")
-    private String nomeSocial;
-
-    private String cep;
-    private String cidade;
-    private String estado;
-    private String numero;
-    private String complemento;
 }

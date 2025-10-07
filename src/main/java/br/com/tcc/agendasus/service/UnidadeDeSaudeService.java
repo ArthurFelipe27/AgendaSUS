@@ -6,10 +6,12 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.tcc.agendasus.dto.UnidadeSaudeCadastroDTO;
-import br.com.tcc.agendasus.dto.UnidadeSaudeResponseDTO;
+import br.com.tcc.agendasus.dto.DTOs.*;
+import br.com.tcc.agendasus.dto.DTOs.UnidadeSaudeCadastroDTO;
+import br.com.tcc.agendasus.dto.DTOs.UnidadeSaudeResponseDTO;
 import br.com.tcc.agendasus.model.entity.UnidadeDeSaude;
 import br.com.tcc.agendasus.repository.UnidadeDeSaudeRepository;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class UnidadeDeSaudeService {
@@ -20,24 +22,27 @@ public class UnidadeDeSaudeService {
         this.repository = repository;
     }
 
-@Transactional
-public UnidadeSaudeResponseDTO criar(UnidadeSaudeCadastroDTO dados) {
-    UnidadeDeSaude novaUnidade = new UnidadeDeSaude();
-    novaUnidade.setNome(dados.nome());
-    novaUnidade.setEndereco(dados.endereco());
-    novaUnidade.setRegiaoAdministrativa(dados.regiaoAdministrativa()); // Define o campo correto
-    novaUnidade.setCep(dados.cep());
-    novaUnidade.setTelefone(dados.telefone());
+    @Transactional
+    public UnidadeSaudeResponseDTO criar(UnidadeSaudeCadastroDTO dados) {
+        UnidadeDeSaude novaUnidade = new UnidadeDeSaude();
+        novaUnidade.setNome(dados.nome());
+        novaUnidade.setEndereco(dados.endereco());
+        novaUnidade.setRegiaoAdministrativa(dados.regiaoAdministrativa());
+        novaUnidade.setCep(dados.cep());
+        novaUnidade.setTelefone(dados.telefone());
 
-    UnidadeDeSaude unidadeSalva = repository.save(novaUnidade);
-    return new UnidadeSaudeResponseDTO(unidadeSalva);
-}
+        return new UnidadeSaudeResponseDTO(repository.save(novaUnidade));
+    }
 
     @Transactional(readOnly = true)
     public List<UnidadeSaudeResponseDTO> listarTodas() {
-        return repository.findAll()
-                .stream()
+        return repository.findAll().stream()
                 .map(UnidadeSaudeResponseDTO::new)
                 .collect(Collectors.toList());
+    }
+
+    public UnidadeDeSaude findById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Unidade de Saúde não encontrada com o ID: " + id));
     }
 }

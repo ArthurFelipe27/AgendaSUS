@@ -1,22 +1,30 @@
 package br.com.tcc.agendasus.model.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
-@EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "unidade_saude")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class UnidadeDeSaude {
     
     @Id
@@ -29,7 +37,6 @@ public class UnidadeDeSaude {
     @Column(nullable = false)
     private String endereco;
     
-    // GARANTA QUE O NOME DO CAMPO ESTEJA CORRETO (camelCase)
     @Column(name = "regiao_administrativa", nullable = false)
     private String regiaoAdministrativa;
     
@@ -37,6 +44,9 @@ public class UnidadeDeSaude {
     private String cep;
     
     private String telefone;
+
+    @OneToMany(mappedBy = "unidade")
+    private List<Medico> medicos;
 
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;

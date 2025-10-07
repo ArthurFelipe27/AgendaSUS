@@ -8,52 +8,30 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.tcc.agendasus.dto.ExameCadastroDTO;
-import br.com.tcc.agendasus.dto.ExameResponseDTO;
-import br.com.tcc.agendasus.dto.ExameResultadoUpdateDTO;
+import br.com.tcc.agendasus.dto.DTOs.*;
+import br.com.tcc.agendasus.dto.DTOs.ExameResponseDTO;
+import br.com.tcc.agendasus.dto.DTOs.ExameResultadoUpdateDTO;
 import br.com.tcc.agendasus.model.entity.Exame;
-import br.com.tcc.agendasus.model.entity.Medico;
-import br.com.tcc.agendasus.model.entity.Paciente;
 import br.com.tcc.agendasus.model.entity.Usuario;
 import br.com.tcc.agendasus.model.enums.Role;
 import br.com.tcc.agendasus.repository.ExameRepository;
-import br.com.tcc.agendasus.repository.MedicoRepository;
-import br.com.tcc.agendasus.repository.PacienteRepository;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class ExameService {
 
     private final ExameRepository repository;
-    private final PacienteRepository pacienteRepository;
-    private final MedicoRepository medicoRepository;
+    private final AuthorizationService authorizationService;
 
-    public ExameService(ExameRepository repository, PacienteRepository pacienteRepository, MedicoRepository medicoRepository) {
+
+    public ExameService(ExameRepository repository, AuthorizationService authorizationService) {
         this.repository = repository;
-        this.pacienteRepository = pacienteRepository;
-        this.medicoRepository = medicoRepository;
-    }
-
-    @Transactional
-    public ExameResponseDTO criar(ExameCadastroDTO dados, Authentication auth) {
-        Usuario usuarioLogado = (Usuario) auth.getPrincipal();
-        Medico medico = medicoRepository.findById(usuarioLogado.getId())
-                .orElseThrow(() -> new RuntimeException("Médico não encontrado"));
-        Paciente paciente = pacienteRepository.findById(dados.idPaciente())
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
-
-        Exame exame = new Exame();
-        exame.setMedico(medico);
-        exame.setPaciente(paciente);
-        exame.setTipo(dados.tipo());
-        exame.setDataRealizacao(dados.dataRealizacao());
-
-        Exame exameSalvo = repository.save(exame);
-        return new ExameResponseDTO(exameSalvo);
+        this.authorizationService = authorizationService;
     }
 
     @Transactional(readOnly = true)
     public List<ExameResponseDTO> listarMinhas(Authentication auth) {
-        Usuario usuarioLogado = (Usuario) auth.getPrincipal();
+        Usuario usuarioLogado = authorizationService.getUsuarioLogado(auth);
         List<Exame> lista;
         if (usuarioLogado.getRole() == Role.PACIENTE) {
             lista = repository.findAllByPacienteIdUsuario(usuarioLogado.getId());
@@ -65,26 +43,21 @@ public class ExameService {
         return lista.stream().map(ExameResponseDTO::new).collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public List<ExameResponseDTO> listarTodas() {
-        return repository.findAll().stream().map(ExameResponseDTO::new).collect(Collectors.toList());
-    }
-
     @Transactional
     public ExameResponseDTO atualizarResultado(Long exameId, ExameResultadoUpdateDTO dados, Authentication auth) {
-        Usuario usuarioLogado = (Usuario) auth.getPrincipal();
+        Usuario usuarioLogado = authorizationService.getUsuarioLogado(auth);
         Exame exame = repository.findById(exameId)
-                .orElseThrow(() -> new RuntimeException("Exame não encontrado."));
+                .orElseThrow(() -> new EntityNotFoundException("Exame não encontrado."));
         if (!exame.getMedico().getIdUsuario().equals(usuarioLogado.getId())) {
             throw new AccessDeniedException("Você não tem permissão para atualizar o resultado deste exame.");
         }
         exame.setResultado(dados.resultado());
-        Exame exameSalvo = repository.save(exame);
-        return new ExameResponseDTO(exameSalvo);
+        return new ExameResponseDTO(repository.save(exame));
     }
 
     @Transactional(readOnly = true)
     public List<ExameResponseDTO> buscarPorAgendamento(Long agendamentoId, Authentication auth) {
+        // A autorização é validada no AgendamentoService
         return repository.findAllByAgendamentoId(agendamentoId)
                 .stream()
                 .map(ExameResponseDTO::new)

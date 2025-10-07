@@ -8,53 +8,37 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.tcc.agendasus.dto.ConteudoCadastroDTO;
-import br.com.tcc.agendasus.dto.ConteudoResponseDTO;
-import br.com.tcc.agendasus.dto.ConteudoUpdateDTO;
+import br.com.tcc.agendasus.dto.DTOs.*;
+import br.com.tcc.agendasus.dto.DTOs.ConteudoCadastroDTO;
+import br.com.tcc.agendasus.dto.DTOs.ConteudoResponseDTO;
+import br.com.tcc.agendasus.dto.DTOs.ConteudoUpdateDTO;
 import br.com.tcc.agendasus.model.entity.Conteudo;
 import br.com.tcc.agendasus.model.entity.Usuario;
 import br.com.tcc.agendasus.model.enums.StatusConteudo;
 import br.com.tcc.agendasus.repository.ConteudoRepository;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class ConteudoService {
 
     private final ConteudoRepository repository;
+    private final AuthorizationService authorizationService;
 
-    public ConteudoService(ConteudoRepository repository) {
+    public ConteudoService(ConteudoRepository repository, AuthorizationService authorizationService) {
         this.repository = repository;
+        this.authorizationService = authorizationService;
     }
-
-    // --- Métodos Públicos (sem login) ---
 
     @Transactional(readOnly = true)
     public List<ConteudoResponseDTO> listarPublicados() {
-        return repository.findAllByStatus(StatusConteudo.PUBLICADO)
-                .stream()
-                .map(ConteudoResponseDTO::new)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public ConteudoResponseDTO getPublicadoPorId(Long id) {
-        return repository.findByIdAndStatus(id, StatusConteudo.PUBLICADO)
-                .map(ConteudoResponseDTO::new)
-                .orElseThrow(() -> new RuntimeException("Conteúdo não encontrado ou não está publicado."));
-    }
-
-    // --- Métodos de Admin (requer login de Diretor) ---
-
-    @Transactional(readOnly = true)
-    public List<ConteudoResponseDTO> listarTodosAdmin() {
-        return repository.findAll()
-                .stream()
+        return repository.findAllByStatusOrderByPublicadoEmDesc(StatusConteudo.PUBLICADO).stream()
                 .map(ConteudoResponseDTO::new)
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public ConteudoResponseDTO criar(ConteudoCadastroDTO dados, Authentication auth) {
-        Usuario autor = (Usuario) auth.getPrincipal();
+        Usuario autor = authorizationService.getUsuarioLogado(auth);
 
         Conteudo novoConteudo = new Conteudo();
         novoConteudo.setAutor(autor);
@@ -63,14 +47,17 @@ public class ConteudoService {
         novoConteudo.setCorpo(dados.corpo());
         novoConteudo.setStatus(StatusConteudo.RASCUNHO); 
 
-        Conteudo conteudoSalvo = repository.save(novoConteudo);
-        return new ConteudoResponseDTO(conteudoSalvo);
+        return new ConteudoResponseDTO(repository.save(novoConteudo));
+    }
+    
+    @Transactional(readOnly = true)
+    public List<ConteudoResponseDTO> listarTodosAdmin() {
+        return repository.findAll().stream().map(ConteudoResponseDTO::new).collect(Collectors.toList());
     }
 
     @Transactional
     public ConteudoResponseDTO atualizar(Long id, ConteudoUpdateDTO dados) {
-        Conteudo conteudo = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conteúdo não encontrado."));
+        Conteudo conteudo = findById(id);
 
         if (dados.titulo() != null) conteudo.setTitulo(dados.titulo());
         if (dados.corpo() != null) conteudo.setCorpo(dados.corpo());
@@ -81,16 +68,20 @@ public class ConteudoService {
             }
             conteudo.setStatus(dados.status());
         }
-
-        Conteudo conteudoSalvo = repository.save(conteudo);
-        return new ConteudoResponseDTO(conteudoSalvo);
+        
+        return new ConteudoResponseDTO(repository.save(conteudo));
     }
 
     @Transactional
     public void deletar(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Conteúdo não encontrado.");
+            throw new EntityNotFoundException("Conteúdo não encontrado com o ID: " + id);
         }
         repository.deleteById(id);
+    }
+    
+    public Conteudo findById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Conteúdo não encontrado com o ID: " + id));
     }
 }

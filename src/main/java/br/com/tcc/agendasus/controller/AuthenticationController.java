@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.tcc.agendasus.dto.LoginDTO;
-import br.com.tcc.agendasus.dto.TokenDTO; // Import necessário
+import br.com.tcc.agendasus.dto.DTOs.*;
+import br.com.tcc.agendasus.dto.DTOs.LoginDTO;
+import br.com.tcc.agendasus.dto.DTOs.TokenDTO;
 import br.com.tcc.agendasus.model.entity.Usuario;
 import br.com.tcc.agendasus.service.security.TokenService;
 import jakarta.validation.Valid;
@@ -28,14 +29,13 @@ public class AuthenticationController {
 
     @PostMapping
     public ResponseEntity<TokenDTO> efetuarLogin(@RequestBody @Valid LoginDTO dados) {
-        var authenticationToken = new UsernamePasswordAuthenticationToken(dados.email(), dados.senha());
-        var authentication = manager.authenticate(authenticationToken);
-
+        var authToken = new UsernamePasswordAuthenticationToken(dados.email(), dados.senha());
+        var authentication = manager.authenticate(authToken);
         var usuario = (Usuario) authentication.getPrincipal();
-        var tokenJWT = tokenService.gerarToken(usuario);
-        var role = usuario.getRole().name();
-        var nome = usuario.getNome();
-
-        return ResponseEntity.ok(new TokenDTO(tokenJWT, role, nome));
+        
+        String tokenJWT = tokenService.gerarToken(usuario);
+        
+        return ResponseEntity.ok(new TokenDTO(tokenJWT, usuario.getRole().name(), usuario.getNome()));
     }
 }
+

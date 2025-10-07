@@ -13,13 +13,19 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
-@EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "prescricao")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class Prescricao {
 
     @Id
@@ -34,7 +40,6 @@ public class Prescricao {
     @JoinColumn(name = "id_paciente", nullable = false)
     private Paciente paciente;
 
-    // --- CAMPO QUE FALTAVA ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_agendamento")
     private Agendamento agendamento;

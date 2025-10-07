@@ -1,47 +1,50 @@
 package br.com.tcc.agendasus.config.exception;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice; // Import necessário
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice 
+import jakarta.persistence.EntityNotFoundException;
+
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Um DTO 'record' privado apenas para esta classe
     private record ErrorResponse(String message) {}
+    private record ValidationErrorResponse(String field, String message) {}
 
-    /**
-     * Captura exceções de validação de negócio (dados duplicados, regras de negócio quebradas)
-     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<List<ValidationErrorResponse>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        List<ValidationErrorResponse> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> new ValidationErrorResponse(error.getField(), error.getDefaultMessage()))
+                .collect(Collectors.toList());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEntityNotFound(EntityNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
-        ErrorResponse error = new ErrorResponse(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error); // Retorna 409 CONFLICT
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(ex.getMessage()));
     }
 
-    /**
-     * Captura exceções de permissão (ex: Paciente tentando cancelar consulta de outro)
-     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-        ErrorResponse error = new ErrorResponse(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error); // Retorna 403 FORBIDDEN
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("Acesso negado. Você não tem permissão para executar esta ação."));
     }
 
-    /**
-     * Captura exceções de "não encontrado" ou outras exceções de runtime
-     */
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
-        if (ex.getMessage().contains("não encontrado")) {
-            ErrorResponse error = new ErrorResponse(ex.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error); // Retorna 404 NOT FOUND
-        }
-        
-        // Se for outra RuntimeException não esperada, é um erro de servidor
-        ErrorResponse error = new ErrorResponse("Erro interno no servidor: " + ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        // Logar a exceção em um sistema de logs real (ex: SLF4J)
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Ocorreu um erro interno no servidor."));
     }
 }
