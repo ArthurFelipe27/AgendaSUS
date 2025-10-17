@@ -1,5 +1,6 @@
 package br.com.tcc.agendasus.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,15 @@ public class AgendamentoController {
         return ResponseEntity.ok(service.listarMeusAgendamentos(auth));
     }
 
+    // [REMOVIDO] Endpoint inseguro que expunha dados de pacientes.
+    // @GetMapping("/medico/{medicoId}") ...
+
+    // [NOVO] Endpoint seguro que retorna apenas os horários ocupados de um médico, sem dados de pacientes.
+    @GetMapping("/medico/{medicoId}/horarios-ocupados")
+    public ResponseEntity<List<LocalDateTime>> listarHorariosOcupados(@PathVariable Long medicoId) {
+        return ResponseEntity.ok(service.listarHorariosOcupadosPorMedico(medicoId));
+    }
+
     @GetMapping("/todos")
     public ResponseEntity<List<AgendamentoResponseDTO>> listarTodos() {
         return ResponseEntity.ok(service.listarTodosAgendamentos());
@@ -51,11 +61,6 @@ public class AgendamentoController {
         return ResponseEntity.ok(service.atualizarStatus(id, dados, auth));
     }
     
-    /**
-     * CORREÇÃO: Este método estava faltando. 
-     * Ele cria o endpoint PUT /api/agendamentos/{id}/cancelar, que é chamado pelo
-     * botão "Cancelar" na tela do paciente.
-     */
     @PutMapping("/{id}/cancelar")
     public ResponseEntity<AgendamentoResponseDTO> cancelarAgendamento(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(service.cancelarAgendamentoPaciente(id, auth));

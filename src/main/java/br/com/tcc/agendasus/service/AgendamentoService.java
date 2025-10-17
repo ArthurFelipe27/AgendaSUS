@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
 import br.com.tcc.agendasus.dto.DTOs.AgendamentoCadastroDTO;
 import br.com.tcc.agendasus.dto.DTOs.AgendamentoResponseDTO;
 import br.com.tcc.agendasus.dto.DTOs.AgendamentoStatusUpdateDTO;
@@ -127,11 +126,9 @@ public class AgendamentoService {
             try {
                 HorarioDisponivelDTO agenda = objectMapper.readValue(horariosJson, HorarioDisponivelDTO.class);
                 String diaDaSemanaReq = DIAS_DA_SEMANA_MAP.get(dataHora.getDayOfWeek());
-                LocalTime horaReq = dataHora.toLocalTime(); // Pega o objeto de tempo
-
+                LocalTime horaReq = dataHora.toLocalTime(); 
                 for (HorarioDisponivelDTO.DiaDeTrabalho dia : agenda.dias()) {
                     if (dia.dia().equalsIgnoreCase(diaDaSemanaReq)) {
-                        // [CORREÇÃO] Itera pela lista de horários, converte para LocalTime e compara os objetos
                         for (String horarioStr : dia.horarios()) {
                             LocalTime horarioDisponivel = LocalTime.parse(horarioStr, TIME_FORMATTER);
                             if (horarioDisponivel.equals(horaReq)) {
@@ -145,7 +142,7 @@ public class AgendamentoService {
                     }
                 }
             } catch (Exception e) { 
-                e.printStackTrace(); // Logar o erro para debug
+                e.printStackTrace(); 
                 throw new RuntimeException("Não foi possível processar a agenda do médico."); 
             }
         }
@@ -160,7 +157,6 @@ public class AgendamentoService {
         }
     }
 
-
     @Transactional(readOnly = true)
     public List<AgendamentoResponseDTO> listarMeusAgendamentos(Authentication authentication) {
         Usuario usuarioLogado = (Usuario) authentication.getPrincipal();
@@ -173,6 +169,18 @@ public class AgendamentoService {
             return List.of();
         }
         return agendamentos.stream().map(AgendamentoResponseDTO::new).collect(Collectors.toList());
+    }
+
+    // [REMOVIDO] Método correspondente ao endpoint inseguro.
+    // public List<AgendamentoResponseDTO> listarAgendamentosPorMedico(Long medicoId) { ... }
+
+    // [NOVO] Método seguro que retorna apenas uma lista de data/hora dos agendamentos confirmados ou pendentes.
+    @Transactional(readOnly = true)
+    public List<LocalDateTime> listarHorariosOcupadosPorMedico(Long medicoId) {
+        return agendamentoRepository.findDataHoraByMedicoIdUsuarioAndStatusIn(
+            medicoId,
+            List.of(StatusAgendamento.PENDENTE, StatusAgendamento.CONFIRMADO)
+        );
     }
 
     @Transactional(readOnly = true)

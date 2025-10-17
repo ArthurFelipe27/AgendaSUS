@@ -135,14 +135,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
         contentDinamico.innerHTML = `<ul class="medico-list"><li>Carregando agenda...</li></ul>`;
         try {
-            const [respMedico, respHorarios] = await Promise.all([
+            // [CORREÇÃO] A chamada de API foi alterada para o novo endpoint seguro.
+            const [respMedico, respHorarios, respAgendamentos] = await Promise.all([
                 fetchAuthenticated(`/api/medicos/${medicoId}`),
-                fetchAuthenticated(`/api/medicos/${medicoId}/horarios`)
+                fetchAuthenticated(`/api/medicos/${medicoId}/horarios`),
+                fetchAuthenticated(`/api/agendamentos/medico/${medicoId}/horarios-ocupados`)
             ]);
-            if (!respMedico.ok || !respHorarios.ok) throw new Error('Não foi possível carregar os dados.');
+
+            if (!respMedico.ok || !respHorarios.ok || !respAgendamentos.ok) throw new Error('Não foi possível carregar os dados completos do médico.');
+
             const medico = await respMedico.json();
             const agenda = await respHorarios.json();
+            // [CORREÇÃO] A resposta agora é diretamente um array de strings de data/hora.
+            const horariosOcupadosArray = await respAgendamentos.json();
+
+            // [CORREÇÃO] Criamos o Set diretamente a partir do array de horários ocupados.
+            const horariosAgendados = new Set(horariosOcupadosArray);
+
             let htmlAgenda = `<h3>Agenda de ${medico.nome} (${medico.especialidade.replace(/_/g, ' ')})</h3><button class="btn btn-secondary" id="btn-voltar-lista" style="margin-bottom: 1rem;">&larr; Voltar</button>`;
+
             if (!agenda.dias || agenda.dias.length === 0) {
                 htmlAgenda += '<p>Este médico não possui horários disponíveis cadastrados.</p>';
             } else {
@@ -151,14 +162,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     htmlAgenda += `<div class="dia-agenda"><strong>${dia.dia}</strong><div class="horarios-grid">`;
                     dia.horarios.forEach(hora => {
                         const dataSlotISO = getProximaDataISO(dia.dia, hora);
-                        htmlAgenda += `<button class="btn-horario" data-iso-datetime="${dataSlotISO}" data-medico-id="${medico.id}" data-medico-nome="${medico.nome}">${hora}</button>`;
+
+                        const isAgendado = horariosAgendados.has(dataSlotISO);
+
+                        htmlAgenda += `<button 
+                                        class="btn-horario ${isAgendado ? 'indisponivel' : ''}" 
+                                        data-iso-datetime="${dataSlotISO}" 
+                                        data-medico-id="${medico.id}" 
+                                        data-medico-nome="${medico.nome}" 
+                                        ${isAgendado ? 'disabled' : ''}>
+                                        ${hora}
+                                     </button>`;
                     });
                     htmlAgenda += `</div></div>`;
                 });
             }
             contentDinamico.innerHTML = htmlAgenda;
             document.getElementById('btn-voltar-lista').addEventListener('click', renderListaMedicos);
-            document.querySelectorAll('.btn-horario').forEach(button => {
+            document.querySelectorAll('.btn-horario:not(.indisponivel)').forEach(button => {
                 button.addEventListener('click', () => renderFormularioSintomas(button.dataset.isoDatetime, button.dataset.medicoId, button.dataset.medicoNome));
             });
         } catch (err) {

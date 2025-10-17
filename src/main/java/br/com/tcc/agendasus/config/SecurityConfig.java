@@ -51,9 +51,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/unidades-saude").hasRole("DIRETOR")
                         .requestMatchers(HttpMethod.GET, "/api/agendamentos/todos").hasRole("DIRETOR")
                         
-                        // CORREÇÃO: Endpoint de criação de conteúdo para Médico e Diretor
                         .requestMatchers(HttpMethod.POST, "/api/conteudo/admin").hasAnyRole("MEDICO", "DIRETOR")
-                        // Demais endpoints de conteúdo apenas para Diretor
                         .requestMatchers("/api/conteudo/admin/**").hasRole("DIRETOR")
 
                         // Endpoints de Médico
@@ -66,6 +64,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/agendamentos").hasRole("PACIENTE")
                         .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id:\\d+}/cancelar").hasRole("PACIENTE")
                         
+                        // [REMOVIDO] Permissão para o endpoint inseguro.
+                        // .requestMatchers(HttpMethod.GET, "/api/agendamentos/medico/{medicoId:\\d+}").authenticated()
+
+                        // [NOVO] Permissão para o novo endpoint seguro, acessível por qualquer usuário autenticado.
+                        .requestMatchers(HttpMethod.GET, "/api/agendamentos/medico/{medicoId:\\d+}/horarios-ocupados").authenticated()
+
                         // Endpoints para múltiplos perfis (Médico E Diretor)
                         .requestMatchers(HttpMethod.GET, "/api/agendamentos/{id:\\d+}/prontuario").hasAnyRole("MEDICO", "DIRETOR")
 

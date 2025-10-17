@@ -217,7 +217,6 @@ a:hover {
     background-color: var(--cor-fundo-container);
 }
 
-/* --- [NOVO] Estilo para a mensagem de erro --- */
 .error-message {
     background-color: #fee2e2;
     color: #b91c1c;
@@ -613,6 +612,28 @@ a:hover {
     color: white;
     border-color: var(--cor-primaria);
 }
+
+/* [NOVO] Estilo para o botão de horário indisponível */
+.btn-horario.indisponivel {
+    background-color: #f1f5f9;
+    /* Cinza bem claro, do fundo */
+    color: #94a3b8;
+    /* Cinza médio/claro */
+    cursor: not-allowed;
+    border-color: var(--cor-borda);
+    text-decoration: line-through;
+}
+
+.btn-horario.indisponivel:hover {
+    transform: none;
+    /* Remove a animação de subir */
+    box-shadow: none;
+    /* Remove a sombra */
+    background-color: #f1f5f9;
+    /* Mantém a mesma cor no hover */
+    color: #94a3b8;
+}
+
 
 /* ===================================================================
    6. COMPONENTES ESPECÍFICOS E UTILITÁRIOS (NOVOS ESTILOS)
