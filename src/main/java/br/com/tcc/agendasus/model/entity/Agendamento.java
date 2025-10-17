@@ -23,7 +23,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(of = "id", callSuper = false)
 @Entity
 @Table(name = "agendamento", uniqueConstraints = {
     @UniqueConstraint(name = "uq_medico_slot", columnNames = {"id_medico", "data_hora"})
@@ -42,13 +42,6 @@ public class Agendamento {
     @JoinColumn(name = "id_medico", nullable = false)
     private Medico medico;
 
-    /**
-     * CORREÇÃO: Adicionado 'cascade = CascadeType.ALL'.
-     * Isso instrui o JPA a salvar (persistir) a entidade FichaMedica
-     * automaticamente quando o Agendamento for salvo.
-     * 'orphanRemoval = true' garante que se um agendamento for deletado,
-     * a ficha médica associada também será.
-     */
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "id_ficha", nullable = false, unique = true)
     private FichaMedica fichaMedica;
@@ -75,5 +68,7 @@ public class Agendamento {
     protected void onUpdate() {
         atualizadoEm = LocalDateTime.now();
     }
+    
+    // O método auxiliar setFichaMedica foi removido pois a relação agora é unidirecional e mais simples.
 }
 

@@ -1,19 +1,16 @@
-// Colocamos todo o nosso código dentro de uma função anônima
-// e a executamos imediatamente com os () no final.
-// Isso cria um "escopo privado" e evita que a const 'token'
-// colida com outros scripts.
+// Este script verifica se o usuário está autenticado antes de carregar as páginas protegidas.
+// Ele é executado imediatamente para bloquear o acesso o mais rápido possível.
 (function () {
-
-    // 1. Pega o token salvo no localStorage
+    // 1. Pega o token salvo no localStorage.
     const token = localStorage.getItem('jwtToken');
+    const currentPath = window.location.pathname;
 
-    // 2. Verifica se o token NÃO existe E se não estamos nas páginas públicas
-    if (!token &&
-        !window.location.pathname.endsWith('/login.html') &&
-        !window.location.pathname.endsWith('/cadastro.html')) {
+    // 2. Define quais páginas são públicas e não precisam de guarda.
+    const publicPages = ['/login.html', '/cadastro.html', '/esqueci-senha.html', '/redefinir-senha.html', '/'];
 
-        // 3. Se não há token, expulsa o usuário
+    // 3. Verifica se o token NÃO existe E se a página atual NÃO é uma das páginas públicas.
+    if (!token && !publicPages.some(page => currentPath.endsWith(page))) {
+        // 4. Se não há token e a página é protegida, redireciona o usuário para o login.
         window.location.href = 'login.html';
     }
-
-})(); // <-- Os parênteses aqui executam a função imediatamente.
+})();

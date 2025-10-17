@@ -3,6 +3,7 @@ package br.com.tcc.agendasus.service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -41,6 +42,7 @@ import br.com.tcc.agendasus.repository.FichaMedicaRepository;
 import br.com.tcc.agendasus.repository.MedicoRepository;
 import br.com.tcc.agendasus.repository.PacienteRepository;
 import br.com.tcc.agendasus.repository.PrescricaoRepository;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class AgendamentoService {
@@ -81,18 +83,25 @@ public class AgendamentoService {
         }
 
         Paciente paciente = pacienteRepository.findById(usuarioLogado.getId())
-            .orElseThrow(() -> new RuntimeException("Paciente não encontrado."));
+            .orElseThrow(() -> new EntityNotFoundException("Paciente não encontrado para o usuário logado."));
 
         Medico medico = medicoRepository.findById(dados.idMedico())
-            .orElseThrow(() -> new RuntimeException("Médico não encontrado."));
+            .orElseThrow(() -> new EntityNotFoundException("Médico não encontrado com o ID fornecido."));
+
+        long agendamentosAtivos = agendamentoRepository.countByPacienteIdUsuarioAndMedicoIdUsuarioAndStatusIn(
+                paciente.getIdUsuario(),
+                medico.getIdUsuario(),
+                List.of(StatusAgendamento.PENDENTE, StatusAgendamento.CONFIRMADO));
+
+        if (agendamentosAtivos > 0) {
+            throw new IllegalArgumentException(
+                    "Você já possui uma consulta ativa (pendente ou confirmada) com este médico. Cancele o agendamento anterior para marcar um novo.");
+        }
 
         validarDisponibilidadeHorario(medico, dados.dataHora());
 
         FichaMedica novaFicha = new FichaMedica();
-        
-        // CORREÇÃO: A linha que associa o paciente à ficha foi adicionada de volta.
         novaFicha.setPaciente(paciente);
-        
         novaFicha.setSintomas(dados.sintomas());
         novaFicha.setDiasSintomas(dados.diasSintomas());
         novaFicha.setAlergias(dados.alergias());
@@ -113,23 +122,44 @@ public class AgendamentoService {
     private void validarDisponibilidadeHorario(Medico medico, LocalDateTime dataHora) {
         String horariosJson = medico.getHorariosDisponiveis();
         boolean horarioDisponivelNoJson = false;
+        
         if (horariosJson != null && !horariosJson.isBlank()) {
             try {
                 HorarioDisponivelDTO agenda = objectMapper.readValue(horariosJson, HorarioDisponivelDTO.class);
                 String diaDaSemanaReq = DIAS_DA_SEMANA_MAP.get(dataHora.getDayOfWeek());
-                String horaReq = dataHora.format(TIME_FORMATTER);
+                LocalTime horaReq = dataHora.toLocalTime(); // Pega o objeto de tempo
+
                 for (HorarioDisponivelDTO.DiaDeTrabalho dia : agenda.dias()) {
-                    if (dia.dia().equalsIgnoreCase(diaDaSemanaReq) && dia.horarios().contains(horaReq)) {
-                        horarioDisponivelNoJson = true;
+                    if (dia.dia().equalsIgnoreCase(diaDaSemanaReq)) {
+                        // [CORREÇÃO] Itera pela lista de horários, converte para LocalTime e compara os objetos
+                        for (String horarioStr : dia.horarios()) {
+                            LocalTime horarioDisponivel = LocalTime.parse(horarioStr, TIME_FORMATTER);
+                            if (horarioDisponivel.equals(horaReq)) {
+                                horarioDisponivelNoJson = true;
+                                break; 
+                            }
+                        }
+                    }
+                    if (horarioDisponivelNoJson) {
                         break;
                     }
                 }
-            } catch (Exception e) { throw new RuntimeException("Não foi possível processar a agenda do médico."); }
+            } catch (Exception e) { 
+                e.printStackTrace(); // Logar o erro para debug
+                throw new RuntimeException("Não foi possível processar a agenda do médico."); 
+            }
         }
-        if (!horarioDisponivelNoJson) { throw new IllegalArgumentException("O médico não atende neste dia e horário."); }
+        
+        if (!horarioDisponivelNoJson) { 
+            throw new IllegalArgumentException("O médico não atende neste dia e horário."); 
+        }
+        
         boolean horarioJaAgendado = agendamentoRepository.existsByMedicoIdUsuarioAndDataHora(medico.getIdUsuario(), dataHora);
-        if (horarioJaAgendado) { throw new IllegalArgumentException("Horário indisponível. Já foi agendado."); }
+        if (horarioJaAgendado) { 
+            throw new IllegalArgumentException("Horário indisponível. Já foi agendado por outro paciente."); 
+        }
     }
+
 
     @Transactional(readOnly = true)
     public List<AgendamentoResponseDTO> listarMeusAgendamentos(Authentication authentication) {
@@ -157,7 +187,7 @@ public class AgendamentoService {
             throw new AccessDeniedException("Apenas médicos podem atualizar o status.");
         }
         Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado com o ID: " + agendamentoId));
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado com o ID: " + agendamentoId));
         if (!agendamento.getMedico().getIdUsuario().equals(usuarioLogado.getId())) {
             throw new AccessDeniedException("Você não tem permissão para alterar um agendamento que não é seu.");
         }
@@ -172,7 +202,7 @@ public class AgendamentoService {
             throw new AccessDeniedException("Apenas pacientes podem cancelar agendamentos.");
         }
         Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado."));
         if (!agendamento.getPaciente().getIdUsuario().equals(usuarioLogado.getId())) {
             throw new AccessDeniedException("Você não tem permissão para cancelar um agendamento que não é seu.");
         }
@@ -188,7 +218,7 @@ public class AgendamentoService {
     public ProntuarioDTO getProntuarioDoAgendamento(Long agendamentoId, Authentication authentication) {
         Usuario usuarioLogado = (Usuario) authentication.getPrincipal();
         Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado."));
 
         boolean isMedicoDoAgendamento = usuarioLogado.getRole() == Role.MEDICO && agendamento.getMedico().getIdUsuario().equals(usuarioLogado.getId());
         boolean isDiretor = usuarioLogado.getRole() == Role.DIRETOR;
@@ -225,7 +255,7 @@ public class AgendamentoService {
     public void finalizarConsulta(Long agendamentoId, FinalizarConsultaDTO dados, Authentication authentication) {
         Usuario medicoLogado = (Usuario) authentication.getPrincipal();
         Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado."));
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado."));
 
         if (!agendamento.getMedico().getIdUsuario().equals(medicoLogado.getId())) {
             throw new AccessDeniedException("Você não tem permissão para finalizar este agendamento.");

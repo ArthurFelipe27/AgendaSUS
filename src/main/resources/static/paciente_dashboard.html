@@ -31,6 +31,17 @@
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
+    <!-- [NOVO] Modal de Confirmação -->
+    <div id="confirmation-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <div class="modal-actions">
+                <button id="modal-btn-cancel" class="btn btn-secondary">Voltar</button>
+                <button id="modal-btn-confirm" class="btn btn-danger">Confirmar Cancelamento</button>
+            </div>
+        </div>
+    </div>
+
     <!-- VLibras -->
     <div vw class="enabled">
         <div vw-access-button class="active"></div>

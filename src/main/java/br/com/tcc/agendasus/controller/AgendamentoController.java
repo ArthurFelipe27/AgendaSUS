@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
 import br.com.tcc.agendasus.dto.DTOs.AgendamentoCadastroDTO;
 import br.com.tcc.agendasus.dto.DTOs.AgendamentoResponseDTO;
 import br.com.tcc.agendasus.dto.DTOs.AgendamentoStatusUpdateDTO;
@@ -52,6 +51,16 @@ public class AgendamentoController {
         return ResponseEntity.ok(service.atualizarStatus(id, dados, auth));
     }
     
+    /**
+     * CORREÇÃO: Este método estava faltando. 
+     * Ele cria o endpoint PUT /api/agendamentos/{id}/cancelar, que é chamado pelo
+     * botão "Cancelar" na tela do paciente.
+     */
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<AgendamentoResponseDTO> cancelarAgendamento(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(service.cancelarAgendamentoPaciente(id, auth));
+    }
+
     @PostMapping("/{id}/finalizar")
     public ResponseEntity<Void> finalizarConsulta(@PathVariable Long id, @RequestBody @Valid FinalizarConsultaDTO dados, Authentication auth) {
         service.finalizarConsulta(id, dados, auth);

@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tokenDisplayDiv = document.getElementById('token-display');
     const emailInput = document.getElementById('email');
     const resetTokenCode = document.getElementById('reset-token-code');
+    const copyButton = document.getElementById('btn-copy-token');
 
     const API_URL = '/api/public/forgot-password';
 
@@ -24,8 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 forgotPasswordForm.style.display = 'none';
                 tokenDisplayDiv.style.display = 'block';
 
-                const copyButton = document.getElementById('btn-copy-token');
+                // Adiciona a funcionalidade de cópia ao botão
                 copyButton.addEventListener('click', () => {
+                    // Usa a API Clipboard para maior compatibilidade e segurança
                     navigator.clipboard.writeText(data.resetToken).then(() => {
                         showToast('Token copiado para a área de transferência!', 'success');
                         copyButton.textContent = 'Copiado!';
@@ -45,4 +47,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-

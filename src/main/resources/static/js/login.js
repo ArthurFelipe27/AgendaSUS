@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 localStorage.setItem('jwtToken', data.token);
                 localStorage.setItem('userName', data.nome);
+
+                // Redireciona o usuário com base na sua role (perfil)
                 switch (data.role) {
                     case 'PACIENTE':
                         window.location.href = 'paciente_dashboard.html';
@@ -30,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         window.location.href = 'diretor_dashboard.html';
                         break;
                     default:
+                        // Caso a role seja desconhecida, desloga e volta para o login
+                        showToast('Perfil de usuário desconhecido.', 'error');
                         localStorage.clear();
                         window.location.href = 'login.html';
                 }

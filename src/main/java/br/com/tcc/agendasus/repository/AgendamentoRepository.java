@@ -14,11 +14,12 @@ import br.com.tcc.agendasus.model.enums.StatusAgendamento;
 @Repository
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
 
-    // MÉTODOS ADICIONADOS QUE ESTAVAM FALTANDO
     boolean existsByMedicoIdUsuarioAndDataHora(Long idMedico, LocalDateTime dataHora);
     List<Agendamento> findAllByMedicoIdUsuario(Long medicoId);
     List<Agendamento> findByMedicoIdUsuarioAndStatusInAndDataHoraAfter(Long medicoId, Collection<StatusAgendamento> statuses, LocalDateTime dataHora);
-    // --- FIM DOS MÉTODOS ADICIONADOS ---
+    
+    // CORREÇÃO: Método adicionado para verificar múltiplos status de uma vez.
+    long countByPacienteIdUsuarioAndMedicoIdUsuarioAndStatusIn(Long pacienteId, Long medicoId, Collection<StatusAgendamento> statuses);
 
     List<Agendamento> findAllByPacienteIdUsuario(Long pacienteId);
     long countByPacienteIdUsuarioAndMedicoIdUsuarioAndStatus(Long pacienteId, Long medicoId, StatusAgendamento status);

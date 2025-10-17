@@ -1,5 +1,5 @@
 // ===================================================================
-// MEDICO.JS (VERSÃO COM MELHORIAS VISUAIS NO PRONTUÁRIO)
+// MEDICO.JS (VERSÃO COMPLETA E ATUALIZADA)
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const li = document.createElement('li');
                 li.className = 'agendamento-card status-' + ag.status;
                 li.style.cursor = 'pointer';
-                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status}</span></small></div><span>Ver Prontuário &rarr;</span>`;
+                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status.replace(/_/g, ' ')}</span></small></div><span>Ver Prontuário &rarr;</span>`;
                 listaUL.appendChild(li);
                 li.addEventListener('click', () => renderTelaDeAtendimento(ag.id, true));
             });
@@ -102,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const consulta = prontuario.detalhesDaConsulta;
 
             if (isHistorico) {
-                // ... (código do histórico continua o mesmo)
                 let examesHtml = '<h5>Exames Solicitados</h5>';
                 if (consulta.exames && consulta.exames.length > 0) {
                     examesHtml += '<ul>';
@@ -112,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let prescricaoHtml = '<h5>Prescrição</h5>';
                 if (consulta.prescricao) {
-                    prescricaoHtml += `<pre class="content">${consulta.prescricao}</pre>`;
+                    prescricaoHtml += `<pre>${consulta.prescricao}</pre>`;
                 } else { prescricaoHtml += '<p>Nenhuma prescrição gerada para esta consulta.</p>'; }
 
                 contentDinamico.innerHTML = `
@@ -123,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('btn-voltar-historico').addEventListener('click', renderHistoricoDeAtendimentos);
 
             } else {
-                // --- [NOVO] Layout do Prontuário de Atendimento ---
                 let examesCheckboxesHtml = '';
                 LISTA_EXAMES_COMUNS.forEach(exame => { examesCheckboxesHtml += `<div class="checkbox-group"><input type="checkbox" id="exame-${exame.replace(/\s+/g, '-')}" name="exames" value="${exame}"><label for="exame-${exame.replace(/\s+/g, '-')}">${exame}</label></div>`; });
 
@@ -134,57 +132,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h3>Atendimento em Andamento</h3>
                         <button class="btn btn-secondary" id="btn-voltar-agenda">&larr; Voltar para Agenda</button>
                     </div>
+                    <div id="atendimento-error-message" class="error-message" style="display:none;"></div>
 
                     <div class="prontuario-grid">
-                        <div class="info-card">
-                            <h5>Paciente</h5>
-                            <p>${prontuario.nomePaciente} (${prontuario.idade || 'N/A'} anos)</p>
-                        </div>
-                        <div class="info-card">
-                            <h5>Telefone</h5>
-                            <p>${prontuario.telefone || 'Não informado'}</p>
-                        </div>
-                        <div class="info-card full-width">
-                            <h5>Queixa Principal</h5>
-                            <p>${consulta.sintomas} (há ${diasSintomas})</p>
-                        </div>
+                        <div class="info-card"><h5>Paciente</h5><p>${prontuario.nomePaciente} (${prontuario.idade || 'N/A'} anos)</p></div>
+                        <div class="info-card"><h5>Telefone</h5><p>${prontuario.telefone || 'Não informado'}</p></div>
+                        <div class="info-card full-width"><h5>Queixa Principal</h5><p>${consulta.sintomas} (há ${diasSintomas})</p></div>
                     </div>
 
                     <form id="form-finalizar-consulta" style="margin-top: 1.5rem;">
                         <div class="atendimento-form-section">
                             <h4>Evolução e Conduta</h4>
-                            <div class="input-group">
-                                <label for="evolucao">Evolução Médica</label>
-                                <textarea id="evolucao" rows="6" placeholder="Descreva a evolução do paciente, exame físico, etc."></textarea>
-                            </div>
-                            <div class="input-group">
-                                <label for="prescricao">Prescrição Médica</label>
-                                <textarea id="prescricao" rows="6" placeholder="Ex: Dipirona 500mg, 1 comprimido de 6/6h por 3 dias se dor ou febre."></textarea>
-                            </div>
+                            <div class="input-group"><label for="evolucao">Evolução Médica</label><textarea id="evolucao" rows="6" placeholder="Descreva a evolução do paciente, exame físico, etc."></textarea></div>
+                            <div class="input-group"><label for="prescricao">Prescrição Médica</label><textarea id="prescricao" rows="6" placeholder="Ex: Dipirona 500mg, 1 comprimido de 6/6h por 3 dias se dor ou febre."></textarea></div>
                         </div>
 
                         <div class="atendimento-form-section" style="margin-top: 1.5rem;">
                              <h4>Exames e Atestado</h4>
-                             <div class="input-group">
-                                <label>Solicitação de Exames</label>
-                                <div class="checkbox-container">${examesCheckboxesHtml}</div>
-                             </div>
-                             <div class="input-group">
-                                <label>Necessita de Atestado?</label>
-                                <div class="radio-group">
-                                    <input type="radio" id="atestado-nao" name="necessitaAtestado" value="nao" checked> <label for="atestado-nao">Não</label>
-                                    <input type="radio" id="atestado-sim" name="necessitaAtestado" value="sim" style="margin-left: 1rem;"> <label for="atestado-sim">Sim</label>
-                                </div>
-                            </div>
-                            <div id="atestado-dias-container" class="input-group" style="display: none;">
-                                <label for="dias-repouso">Dias de Repouso</label>
-                                <input type="number" id="dias-repouso" min="1" placeholder="Informe o número de dias">
-                            </div>
+                             <div class="input-group"><label>Solicitação de Exames</label><div class="checkbox-container">${examesCheckboxesHtml}</div></div>
+                             <div class="input-group"><label>Necessita de Atestado?</label><div class="radio-group"><input type="radio" id="atestado-nao" name="necessitaAtestado" value="nao" checked> <label for="atestado-nao">Não</label><input type="radio" id="atestado-sim" name="necessitaAtestado" value="sim" style="margin-left: 1rem;"> <label for="atestado-sim">Sim</label></div></div>
+                            <div id="atestado-dias-container" class="input-group" style="display: none;"><label for="dias-repouso">Dias de Repouso</label><input type="number" id="dias-repouso" min="1" placeholder="Informe o número de dias"></div>
                         </div>
                         
-                        <div class="form-actions" style="margin-top: 2rem; justify-content: flex-end;">
-                            <button type="submit" class="btn btn-success">Finalizar e Salvar Consulta</button>
-                        </div>
+                        <div class="form-actions" style="margin-top: 2rem; justify-content: flex-end;"><button type="submit" class="btn btn-success">Finalizar e Salvar Consulta</button></div>
                     </form>
                 `;
 
@@ -218,15 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/finalizar`, { method: 'POST', body: JSON.stringify(dto) });
-            if (response.ok) {
+            if (response && response.ok) {
                 showToast('Consulta finalizada com sucesso!', 'success');
                 renderHistoricoDeAtendimentos();
-            } else {
-                await handleApiError(response, 'atendimento-error-message');
-            }
-        } catch (err) {
-            showToast('Erro de rede ao finalizar a consulta.', 'error');
-        }
+            } else { await handleApiError(response, 'atendimento-error-message'); }
+        } catch (err) { showToast('Erro de rede ao finalizar a consulta.', 'error'); }
     }
 
     async function renderGerenciarHorarios() {
@@ -237,10 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let htmlForm = `
             <div class="section-card">
-                <div class="admin-section-header">
-                    <h3>Meus Horários Disponíveis</h3>
-                </div>
-                <p class="form-description">Adicione os horários em que você está disponível para atendimento em cada dia da semana. As alterações são salvas para as próximas semanas.</p>
+                <div class="admin-section-header"><h3>Meus Horários Disponíveis</h3></div>
+                <p>Adicione os horários em que você está disponível. As alterações são salvas para as próximas semanas.</p>
                 <div id="horarios-error-message" class="error-message" style="display:none;"></div>
                 <div class="schedule-builder">`;
 
@@ -249,21 +213,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="schedule-day-card" id="card-${dia}">
                     <h5>${dia.charAt(0) + dia.slice(1).toLowerCase()}</h5>
                     <div class="add-time-form">
-                        <div class="time-input-wrapper">
-                            ${clockIcon}
-                            <input type="time" class="time-input" data-dia="${dia}">
-                        </div>
+                        <div class="time-input-wrapper">${clockIcon}<input type="time" class="time-input" data-dia="${dia}"></div>
                         <button type="button" class="btn-add-time" data-dia="${dia}" title="Adicionar horário">${plusIcon}</button>
                     </div>
                     <div class="time-tags-container" id="tags-${dia}"></div>
                 </div>`;
         });
 
-        htmlForm += `</div>
-            <div class="form-actions" style="margin-top: 2rem; justify-content: flex-end;">
-                <button type="button" class="btn btn-primary" id="btn-salvar-agenda">Salvar Agenda</button>
-            </div>
-        </div>`;
+        htmlForm += `</div><div class="form-actions" style="margin-top: 2rem; justify-content: flex-end;"><button type="button" class="btn btn-primary" id="btn-salvar-agenda">Salvar Agenda</button></div></div>`;
         contentDinamico.innerHTML = htmlForm;
         try {
             const respHorarios = await fetchAuthenticated(`/api/medicos/${meuIdDeMedico}/horarios`);
@@ -273,39 +230,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) { console.error("Erro ao buscar agenda atual", e); }
 
-        document.querySelectorAll('.btn-add-time').forEach(button => {
-            button.addEventListener('click', e => {
-                const dia = e.currentTarget.dataset.dia;
-                const input = document.querySelector(`.time-input[data-dia="${dia}"]`);
-                if (input && input.value) {
-                    criarTagDeHorario(dia, input.value);
-                    input.value = '';
-                }
-            });
-        });
+        document.querySelectorAll('.btn-add-time').forEach(button => button.addEventListener('click', e => {
+            const dia = e.currentTarget.dataset.dia;
+            const input = document.querySelector(`.time-input[data-dia="${dia}"]`);
+            if (input && input.value) { criarTagDeHorario(dia, input.value); input.value = ''; }
+        }));
 
         document.getElementById('btn-salvar-agenda').addEventListener('click', handleSalvarHorarios);
     }
 
     function criarTagDeHorario(diaSemana, horaString) {
-        const container = document.getElementById(`tags-${diaSemana}`);
+        const container = document.getElementById(`tags-${diaSemana.toUpperCase()}`);
         if (container.querySelector(`[data-hora="${horaString}"]`)) return;
         const tag = document.createElement('div');
         tag.className = 'time-tag';
         tag.dataset.hora = horaString;
-
-        const timeText = document.createElement('span');
-        timeText.textContent = horaString;
-
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'remove-tag';
-        removeBtn.title = 'Remover horário';
-        removeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-
-        removeBtn.onclick = () => tag.remove();
-
-        tag.appendChild(timeText);
-        tag.appendChild(removeBtn);
+        tag.innerHTML = `<span>${horaString}</span><button class="remove-tag" title="Remover horário"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`;
+        tag.querySelector('.remove-tag').onclick = () => tag.remove();
         container.appendChild(tag);
     }
 
@@ -328,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderFormularioConteudo() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Será salvo como rascunho para aprovação.</p><form id="form-conteudo"><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary">Enviar para Aprovação</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Seu conteúdo será salvo como rascunho e enviado para aprovação de um administrador.</p><form id="form-conteudo"><div id="conteudo-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo do Conteúdo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary">Enviar para Aprovação</button></div></form></div>`;
         document.getElementById('form-conteudo').addEventListener('submit', handleConteudoSubmit);
     }
 
@@ -369,14 +310,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response && response.ok) {
                 showToast('Senha alterada! Você será deslogado.', 'success');
                 setTimeout(logout, 2000);
-            } else {
-                await handleApiError(response, 'senha-error-message');
-            }
-        } catch (err) {
-            showToast('Erro de rede ao alterar senha.', 'error');
-        }
+            } else { await handleApiError(response, 'senha-error-message'); }
+        } catch (err) { showToast('Erro de rede ao alterar senha.', 'error'); }
     }
 
     initMedicoDashboard();
 });
-

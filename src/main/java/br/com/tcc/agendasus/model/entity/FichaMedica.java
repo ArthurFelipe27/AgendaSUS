@@ -17,7 +17,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(of = "id", callSuper = false)
 @Entity
 @Table(name = "ficha_medica")
 public class FichaMedica {
@@ -26,15 +26,10 @@ public class FichaMedica {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * CORREÇÃO: A relação com o Paciente foi adicionada de volta.
-     * Isso é necessário para que o FichaMedicaResponseDTO possa ser construído
-     * corretamente sem precisar passar pelo Agendamento.
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_paciente", nullable = false)
     private Paciente paciente;
-
+    
     @Column(columnDefinition = "TEXT", nullable = false)
     private String sintomas;
 
@@ -47,6 +42,8 @@ public class FichaMedica {
     @Column(columnDefinition = "TEXT")
     private String cirurgias;
 
+    // [CORREÇÃO] O nome do campo foi ajustado para camelCase para seguir a convenção Java.
+    // A anotação @Column garante o mapeamento correto com o banco de dados.
     @Column(name = "evolucao_medica", columnDefinition = "TEXT")
     private String evolucaoMedica;
 
