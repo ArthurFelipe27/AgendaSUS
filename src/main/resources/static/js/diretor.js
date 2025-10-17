@@ -1,10 +1,12 @@
 // ===================================================================
-// DIRETOR.JS (VERSÃO COMPLETA E ATUALIZADA)
+// DIRETOR.JS (VERSÃO COM MELHORIAS VISUAIS)
+// Implementa ícones, spinners e um layout de card aprimorado.
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
     let idUsuarioLogado = null;
+    const SPINNER_HTML = `<div class="spinner-container"><div class="spinner"></div></div>`;
 
     async function initDiretorDashboard() {
         try {
@@ -18,14 +20,33 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // [MELHORIA VISUAL] Adicionados ícones SVG aos cards do dashboard.
         contentArea.innerHTML = `
             <div class="dashboard-grid">
-                <div class="dashboard-card admin" id="card-gerenciar-unidades">Gerenciar Unidades</div>
-                <div class="dashboard-card admin" id="card-gerenciar-medicos">Gerenciar Médicos</div>
-                <div class="dashboard-card admin" id="card-gerenciar-usuarios">Gerenciar Usuários</div>
-                <div class="dashboard-card admin" id="card-gerenciar-conteudo">Gerenciar Conteúdo</div>
-                <div class="dashboard-card" id="card-meu-perfil">Meu Perfil</div>
-                <div class="dashboard-card" id="card-noticias">Ver Notícias Públicas</div>
+                <div class="dashboard-card admin" id="card-gerenciar-unidades">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16"/><path d="M2 10h20"/><path d="M6 10v12"/><path d="M18 10v12"/><path d="M14 22V10l-2-3-2 3v12"/><path d="M10 2h4"/><path d="M10 22V10"/></svg>
+                    <span>Gerenciar Unidades</span>
+                </div>
+                <div class="dashboard-card admin" id="card-gerenciar-medicos">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Gerenciar Médicos</span>
+                </div>
+                <div class="dashboard-card admin" id="card-gerenciar-usuarios">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Gerenciar Usuários</span>
+                </div>
+                <div class="dashboard-card admin" id="card-gerenciar-conteudo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="m9 15 2 2 4-4"></path></svg>
+                    <span>Gerenciar Conteúdo</span>
+                </div>
+                <div class="dashboard-card" id="card-meu-perfil">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Meu Perfil</span>
+                </div>
+                <div class="dashboard-card" id="card-noticias">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2Z"></path><path d="M8 6h8"></path><path d="M8 10h8"></path><path d="M8 14h4"></path></svg>
+                    <span>Ver Notícias Públicas</span>
+                </div>
             </div>
             <hr>
             <div id="diretor-content-dinamico"></div> 
@@ -54,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="btn btn-new" id="btn-nova-unidade">+ Nova Unidade</button>
             </div>
             <div id="unidade-form-container" style="display: none; margin-bottom: 1.5rem;"></div>
-            <div id="lista-unidades" class="admin-table-container">Carregando...</div>
+            <div id="lista-unidades" class="admin-table-container">${SPINNER_HTML}</div>
         `;
         document.getElementById('btn-nova-unidade').addEventListener('click', () => {
             const formContainer = document.getElementById('unidade-form-container');
@@ -137,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         adminContent.innerHTML = `
             <div class="admin-section-header"><h4>Médicos do Sistema</h4><button class="btn btn-new" id="btn-novo-medico">+ Novo Médico</button></div>
             <div id="medico-form-container" style="display: none; margin-bottom: 1.5rem;"></div>
-            <div id="lista-medicos" class="admin-table-container">Carregando...</div>`;
+            <div id="lista-medicos" class="admin-table-container">${SPINNER_HTML}</div>`;
         document.getElementById('btn-novo-medico').addEventListener('click', async () => {
             const formContainer = document.getElementById('medico-form-container');
             if (formContainer.style.display === 'none') {
@@ -157,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function carregarTabelaMedicos() {
         const container = document.getElementById('lista-medicos');
-        container.innerHTML = 'Carregando...';
+        container.innerHTML = SPINNER_HTML;
         try {
             const response = await fetchAuthenticated('/api/medicos');
             if (!response || !response.ok) throw new Error('Falha ao buscar médicos.');
@@ -243,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderGerenciadorDeUsuarios() {
         const adminContent = document.getElementById('diretor-content-dinamico');
-        adminContent.innerHTML = `<div class="admin-section-header"><h4>Usuários do Sistema</h4></div><div id="admin-user-list-container">Carregando...</div>`;
+        adminContent.innerHTML = `<div class="admin-section-header"><h4>Usuários do Sistema</h4></div><div id="admin-user-list-container">${SPINNER_HTML}</div>`;
         try {
             const response = await fetchAuthenticated('/api/usuarios');
             if (!response || !response.ok) throw new Error('Falha ao buscar usuários');
@@ -277,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderGerenciadorDeConteudo() {
         const adminContent = document.getElementById('diretor-content-dinamico');
-        adminContent.innerHTML = `<div class="admin-section-header"><h4>Moderação de Conteúdo</h4></div><div id="admin-content-list">Carregando...</div>`;
+        adminContent.innerHTML = `<div class="admin-section-header"><h4>Moderação de Conteúdo</h4></div><div id="admin-content-list">${SPINNER_HTML}</div>`;
         try {
             const response = await fetchAuthenticated('/api/conteudo/admin/todos');
             if (!response || !response.ok) throw new Error('Falha ao buscar conteúdo');
@@ -323,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderMeuPerfil() {
         const contentDinamico = document.getElementById('diretor-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meu Perfil</h3><div id="perfil-info" class="document-item">Carregando...</div><hr><h4>Alterar Senha</h4><div class="booking-form-container"><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label for="nova-senha">Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label for="confirma-senha">Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
+        contentDinamico.innerHTML = `<h3>Meu Perfil</h3><div id="perfil-info" class="document-item">${SPINNER_HTML}</div><hr><h4>Alterar Senha</h4><div class="booking-form-container"><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label for="nova-senha">Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label for="confirma-senha">Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
         try {
             fetchAuthenticated('/api/usuarios/me').then(response => response.json()).then(usuario => {
                 document.getElementById('perfil-info').innerHTML = `<p><strong>Nome:</strong> ${usuario.nome}</p><p><strong>Email:</strong> ${usuario.email}</p><p><strong>CPF:</strong> ${usuario.cpf}</p>`;

@@ -1,5 +1,6 @@
 // ===================================================================
-// MEDICO.JS (VERSÃO COMPLETA E ATUALIZADA)
+// MEDICO.JS (VERSÃO COM MELHORIAS VISUAIS)
+// Implementa ícones, spinners e um layout de card aprimorado.
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let meuIdDeMedico = null;
     const DIAS_DA_SEMANA = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO", "DOMINGO"];
     const LISTA_EXAMES_COMUNS = ["Hemograma Completo", "Colesterol Total e Frações", "Glicemia de Jejum", "Ureia e Creatinina", "Exame de Urina (EAS)", "Eletrocardiograma (ECG)", "Raio-X do Tórax", "Ultrassonografia Abdominal"];
+    const SPINNER_HTML = `<div class="spinner-container"><div class="spinner"></div></div>`;
+
 
     async function initMedicoDashboard() {
         try {
@@ -20,13 +23,29 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // [MELHORIA VISUAL] Adicionados ícones SVG aos cards do dashboard.
         contentArea.innerHTML = `
             <div class="dashboard-grid">
-                <div class="dashboard-card" id="card-minha-agenda">Minha Agenda (Ativas)</div>
-                <div class="dashboard-card" id="card-historico">Histórico de Atendimentos</div>
-                <div class="dashboard-card" id="card-meus-horarios">Gerenciar Meus Horários</div>
-                <div class="dashboard-card" id="card-criar-conteudo">Criar Artigo/Notícia</div>
-                <div class="dashboard-card" id="card-meu-perfil">Meu Perfil</div>
+                <div class="dashboard-card" id="card-minha-agenda">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <span>Minha Agenda (Ativas)</span>
+                </div>
+                <div class="dashboard-card" id="card-historico">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21H3V3h12l6 6v12zM12 21v-8H3M15 3v6h6"></path></svg>
+                    <span>Histórico de Atendimentos</span>
+                </div>
+                <div class="dashboard-card" id="card-meus-horarios">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Gerenciar Meus Horários</span>
+                </div>
+                <div class="dashboard-card" id="card-criar-conteudo">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    <span>Criar Artigo/Notícia</span>
+                </div>
+                 <div class="dashboard-card" id="card-meu-perfil">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Meu Perfil</span>
+                </div>
             </div>
             <hr>
             <div id="medico-content-dinamico"></div>
@@ -42,59 +61,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderMinhaAgenda() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div class="section-card"><h3>Minha Agenda (Próximas Consultas)</h3><p>Clique em uma consulta para iniciar o atendimento.</p><ul id="lista-agendamentos-medico" class="medico-list" style="margin-top: 1.5rem;"><li>Carregando...</li></ul></div>`;
+        contentDinamico.innerHTML = `<div class="section-card"><h3>Minha Agenda (Próximas Consultas)</h3><p>Clique em uma consulta para iniciar o atendimento.</p><div id="lista-agendamentos-medico" class="medico-list" style="margin-top: 1.5rem;">${SPINNER_HTML}</div></div>`;
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
             if (!response) return;
             const todosAgendamentos = await response.json();
             const agendamentosAtivos = todosAgendamentos.filter(ag => ag.status === 'PENDENTE' || ag.status === 'CONFIRMADO');
-            const listaUL = document.getElementById('lista-agendamentos-medico');
-            listaUL.innerHTML = '';
+            const listaContainer = document.getElementById('lista-agendamentos-medico');
+            listaContainer.innerHTML = '';
             if (agendamentosAtivos.length === 0) {
-                listaUL.innerHTML = '<li>Você não possui nenhuma consulta ativa.</li>';
+                listaContainer.innerHTML = '<p>Você não possui nenhuma consulta ativa.</p>';
                 return;
             }
             agendamentosAtivos.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
             agendamentosAtivos.forEach(ag => {
-                const li = document.createElement('li');
-                li.className = 'agendamento-card status-' + ag.status;
-                li.style.cursor = 'pointer';
-                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status}</span></small></div><span>Iniciar Atendimento &rarr;</span>`;
-                listaUL.appendChild(li);
-                li.addEventListener('click', () => renderTelaDeAtendimento(ag.id));
+                const item = document.createElement('div');
+                item.className = 'agendamento-card status-' + ag.status;
+                item.style.cursor = 'pointer';
+                item.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status}</span></small></div><span>Iniciar Atendimento &rarr;</span>`;
+                listaContainer.appendChild(item);
+                item.addEventListener('click', () => renderTelaDeAtendimento(ag.id));
             });
-        } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar agendamentos.</li>'; }
+        } catch (err) { console.error(err); document.getElementById('lista-agendamentos-medico').innerHTML = '<p>Erro ao carregar agendamentos.</p>'; }
     }
 
     async function renderHistoricoDeAtendimentos() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div class="section-card"><h3>Histórico de Atendimentos</h3><p>Clique em um atendimento para rever o prontuário.</p><ul id="lista-historico-medico" class="medico-list" style="margin-top: 1.5rem;"><li>Carregando...</li></ul></div>`;
+        contentDinamico.innerHTML = `<div class="section-card"><h3>Histórico de Atendimentos</h3><p>Clique em um atendimento para rever o prontuário.</p><div id="lista-historico-medico" class="medico-list" style="margin-top: 1.5rem;">${SPINNER_HTML}</div></div>`;
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
             if (!response) return;
             const todosAgendamentos = await response.json();
             const agendamentosInativos = todosAgendamentos.filter(ag => ag.status !== 'PENDENTE' && ag.status !== 'CONFIRMADO');
-            const listaUL = document.getElementById('lista-historico-medico');
-            listaUL.innerHTML = '';
+            const listaContainer = document.getElementById('lista-historico-medico');
+            listaContainer.innerHTML = '';
             if (agendamentosInativos.length === 0) {
-                listaUL.innerHTML = '<li>Nenhum atendimento no seu histórico.</li>';
+                listaContainer.innerHTML = '<p>Nenhum atendimento no seu histórico.</p>';
                 return;
             }
             agendamentosInativos.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
             agendamentosInativos.forEach(ag => {
-                const li = document.createElement('li');
-                li.className = 'agendamento-card status-' + ag.status;
-                li.style.cursor = 'pointer';
-                li.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status.replace(/_/g, ' ')}</span></small></div><span>Ver Prontuário &rarr;</span>`;
-                listaUL.appendChild(li);
-                li.addEventListener('click', () => renderTelaDeAtendimento(ag.id, true));
+                const item = document.createElement('div');
+                item.className = 'agendamento-card status-' + ag.status;
+                item.style.cursor = 'pointer';
+                item.innerHTML = `<div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Paciente: ${ag.paciente.nome} | Status: <span class="badge status-${ag.status}">${ag.status.replace(/_/g, ' ')}</span></small></div><span>Ver Prontuário &rarr;</span>`;
+                listaContainer.appendChild(item);
+                item.addEventListener('click', () => renderTelaDeAtendimento(ag.id, true));
             });
-        } catch (err) { console.error(err); contentDinamico.innerHTML = '<li>Erro ao carregar histórico.</li>'; }
+        } catch (err) { console.error(err); document.getElementById('lista-historico-medico').innerHTML = '<p>Erro ao carregar histórico.</p>'; }
     }
 
     async function renderTelaDeAtendimento(agendamentoId, isHistorico = false) {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div class="section-card">Carregando atendimento...</div>`;
+        contentDinamico.innerHTML = `<div class="section-card">${SPINNER_HTML}</div>`;
         try {
             const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/prontuario`);
             if (!response || !response.ok) throw new Error('Falha ao carregar dados do atendimento.');
@@ -285,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderMeuPerfil() {
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div class="section-card"><h3>Meu Perfil</h3><div id="perfil-info">Carregando...</div></div><div class="section-card" style="margin-top: 1.5rem;"><h4>Alterar Senha</h4><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="section-card"><h3>Meu Perfil</h3><div id="perfil-info">${SPINNER_HTML}</div></div><div class="section-card" style="margin-top: 1.5rem;"><h4>Alterar Senha</h4><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
         try {
             fetchAuthenticated('/api/usuarios/me').then(response => response.json()).then(usuario => {
                 document.getElementById('perfil-info').innerHTML = `<p><strong>Nome:</strong> ${usuario.nome}</p><p><strong>Email:</strong> ${usuario.email}</p><p><strong>CPF:</strong> ${usuario.cpf}</p>${usuario.crm ? `<p><strong>CRM:</strong> ${usuario.crm}</p>` : ''}`;
