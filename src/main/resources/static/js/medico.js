@@ -146,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const diasSintomas = consulta.diasSintomas ? `${consulta.diasSintomas} dia(s)` : 'Não informado';
 
+                // [MELHORIA FUNCIONAL] Adiciona campos de Alergias e Cirurgias
                 contentDinamico.innerHTML = `
                     <div class="admin-section-header">
                         <h3>Atendimento em Andamento</h3>
@@ -157,6 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="info-card"><h5>Paciente</h5><p>${prontuario.nomePaciente} (${prontuario.idade || 'N/A'} anos)</p></div>
                         <div class="info-card"><h5>Telefone</h5><p>${prontuario.telefone || 'Não informado'}</p></div>
                         <div class="info-card full-width"><h5>Queixa Principal</h5><p>${consulta.sintomas} (há ${diasSintomas})</p></div>
+                        <div class="info-card"><h5>Alergias</h5><p>${consulta.alergias || 'Nenhuma informada'}</p></div>
+                        <div class="info-card"><h5>Cirurgias Prévias</h5><p>${consulta.cirurgias || 'Nenhuma informada'}</p></div>
                     </div>
 
                     <form id="form-finalizar-consulta" style="margin-top: 1.5rem;">
