@@ -1,6 +1,6 @@
 // ===================================================================
-// PACIENTE.JS (VERSÃO COMPLETA E ATUALIZADA)
-// Inclui correção de fuso horário, modal de confirmação e validação de formulário.
+// PACIENTE.JS (VERSÃO COM MELHORIAS VISUAIS)
+// Implementa ícones, spinners e um layout de card aprimorado.
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,12 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const DIAS_SEMANA_MAP = { "DOMINGO": 0, "SEGUNDA": 1, "TERCA": 2, "QUARTA": 3, "QUINTA": 4, "SEXTA": 5, "SABADO": 6 };
 
-    /**
-     * Gera a próxima data/hora no formato ISO LOCAL, evitando a conversão para UTC.
-     * @param {string} diaDaSemana O dia da semana (ex: "SEGUNDA").
-     * @param {string} horaMinuto A hora no formato "HH:mm".
-     * @returns {string} A data/hora no formato "YYYY-MM-DDTHH:mm:ss".
-     */
+    const SPINNER_HTML = `<div class="spinner-container"><div class="spinner"></div></div>`;
+
     function getProximaDataISO(diaDaSemana, horaMinuto) {
         const [hora, minuto] = horaMinuto.split(':').map(Number);
         const agora = new Date();
@@ -52,12 +48,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // [MELHORIA VISUAL] Adicionados ícones SVG aos cards do dashboard.
         contentArea.innerHTML = `
             <div class="dashboard-grid">
-                <div class="dashboard-card" id="card-agendar">Novo Agendamento</div>
-                <div class="dashboard-card" id="card-meus-agendamentos">Meus Agendamentos</div>
-                <div class="dashboard-card" id="card-meu-perfil">Meu Perfil</div>
-                <div class="dashboard-card" id="card-noticias">Notícias e Artigos</div>
+                <div class="dashboard-card" id="card-agendar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="12" y1="15" x2="12" y2="15"></line><line x1="12" y1="15" x2="12" y2="15"></line><line x1="12" y1="14" x2="12" y2="18"></line><line x1="10" y1="16" x2="14" y2="16"></line></svg>
+                    <span>Novo Agendamento</span>
+                </div>
+                <div class="dashboard-card" id="card-meus-agendamentos">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="m9 16 2 2 4-4"></path></svg>
+                    <span>Meus Agendamentos</span>
+                </div>
+                <div class="dashboard-card" id="card-meu-perfil">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Meu Perfil</span>
+                </div>
+                <div class="dashboard-card" id="card-noticias">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2Z"></path><path d="M8 6h8"></path><path d="M8 10h8"></path><path d="M8 14h4"></path></svg>
+                    <span>Notícias e Artigos</span>
+                </div>
             </div>
             <hr>
             <div id="paciente-content-dinamico"></div>
@@ -76,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderMeuPerfil() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<div class="booking-form-container"><h3>Meu Perfil</h3><div id="perfil-info" class="document-item">Carregando...</div></div><hr><div class="booking-form-container"><h4>Alterar Senha</h4><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="booking-form-container"><h3>Meu Perfil</h3><div id="perfil-info" class="document-item">${SPINNER_HTML}</div></div><hr><div class="booking-form-container"><h4>Alterar Senha</h4><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
         try {
             const response = await fetchAuthenticated('/api/usuarios/me');
             if (!response.ok) throw new Error('Falha ao buscar perfil.');
@@ -106,36 +115,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderListaMedicos() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Novo Agendamento</h3><p>Selecione um profissional para ver os horários.</p><ul id="lista-medicos" class="medico-list"><li>Carregando...</li></ul>`;
+        contentDinamico.innerHTML = `<h3>Novo Agendamento</h3><p>Selecione um profissional para ver os horários.</p><div id="lista-medicos" class="medico-list">${SPINNER_HTML}</div>`;
         try {
             const response = await fetchAuthenticated('/api/medicos');
             if (!response || !response.ok) throw new Error('Falha ao carregar médicos');
             const medicos = await response.json();
-            const listaUL = document.getElementById('lista-medicos');
-            listaUL.innerHTML = '';
+            const container = document.getElementById('lista-medicos');
+            container.innerHTML = '';
             const medicosAtivos = medicos.filter(m => m.ativo);
             if (medicosAtivos.length === 0) {
-                listaUL.innerHTML = '<li>Nenhum médico disponível no momento.</li>';
+                container.innerHTML = '<p>Nenhum médico disponível no momento.</p>';
                 return;
             }
             medicosAtivos.forEach(medico => {
-                const li = document.createElement('li');
+                const li = document.createElement('div'); // Mudado de <ul> para <div> para não precisar de <li>
                 li.className = 'medico-item-clicavel';
                 li.innerHTML = `<div><strong>Dr(a). ${medico.nome}</strong><br><small>${medico.especialidade.replace(/_/g, ' ')} | ${medico.unidade ? medico.unidade.nome : 'N/A'}</small></div><span>Ver horários &rarr;</span>`;
                 li.addEventListener('click', () => renderDetalhesMedicoParaAgendamento(medico.id));
-                listaUL.appendChild(li);
+                container.appendChild(li);
             });
         } catch (err) {
             console.error(err);
-            contentDinamico.innerHTML = '<li>Erro ao carregar médicos.</li>';
+            document.getElementById('lista-medicos').innerHTML = '<p>Erro ao carregar médicos.</p>';
         }
     }
 
     async function renderDetalhesMedicoParaAgendamento(medicoId) {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<ul class="medico-list"><li>Carregando agenda...</li></ul>`;
+        contentDinamico.innerHTML = SPINNER_HTML;
         try {
-            // [CORREÇÃO] A chamada de API foi alterada para o novo endpoint seguro.
             const [respMedico, respHorarios, respAgendamentos] = await Promise.all([
                 fetchAuthenticated(`/api/medicos/${medicoId}`),
                 fetchAuthenticated(`/api/medicos/${medicoId}/horarios`),
@@ -146,10 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const medico = await respMedico.json();
             const agenda = await respHorarios.json();
-            // [CORREÇÃO] A resposta agora é diretamente um array de strings de data/hora.
             const horariosOcupadosArray = await respAgendamentos.json();
-
-            // [CORREÇÃO] Criamos o Set diretamente a partir do array de horários ocupados.
             const horariosAgendados = new Set(horariosOcupadosArray);
 
             let htmlAgenda = `<h3>Agenda de ${medico.nome} (${medico.especialidade.replace(/_/g, ' ')})</h3><button class="btn btn-secondary" id="btn-voltar-lista" style="margin-bottom: 1rem;">&larr; Voltar</button>`;
@@ -162,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     htmlAgenda += `<div class="dia-agenda"><strong>${dia.dia}</strong><div class="horarios-grid">`;
                     dia.horarios.forEach(hora => {
                         const dataSlotISO = getProximaDataISO(dia.dia, hora);
-
                         const isAgendado = horariosAgendados.has(dataSlotISO);
 
                         htmlAgenda += `<button 
@@ -257,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderMeusAgendamentos() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meus Agendamentos</h3><div id="agendamentos-container">Carregando...</div><div id="detalhes-consulta-container" style="margin-top: 2rem;"></div>`;
+        contentDinamico.innerHTML = `<h3>Meus Agendamentos</h3><div id="agendamentos-container">${SPINNER_HTML}</div><div id="detalhes-consulta-container" style="margin-top: 2rem;"></div>`;
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
             if (!response || !response.ok) throw new Error('Falha ao buscar agendamentos');
@@ -272,11 +276,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (proximosAgendamentos.length === 0) {
                 html += '<p>Nenhum próximo agendamento encontrado.</p>';
             } else {
-                html += '<ul class="medico-list">';
+                html += '<div class="medico-list">';
                 proximosAgendamentos.forEach(ag => {
-                    html += `<li class="agendamento-card status-${ag.status}"><div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Médico(a): ${ag.medico.nome} | Status: ${ag.status}</small></div><button class="btn btn-danger btn-cancelar-agendamento" data-id="${ag.id}">Cancelar</button></li>`;
+                    html += `<div class="agendamento-card status-${ag.status}"><div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Médico(a): ${ag.medico.nome} | Status: ${ag.status}</small></div><button class="btn btn-danger btn-cancelar-agendamento" data-id="${ag.id}">Cancelar</button></div>`;
                 });
-                html += '</ul>';
+                html += '</div>';
             }
 
             html += '<hr><h4>Histórico de Agendamentos</h4>';
@@ -303,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.btn-cancelar-agendamento').forEach(btn => btn.addEventListener('click', () => handleCancelarAgendamento(btn.dataset.id)));
         } catch (err) {
             console.error(err);
-            contentDinamico.innerHTML = '<p>Erro ao carregar seus agendamentos.</p>';
+            document.getElementById('agendamentos-container').innerHTML = '<p>Erro ao carregar seus agendamentos.</p>';
         }
     }
 
@@ -326,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.handleVerDetalhesConsulta = async (agendamentoId) => {
         const container = document.getElementById('detalhes-consulta-container');
-        container.innerHTML = `<div class="document-view"><h4>Carregando detalhes...</h4></div>`;
+        container.innerHTML = `<div class="document-view"><h4>${SPINNER_HTML}</h4></div>`;
 
         try {
             const [respPresc, respAtest, respExames] = await Promise.all([
