@@ -8,7 +8,6 @@
    =================================================================== */
 :root {
     --cor-primaria: #2563eb;
-    /* Azul Vibrante */
     --cor-primaria-hover: #1d4ed8;
     --cor-sucesso: #16a34a;
     --cor-sucesso-hover: #15803d;
@@ -16,17 +15,13 @@
     --cor-perigo-hover: #b91c1c;
     --cor-aviso: #f97316;
     --cor-fundo-body: #f1f5f9;
-    /* Cinza bem claro */
     --cor-fundo-container: #ffffff;
     --cor-texto-principal: #1e293b;
-    /* Cinza escuro */
     --cor-texto-secundario: #64748b;
-    /* Cinza médio */
     --cor-borda: #e2e8f0;
     --sombra-card: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
     --sombra-card-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --raio-borda: 0.75rem;
-    /* 12px */
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -287,15 +282,6 @@ a:hover {
     box-shadow: var(--sombra-card-hover);
 }
 
-.btn:disabled {
-    background-color: #e2e8f0;
-    color: var(--cor-texto-secundario);
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-
 .btn-full-width {
     width: 100%;
 }
@@ -335,12 +321,12 @@ a:hover {
 
 .btn-secondary {
     border: 1px solid var(--cor-borda);
-    background-color: var(--cor-fundo-container);
+    background-color: transparent;
     color: var(--cor-texto-secundario);
 }
 
-.btn-secondary:hover:not(:disabled) {
-    background-color: #f1f5f9;
+.btn-secondary:hover {
+    background-color: #e2e8f0;
     color: var(--cor-texto-principal);
     text-decoration: none;
 }
@@ -372,11 +358,16 @@ a:hover {
     background: var(--cor-sucesso-hover);
 }
 
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-start;
-    align-items: center;
+.btn-horario.indisponivel {
+    background-color: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+.btn-horario.indisponivel:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 /* ===================================================================
@@ -425,20 +416,15 @@ a:hover {
 }
 
 .dashboard-card svg {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 32px;
+    height: 32px;
     color: var(--cor-primaria);
 }
-
 
 .dashboard-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--sombra-card-hover);
     border-left-color: var(--cor-primaria-hover);
-}
-
-.dashboard-card:hover svg {
-    color: var(--cor-primaria-hover);
 }
 
 .dashboard-card.admin {
@@ -451,10 +437,6 @@ a:hover {
 
 .dashboard-card.admin:hover {
     border-left-color: var(--cor-perigo-hover);
-}
-
-.dashboard-card.admin:hover svg {
-    color: var(--cor-perigo-hover);
 }
 
 .section-card,
@@ -499,7 +481,6 @@ a:hover {
     padding: 1rem;
     border-bottom: 1px solid var(--cor-borda);
     text-align: left;
-    vertical-align: middle;
 }
 
 .admin-table thead {
@@ -518,8 +499,9 @@ a:hover {
 }
 
 .admin-table tbody tr:hover {
-    background-color: color-mix(in srgb, var(--cor-primaria) 8%, transparent);
+    background-color: color-mix(in srgb, var(--cor-primaria) 10%, transparent);
 }
+
 
 /* Badges de Status */
 .badge {
@@ -631,55 +613,16 @@ a:hover {
     transition: all 0.2s ease;
 }
 
-.btn-horario:hover:not(:disabled) {
+.btn-horario:hover {
     background-color: var(--cor-primaria);
     color: white;
     border-color: var(--cor-primaria);
-    transform: translateY(-2px);
 }
-
-.btn-horario:disabled {
-    background-color: #e2e8f0;
-    color: #94a3b8;
-    cursor: not-allowed;
-    text-decoration: line-through;
-    border-color: transparent;
-}
-
 
 /* ===================================================================
    6. COMPONENTES ESPECÍFICOS E UTILITÁRIOS
    =================================================================== */
 
-.spinner-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 3rem;
-}
-
-.spinner {
-    width: 48px;
-    height: 48px;
-    border: 5px solid var(--cor-primaria);
-    border-bottom-color: transparent;
-    border-radius: 50%;
-    display: inline-block;
-    box-sizing: border-box;
-    animation: rotation 1s linear infinite;
-}
-
-@keyframes rotation {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-/* Histórico de Agendamento (Paciente) */
 .history-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -713,9 +656,6 @@ a:hover {
     margin-top: auto;
     background-color: #f8fafc;
     border-top: 1px solid var(--cor-borda);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .history-card.status-ATENDIDO {
@@ -773,7 +713,6 @@ a:hover {
     padding-left: 1.5rem;
 }
 
-/* Notícias e Artigos */
 .content-list {
     display: flex;
     flex-direction: column;
@@ -813,13 +752,10 @@ a:hover {
     line-height: 1.7;
 }
 
-
-/* Prontuário do Médico */
 .prontuario-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1.5rem;
-    margin-top: 1.5rem;
 }
 
 .prontuario-grid .full-width {
@@ -838,12 +774,11 @@ a:hover {
     color: var(--cor-texto-secundario);
     text-transform: uppercase;
     margin-bottom: 0.75rem;
-    font-weight: 500;
 }
 
 .info-card p {
     font-size: 1.1rem;
-    font-weight: 500;
+    font-weight: 600;
     margin: 0;
 }
 
@@ -852,7 +787,6 @@ a:hover {
     padding: 2rem;
     border-radius: var(--raio-borda);
     box-shadow: var(--sombra-card);
-    margin-top: 1.5rem;
 }
 
 .atendimento-form-section h4 {
@@ -867,19 +801,13 @@ a:hover {
 .radio-group {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem;
-    align-items: center;
+    gap: 1rem;
 }
 
-.checkbox-group,
-.radio-group {
+.checkbox-group {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.radio-group input {
-    width: auto;
 }
 
 .token-box {
@@ -1061,16 +989,18 @@ a:hover {
 @keyframes fadeIn {
     from {
         opacity: 0;
+        transform: scale(0.98);
     }
 
     to {
         opacity: 1;
+        transform: scale(1);
     }
 }
 
 @keyframes scaleUp {
     from {
-        transform: scale(0.95);
+        transform: scale(0.8);
         opacity: 0;
     }
 
@@ -1100,7 +1030,39 @@ a:hover {
 }
 
 /* ===================================================================
-   7. Componentes de Modal
+   7. Indicador de Carregamento (Spinner)
+   =================================================================== */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    width: 100%;
+}
+
+.spinner {
+    width: 56px;
+    height: 56px;
+    border: 8px solid var(--cor-borda);
+    border-bottom-color: var(--cor-primaria);
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===================================================================
+   8. Componentes de Modal
    =================================================================== */
 
 .modal-overlay {
@@ -1116,7 +1078,6 @@ a:hover {
     z-index: 2000;
     animation: fadeIn 0.3s ease;
     backdrop-filter: blur(5px);
-    padding: 1rem;
 }
 
 .modal-content {
@@ -1129,12 +1090,10 @@ a:hover {
     text-align: center;
     transform: scale(0.95);
     animation: scaleUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-    max-height: 90vh;
-    overflow-y: auto;
 }
 
 .modal-content.large {
-    max-width: 900px;
+    max-width: 800px;
     text-align: left;
 }
 
@@ -1153,19 +1112,20 @@ a:hover {
     color: var(--cor-primaria);
 }
 
-.modal-close-btn {
-    background: none;
+.btn-close {
+    background: transparent;
     border: none;
-    font-size: 2.5rem;
+    font-size: 2rem;
     line-height: 1;
-    cursor: pointer;
     color: var(--cor-texto-secundario);
+    cursor: pointer;
     transition: color 0.2s ease;
 }
 
-.modal-close-btn:hover {
+.btn-close:hover {
     color: var(--cor-texto-principal);
 }
+
 
 .modal-content p {
     font-size: 1.15rem;
@@ -1181,39 +1141,47 @@ a:hover {
     gap: 1rem;
 }
 
-/* Estilos para o conteúdo pré-visualizado no modal */
-#preview-body h1,
-#preview-body h2,
-#preview-body h3,
-#preview-body h4 {
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--cor-texto-principal);
-    line-height: 1.3;
+/* ===================================================================
+   9. [NOVO] Estilos para a Barra de Filtro
+   =================================================================== */
+
+.filter-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    background-color: var(--cor-fundo-container);
+    padding: 1.5rem;
+    border-radius: var(--raio-borda);
+    margin-bottom: 2rem;
+    border: 1px solid var(--cor-borda);
 }
 
-#preview-body p {
-    font-size: 1rem;
-    margin-bottom: 1rem;
-    line-height: 1.7;
-    color: var(--cor-texto-principal);
+.filter-group {
+    display: flex;
+    flex-direction: column;
 }
 
-#preview-body ul,
-#preview-body ol {
-    margin-bottom: 1rem;
-    padding-left: 2rem;
-}
-
-#preview-body a {
-    color: var(--cor-primaria-hover);
-    text-decoration: underline;
-}
-
-#preview-body blockquote {
-    border-left: 4px solid var(--cor-borda);
-    padding-left: 1rem;
-    margin: 1rem 0;
-    font-style: italic;
+.filter-group label {
+    font-weight: 500;
+    font-size: 0.9rem;
     color: var(--cor-texto-secundario);
+    margin-bottom: 0.5rem;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 0.5rem;
+    background-color: var(--cor-fundo-body);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cor-primaria) 25%, transparent);
 }
