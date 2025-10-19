@@ -17,4 +17,12 @@ public interface ConteudoRepository extends JpaRepository<Conteudo, Long> {
     List<Conteudo> findAllByStatusOrderByPublicadoEmDesc(StatusConteudo status);
 
     Optional<Conteudo> findByIdAndStatus(Long id, StatusConteudo status);
+    
+    // [CORREÇÃO] Adiciona JOIN FETCH para carregar o autor e evitar LazyInitializationException
+    @Query("SELECT c FROM Conteudo c JOIN FETCH c.autor WHERE c.id = :id")
+    Optional<Conteudo> findByIdWithAutor(Long id);
+
+    // Encontra todos os conteúdos de um autor específico
+    List<Conteudo> findAllByAutorIdOrderByCriadoEmDesc(Long autorId);
 }
+

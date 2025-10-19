@@ -1,6 +1,6 @@
 // ===================================================================
-// MEDICO.JS (VERSÃO COM MELHORIAS VISUAIS)
-// Implementa ícones, spinners e um layout de card aprimorado.
+// MEDICO.JS (VERSÃO COMPLETA E ATUALIZADA)
+// Inclui correções para o ciclo de vida do TinyMCE e funcionalidades de conteúdo.
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,6 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const LISTA_EXAMES_COMUNS = ["Hemograma Completo", "Colesterol Total e Frações", "Glicemia de Jejum", "Ureia e Creatinina", "Exame de Urina (EAS)", "Eletrocardiograma (ECG)", "Raio-X do Tórax", "Ultrassonografia Abdominal"];
     const SPINNER_HTML = `<div class="spinner-container"><div class="spinner"></div></div>`;
 
+    // [CORREÇÃO] Função para limpar o editor TinyMCE antes de renderizar uma nova tela
+    function cleanupBeforeRender() {
+        const editor = tinymce.get('conteudo-editor');
+        if (editor) {
+            editor.remove();
+        }
+    }
 
     async function initMedicoDashboard() {
         try {
@@ -23,24 +30,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // [MELHORIA VISUAL] Adicionados ícones SVG aos cards do dashboard.
         contentArea.innerHTML = `
             <div class="dashboard-grid">
                 <div class="dashboard-card" id="card-minha-agenda">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <span>Minha Agenda (Ativas)</span>
+                    <span>Minha Agenda</span>
                 </div>
                 <div class="dashboard-card" id="card-historico">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21H3V3h12l6 6v12zM12 21v-8H3M15 3v6h6"></path></svg>
-                    <span>Histórico de Atendimentos</span>
+                    <span>Histórico</span>
                 </div>
                 <div class="dashboard-card" id="card-meus-horarios">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    <span>Gerenciar Meus Horários</span>
+                    <span>Meus Horários</span>
                 </div>
-                <div class="dashboard-card" id="card-criar-conteudo">
+                <div class="dashboard-card" id="card-novo-conteudo">
                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-                    <span>Criar Artigo/Notícia</span>
+                    <span>Novo Artigo</span>
+                </div>
+                 <div class="dashboard-card" id="card-meus-conteudos">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20v2H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v15H6.5A2.5 2.5 0 0 1 4 19.5z"></path></svg>
+                    <span>Meus Conteúdos</span>
                 </div>
                  <div class="dashboard-card" id="card-meu-perfil">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -54,12 +64,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('card-minha-agenda').addEventListener('click', renderMinhaAgenda);
         document.getElementById('card-historico').addEventListener('click', renderHistoricoDeAtendimentos);
         document.getElementById('card-meus-horarios').addEventListener('click', renderGerenciarHorarios);
-        document.getElementById('card-criar-conteudo').addEventListener('click', renderFormularioConteudo);
+        document.getElementById('card-novo-conteudo').addEventListener('click', () => renderFormularioConteudo());
+        document.getElementById('card-meus-conteudos').addEventListener('click', renderMeusConteudos);
         document.getElementById('card-meu-perfil').addEventListener('click', renderMeuPerfil);
+
+        const previewModal = document.getElementById('preview-modal');
+        if (previewModal) {
+            document.getElementById('preview-modal-close').addEventListener('click', closePreviewModal);
+            previewModal.addEventListener('click', (e) => { if (e.target.id === 'preview-modal') closePreviewModal(); });
+        }
+
         await renderMinhaAgenda();
     }
 
     async function renderMinhaAgenda() {
+        cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<div class="section-card"><h3>Minha Agenda (Próximas Consultas)</h3><p>Clique em uma consulta para iniciar o atendimento.</p><div id="lista-agendamentos-medico" class="medico-list" style="margin-top: 1.5rem;">${SPINNER_HTML}</div></div>`;
         try {
@@ -86,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function renderHistoricoDeAtendimentos() {
+        cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<div class="section-card"><h3>Histórico de Atendimentos</h3><p>Clique em um atendimento para rever o prontuário.</p><div id="lista-historico-medico" class="medico-list" style="margin-top: 1.5rem;">${SPINNER_HTML}</div></div>`;
         try {
@@ -112,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function renderTelaDeAtendimento(agendamentoId, isHistorico = false) {
+        cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<div class="section-card">${SPINNER_HTML}</div>`;
         try {
@@ -146,14 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const diasSintomas = consulta.diasSintomas ? `${consulta.diasSintomas} dia(s)` : 'Não informado';
 
-                // [MELHORIA FUNCIONAL] Adiciona campos de Alergias e Cirurgias
                 contentDinamico.innerHTML = `
                     <div class="admin-section-header">
                         <h3>Atendimento em Andamento</h3>
                         <button class="btn btn-secondary" id="btn-voltar-agenda">&larr; Voltar para Agenda</button>
                     </div>
                     <div id="atendimento-error-message" class="error-message" style="display:none;"></div>
-
                     <div class="prontuario-grid">
                         <div class="info-card"><h5>Paciente</h5><p>${prontuario.nomePaciente} (${prontuario.idade || 'N/A'} anos)</p></div>
                         <div class="info-card"><h5>Telefone</h5><p>${prontuario.telefone || 'Não informado'}</p></div>
@@ -161,25 +180,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="info-card"><h5>Alergias</h5><p>${consulta.alergias || 'Nenhuma informada'}</p></div>
                         <div class="info-card"><h5>Cirurgias Prévias</h5><p>${consulta.cirurgias || 'Nenhuma informada'}</p></div>
                     </div>
-
                     <form id="form-finalizar-consulta" style="margin-top: 1.5rem;">
                         <div class="atendimento-form-section">
                             <h4>Evolução e Conduta</h4>
                             <div class="input-group"><label for="evolucao">Evolução Médica</label><textarea id="evolucao" rows="6" placeholder="Descreva a evolução do paciente, exame físico, etc."></textarea></div>
                             <div class="input-group"><label for="prescricao">Prescrição Médica</label><textarea id="prescricao" rows="6" placeholder="Ex: Dipirona 500mg, 1 comprimido de 6/6h por 3 dias se dor ou febre."></textarea></div>
                         </div>
-
-                        <div class="atendimento-form-section" style="margin-top: 1.5rem;">
+                        <div class="atendimento-form-section">
                              <h4>Exames e Atestado</h4>
                              <div class="input-group"><label>Solicitação de Exames</label><div class="checkbox-container">${examesCheckboxesHtml}</div></div>
                              <div class="input-group"><label>Necessita de Atestado?</label><div class="radio-group"><input type="radio" id="atestado-nao" name="necessitaAtestado" value="nao" checked> <label for="atestado-nao">Não</label><input type="radio" id="atestado-sim" name="necessitaAtestado" value="sim" style="margin-left: 1rem;"> <label for="atestado-sim">Sim</label></div></div>
                             <div id="atestado-dias-container" class="input-group" style="display: none;"><label for="dias-repouso">Dias de Repouso</label><input type="number" id="dias-repouso" min="1" placeholder="Informe o número de dias"></div>
                         </div>
-                        
                         <div class="form-actions" style="margin-top: 2rem; justify-content: flex-end;"><button type="submit" class="btn btn-success">Finalizar e Salvar Consulta</button></div>
                     </form>
                 `;
-
                 document.getElementById('btn-voltar-agenda').addEventListener('click', renderMinhaAgenda);
                 document.getElementById('form-finalizar-consulta').addEventListener('submit', (e) => { e.preventDefault(); handleFinalizarConsulta(agendamentoId); });
                 document.querySelectorAll('input[name="necessitaAtestado"]').forEach(radio => {
@@ -197,8 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let diasDeRepouso = null;
         if (necessitaAtestado) {
             if (!diasRepousoInput.value || diasRepousoInput.value < 1) {
-                showToast("Por favor, informe um número válido de dias para o atestado.", "error");
-                return;
+                showToast("Por favor, informe um número válido de dias para o atestado.", "error"); return;
             }
             diasDeRepouso = parseInt(diasRepousoInput.value);
         }
@@ -218,30 +232,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function renderGerenciarHorarios() {
+        cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
-
         const clockIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
         const plusIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>`;
-
-        let htmlForm = `
-            <div class="section-card">
-                <div class="admin-section-header"><h3>Meus Horários Disponíveis</h3></div>
-                <p>Adicione os horários em que você está disponível. As alterações são salvas para as próximas semanas.</p>
-                <div id="horarios-error-message" class="error-message" style="display:none;"></div>
-                <div class="schedule-builder">`;
-
+        let htmlForm = `<div class="section-card"><div class="admin-section-header"><h3>Meus Horários Disponíveis</h3></div><p>Adicione os horários em que você está disponível. As alterações são salvas para as próximas semanas.</p><div id="horarios-error-message" class="error-message" style="display:none;"></div><div class="schedule-builder">`;
         DIAS_DA_SEMANA.forEach(dia => {
-            htmlForm += `
-                <div class="schedule-day-card" id="card-${dia}">
-                    <h5>${dia.charAt(0) + dia.slice(1).toLowerCase()}</h5>
-                    <div class="add-time-form">
-                        <div class="time-input-wrapper">${clockIcon}<input type="time" class="time-input" data-dia="${dia}"></div>
-                        <button type="button" class="btn-add-time" data-dia="${dia}" title="Adicionar horário">${plusIcon}</button>
-                    </div>
-                    <div class="time-tags-container" id="tags-${dia}"></div>
-                </div>`;
+            htmlForm += `<div class="schedule-day-card" id="card-${dia}"><h5>${dia.charAt(0) + dia.slice(1).toLowerCase()}</h5><div class="add-time-form"><div class="time-input-wrapper">${clockIcon}<input type="time" class="time-input" data-dia="${dia}"></div><button type="button" class="btn-add-time" data-dia="${dia}" title="Adicionar horário">${plusIcon}</button></div><div class="time-tags-container" id="tags-${dia}"></div></div>`;
         });
-
         htmlForm += `</div><div class="form-actions" style="margin-top: 2rem; justify-content: flex-end;"><button type="button" class="btn btn-primary" id="btn-salvar-agenda">Salvar Agenda</button></div></div>`;
         contentDinamico.innerHTML = htmlForm;
         try {
@@ -251,18 +249,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (agendaAtual.dias) { agendaAtual.dias.forEach(diaInfo => diaInfo.horarios.forEach(hora => criarTagDeHorario(diaInfo.dia, hora))); }
             }
         } catch (e) { console.error("Erro ao buscar agenda atual", e); }
-
         document.querySelectorAll('.btn-add-time').forEach(button => button.addEventListener('click', e => {
             const dia = e.currentTarget.dataset.dia;
             const input = document.querySelector(`.time-input[data-dia="${dia}"]`);
             if (input && input.value) { criarTagDeHorario(dia, input.value); input.value = ''; }
         }));
-
         document.getElementById('btn-salvar-agenda').addEventListener('click', handleSalvarHorarios);
     }
 
     function criarTagDeHorario(diaSemana, horaString) {
         const container = document.getElementById(`tags-${diaSemana.toUpperCase()}`);
+        if (!container) return;
         if (container.querySelector(`[data-hora="${horaString}"]`)) return;
         const tag = document.createElement('div');
         tag.className = 'time-tag';
@@ -289,23 +286,158 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { showToast('Erro de rede ao salvar horários.', 'error'); }
     }
 
-    function renderFormularioConteudo() {
+    function openPreviewModal(title, content) {
+        document.getElementById('preview-title').textContent = title;
+        document.getElementById('preview-body').innerHTML = content;
+        document.getElementById('preview-modal').style.display = 'flex';
+    }
+
+    function closePreviewModal() {
+        document.getElementById('preview-modal').style.display = 'none';
+    }
+
+    async function renderMeusConteudos() {
+        cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
-        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Criar Conteúdo</h4><p>Seu conteúdo será salvo como rascunho e enviado para aprovação de um administrador.</p><form id="form-conteudo"><div id="conteudo-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo do Conteúdo</label><textarea id="conteudo-corpo" rows="15" required></textarea></div><div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-primary">Enviar para Aprovação</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="admin-section-header"><h4>Meus Conteúdos</h4> <button class="btn btn-new" id="btn-criar-novo-conteudo">+ Criar Novo</button></div><div id="lista-meus-conteudos">${SPINNER_HTML}</div>`;
+        document.getElementById('btn-criar-novo-conteudo').addEventListener('click', () => renderFormularioConteudo());
+
+        try {
+            const response = await fetchAuthenticated('/api/conteudo/meus');
+            if (!response || !response.ok) throw new Error('Falha ao buscar seus conteúdos');
+            const conteudos = await response.json();
+            const container = document.getElementById('lista-meus-conteudos');
+            if (conteudos.length === 0) {
+                container.innerHTML = "<p>Você ainda não criou nenhum conteúdo.</p>";
+                return;
+            }
+            let tableHTML = `<div class="admin-table-container"><table class="admin-table"><thead><tr><th>Título</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
+            conteudos.forEach(c => {
+                const canEdit = c.status === 'RASCUNHO';
+                tableHTML += `<tr><td>${c.titulo}</td><td>${c.tipo}</td><td><span class="badge ${c.status}">${c.status}</span></td><td><div class="form-actions" style="gap: 0.5rem;"><button class="btn btn-secondary btn-sm" data-action="visualizar" data-id="${c.id}">Visualizar</button><button class="btn btn-primary btn-sm" data-action="editar" data-id="${c.id}" ${!canEdit ? 'disabled' : ''}>Editar</button><button class="btn btn-danger btn-sm" data-action="deletar" data-id="${c.id}" ${!canEdit ? 'disabled' : ''}>Excluir</button></div></td></tr>`;
+            });
+            tableHTML += '</tbody></table></div>';
+            container.innerHTML = tableHTML;
+
+            container.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const action = e.target.dataset.action;
+                    const id = e.target.dataset.id;
+                    if (action === 'visualizar') visualizarConteudo(id);
+                    if (action === 'editar') editarConteudo(id);
+                    if (action === 'deletar') deletarMeuConteudo(id);
+                }
+            });
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById('lista-meus-conteudos').innerHTML = "<p>Erro ao carregar seus conteúdos.</p>";
+        }
+    }
+
+    async function visualizarConteudo(conteudoId) {
+        try {
+            const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`);
+            if (!response || !response.ok) {
+                await handleApiError(response, null);
+                return;
+            };
+            const conteudo = await response.json();
+            openPreviewModal(conteudo.titulo, conteudo.corpo);
+        } catch (err) {
+            showToast(err.message || 'Erro de rede ao visualizar', 'error');
+        }
+    };
+
+    function editarConteudo(conteudoId) {
+        renderFormularioConteudo(conteudoId);
+    };
+
+    async function deletarMeuConteudo(conteudoId) {
+        if (confirm("Tem certeza que deseja excluir este rascunho? Esta ação não pode ser desfeita.")) {
+            try {
+                const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`, { method: 'DELETE' });
+                if (response && response.ok) {
+                    showToast("Rascunho excluído com sucesso!", 'success');
+                    renderMeusConteudos();
+                } else {
+                    await handleApiError(response, null);
+                }
+            } catch (err) {
+                showToast("Erro de rede ao excluir conteúdo.", 'error');
+            }
+        }
+    };
+
+    async function renderFormularioConteudo(conteudoId = null) {
+        cleanupBeforeRender();
+        const isEditing = conteudoId !== null;
+        const contentDinamico = document.getElementById('medico-content-dinamico');
+        contentDinamico.innerHTML = `<div class="booking-form-container"><div class="admin-section-header"><h4>${isEditing ? 'Editar Conteúdo' : 'Criar Novo Conteúdo'}</h4><button class="btn btn-secondary" id="btn-voltar-conteudos">&larr; Voltar</button></div><form id="form-conteudo"><input type="hidden" id="conteudo-id" value="${conteudoId || ''}"><div id="conteudo-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo do Conteúdo</label><textarea id="conteudo-editor"></textarea></div><div class="form-actions" style="justify-content: space-between;"><button type="button" class="btn btn-secondary" id="btn-preview">Pré-visualizar</button><div><button type="submit" class="btn btn-primary">Salvar Rascunho</button></div></div></form></div>`;
+        document.getElementById('btn-voltar-conteudos').addEventListener('click', renderMeusConteudos);
+
+        tinymce.init({
+            selector: '#conteudo-editor',
+            plugins: 'lists link image table code help wordcount autoresize',
+            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image | code',
+            language: 'pt_BR',
+            height: 700,
+            menubar: false,
+            setup: (editor) => {
+                editor.on('init', async () => {
+                    if (isEditing) {
+                        try {
+                            const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`);
+                            if (!response || !response.ok) throw new Error('Conteúdo não encontrado');
+                            const data = await response.json();
+                            document.getElementById('conteudo-titulo').value = data.titulo;
+                            document.getElementById('conteudo-tipo').value = data.tipo;
+                            editor.setContent(data.corpo);
+                        } catch (err) {
+                            showToast(err.message, 'error');
+                            renderMeusConteudos();
+                        }
+                    }
+                });
+            }
+        });
+        document.getElementById('btn-preview').addEventListener('click', () => {
+            const title = document.getElementById('conteudo-titulo').value || "Sem Título";
+            const content = tinymce.get('conteudo-editor').getContent();
+            openPreviewModal(title, content);
+        });
         document.getElementById('form-conteudo').addEventListener('submit', handleConteudoSubmit);
     }
 
     async function handleConteudoSubmit(event) {
         event.preventDefault();
-        const dto = { titulo: document.getElementById('conteudo-titulo').value, tipo: document.getElementById('conteudo-tipo').value, corpo: document.getElementById('conteudo-corpo').value };
+        const corpoConteudo = tinymce.get('conteudo-editor').getContent();
+        if (!corpoConteudo) {
+            showToast('O corpo do conteúdo não pode estar vazio.', 'error');
+            return;
+        }
+        const conteudoId = document.getElementById('conteudo-id').value;
+        const isEditing = !!conteudoId;
+        const url = isEditing ? `/api/conteudo/admin/${conteudoId}` : '/api/conteudo/admin';
+        const method = isEditing ? 'PUT' : 'POST';
+        const dto = {
+            titulo: document.getElementById('conteudo-titulo').value,
+            tipo: document.getElementById('conteudo-tipo').value,
+            corpo: corpoConteudo,
+            status: 'RASCUNHO' // Sempre salva como rascunho
+        };
         try {
-            const response = await fetchAuthenticated('/api/conteudo/admin', { method: 'POST', body: JSON.stringify(dto) });
-            if (response && response.ok) { showToast('Conteúdo salvo como rascunho!', 'success'); document.getElementById('form-conteudo').reset(); }
+            const response = await fetchAuthenticated(url, { method: method, body: JSON.stringify(dto) });
+            if (response && response.ok) {
+                showToast(`Rascunho ${isEditing ? 'atualizado' : 'salvo'} com sucesso!`, 'success');
+                renderMeusConteudos();
+            }
             else { await handleApiError(response, 'conteudo-error-message'); }
-        } catch (err) { showToast('Erro de rede.', 'error'); }
+        } catch (err) { showToast('Erro de rede ao salvar conteúdo.', 'error'); }
     }
 
     function renderMeuPerfil() {
+        cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
         contentDinamico.innerHTML = `<div class="section-card"><h3>Meu Perfil</h3><div id="perfil-info">${SPINNER_HTML}</div></div><div class="section-card" style="margin-top: 1.5rem;"><h4>Alterar Senha</h4><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions" style="justify-content: flex-end;"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
         try {

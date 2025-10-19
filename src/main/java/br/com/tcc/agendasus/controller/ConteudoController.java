@@ -36,6 +36,18 @@ public class ConteudoController {
         return ResponseEntity.ok(service.listarPublicados());
     }
     
+    // [NOVO] Endpoint para o médico listar seus próprios conteúdos
+    @GetMapping("/meus")
+    public ResponseEntity<List<ConteudoResponseDTO>> listarMeus(Authentication auth) {
+        return ResponseEntity.ok(service.listarMeusConteudos(auth));
+    }
+
+    // [NOVO] Endpoint para buscar um conteúdo específico (para edição)
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ConteudoResponseDTO> buscarPorIdAdmin(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(service.buscarPorIdAdmin(id, auth));
+    }
+
     @PostMapping("/admin")
     public ResponseEntity<ConteudoResponseDTO> criar(@RequestBody @Valid ConteudoCadastroDTO dados, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(dados, auth));
@@ -47,14 +59,13 @@ public class ConteudoController {
     }
 
     @PutMapping("/admin/{id}")
-    public ResponseEntity<ConteudoResponseDTO> atualizar(@PathVariable Long id, @RequestBody ConteudoUpdateDTO dados) {
-        return ResponseEntity.ok(service.atualizar(id, dados));
+    public ResponseEntity<ConteudoResponseDTO> atualizar(@PathVariable Long id, @RequestBody ConteudoUpdateDTO dados, Authentication auth) {
+        return ResponseEntity.ok(service.atualizar(id, dados, auth));
     }
 
     @DeleteMapping("/admin/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        service.deletar(id);
+    public ResponseEntity<Void> deletar(@PathVariable Long id, Authentication auth) {
+        service.deletar(id, auth);
         return ResponseEntity.noContent().build();
     }
 }
-

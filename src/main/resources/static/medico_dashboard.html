@@ -7,6 +7,11 @@
     <title>Dashboard Médico - AgendaSUS</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Substitua 'SUA_CHAVE_DE_API_AQUI' pela sua chave da API do TinyMCE -->
+    <script src="https://cdn.tiny.cloud/1/ytsggak9jet0c6nj0jfdwaah6p3tgc2xy0qckrgnvxqimzh4/tinymce/7/tinymce.min.js"
+        referrerpolicy="origin"></script>
+
     <script src="js/auth-guard.js" defer></script>
     <script src="js/common.js" defer></script>
     <script src="js/medico.js" defer></script>
@@ -28,6 +33,17 @@
             <!-- O conteúdo principal do dashboard será renderizado aqui pelo medico.js -->
         </div>
     </main>
+
+    <!-- [NOVO] Modal de Pré-visualização de Conteúdo -->
+    <div id="preview-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content large">
+            <div id="preview-modal-header" class="modal-header">
+                <h3 id="preview-title"></h3>
+                <button id="preview-modal-close" class="modal-close-btn">&times;</button>
+            </div>
+            <div id="preview-body" class="content-item-body"></div>
+        </div>
+    </div>
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 

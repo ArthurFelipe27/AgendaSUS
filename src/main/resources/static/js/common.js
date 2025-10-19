@@ -72,7 +72,7 @@ async function renderNoticiasPublicas(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    container.innerHTML = `<div class="content-list">Carregando...</div>`;
+    container.innerHTML = `<div class="content-list"><div class="spinner-container"><div class="spinner"></div></div></div>`;
     const listContainer = container.querySelector('.content-list');
 
     try {
@@ -91,6 +91,8 @@ async function renderNoticiasPublicas(containerId) {
             const dataPublicacao = c.publicadoEm ? new Date(c.publicadoEm).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Data não disponível';
             const item = document.createElement('article');
             item.className = 'content-item';
+            // [ALTERAÇÃO] A linha abaixo agora insere o c.corpo diretamente no innerHTML,
+            // o que vai renderizar o HTML salvo pelo editor de texto.
             item.innerHTML = `
                 <div class="content-item-header">
                     <h4>${c.titulo}</h4>
@@ -99,7 +101,7 @@ async function renderNoticiasPublicas(containerId) {
                     </p>
                 </div>
                 <div class="content-item-body">
-                    ${c.corpo.replace(/\n/g, '<br>')}
+                    ${c.corpo}
                 </div>
             `;
             listContainer.appendChild(item);
