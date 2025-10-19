@@ -40,8 +40,8 @@ public class SecurityConfig {
                         // Conteúdo Público
                         .requestMatchers(HttpMethod.GET, "/api/conteudo/publico/**").permitAll()
 
-                        // Arquivos Estáticos (HTML, CSS, JS, favicon)
-                        .requestMatchers("/", "/*.html", "/favicon.ico", "/css/**", "/js/**").permitAll()
+                        // [CORREÇÃO] Adicionado o favicon.svg à lista de permissões públicas
+                        .requestMatchers("/", "/*.html", "/favicon.svg", "/css/**", "/js/**").permitAll()
 
                         // Endpoints de Admin (Diretor)
                         .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("DIRETOR")
@@ -56,7 +56,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/conteudo/admin").hasAnyRole("MEDICO", "DIRETOR")
                         .requestMatchers(HttpMethod.GET, "/api/conteudo/meus").hasRole("MEDICO")
                         
-                        // [CORREÇÃO] Permite que usuários autenticados acessem. A lógica de permissão (dono vs diretor) fica no Service.
                         .requestMatchers(HttpMethod.GET, "/api/conteudo/admin/{id:\\d+}").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/conteudo/admin/{id:\\d+}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/conteudo/admin/{id:\\d+}").authenticated()
