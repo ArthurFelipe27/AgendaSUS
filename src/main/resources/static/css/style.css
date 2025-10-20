@@ -1095,6 +1095,11 @@ a:hover {
 .modal-content.large {
     max-width: 800px;
     text-align: left;
+    /* [CORREÇÃO] Adições para controlar a altura e o scroll */
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    /* Limita a altura do modal inteiro */
 }
 
 .modal-header {
@@ -1104,6 +1109,8 @@ a:hover {
     border-bottom: 1px solid var(--cor-borda);
     padding-bottom: 1rem;
     margin-bottom: 1.5rem;
+    flex-shrink: 0;
+    /* Impede que o header encolha */
 }
 
 .modal-header h3 {
@@ -1126,6 +1133,14 @@ a:hover {
     color: var(--cor-texto-principal);
 }
 
+/* [CORREÇÃO] Estilo para o corpo do modal com scroll */
+.modal-body {
+    overflow-y: auto;
+    /* Adiciona scroll vertical SE o conteúdo ultrapassar */
+    padding: 0 1rem 1rem 0;
+    /* Ajuste no padding para a barra de rolagem */
+    line-height: 1.7;
+}
 
 .modal-content p {
     font-size: 1.15rem;
