@@ -1082,7 +1082,7 @@ a:hover {
 
 .modal-content {
     background-color: var(--cor-fundo-container);
-    padding: 2.5rem;
+    padding: 0;
     border-radius: var(--raio-borda);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     width: 90%;
@@ -1090,16 +1090,15 @@ a:hover {
     text-align: center;
     transform: scale(0.95);
     animation: scaleUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .modal-content.large {
     max-width: 800px;
     text-align: left;
-    /* [CORREÇÃO] Adições para controlar a altura e o scroll */
-    display: flex;
-    flex-direction: column;
     max-height: 85vh;
-    /* Limita a altura do modal inteiro */
 }
 
 .modal-header {
@@ -1107,10 +1106,9 @@ a:hover {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--cor-borda);
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
+    padding: 1.5rem 2.5rem;
+    margin-bottom: 0;
     flex-shrink: 0;
-    /* Impede que o header encolha */
 }
 
 .modal-header h3 {
@@ -1133,28 +1131,50 @@ a:hover {
     color: var(--cor-texto-principal);
 }
 
-/* [CORREÇÃO] Estilo para o corpo do modal com scroll */
-.modal-body {
-    overflow-y: auto;
-    /* Adiciona scroll vertical SE o conteúdo ultrapassar */
-    padding: 0 1rem 1rem 0;
-    /* Ajuste no padding para a barra de rolagem */
-    line-height: 1.7;
-}
 
 .modal-content p {
     font-size: 1.15rem;
     color: var(--cor-texto-principal);
-    margin: 0;
-    margin-bottom: 2rem;
+    margin: 0 0 2rem 0;
     line-height: 1.5;
+    padding: 1.5rem 2.5rem 0;
 }
 
 .modal-actions {
     display: flex;
     justify-content: center;
     gap: 1rem;
+    padding: 0 2.5rem 2.5rem;
 }
+
+/* Estilos para o corpo do modal de preview com scroll */
+.modal-content .content-item-body {
+    padding: 1.5rem 2.5rem;
+    line-height: 1.7;
+    overflow-y: auto;
+    /* Adiciona a barra de rolagem vertical quando necessário */
+    flex-grow: 1;
+}
+
+/* Estilização da barra de rolagem (opcional, para um visual melhor) */
+.modal-content .content-item-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content .content-item-body::-webkit-scrollbar-track {
+    background: var(--cor-fundo-body);
+    border-radius: 10px;
+}
+
+.modal-content .content-item-body::-webkit-scrollbar-thumb {
+    background: #bdc5d1;
+    border-radius: 10px;
+}
+
+.modal-content .content-item-body::-webkit-scrollbar-thumb:hover {
+    background: #a3aab5;
+}
+
 
 /* ===================================================================
    9. [NOVO] Estilos para a Barra de Filtro
