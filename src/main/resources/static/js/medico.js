@@ -1,23 +1,37 @@
 // ===================================================================
-// MEDICO.JS (VERSÃO COMPLETA E ATUALIZADA)
-// Inclui correções para o ciclo de vida do TinyMCE e funcionalidades de conteúdo.
+// MEDICO.JS (VERSÃO COMPLETA E CORRIGIDA)
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Área principal onde o conteúdo dinâmico do dashboard será renderizado
     const contentArea = document.getElementById('content-area');
-    let meuIdDeMedico = null;
+    let meuIdDeMedico = null; // Armazena o ID do médico logado
+
+    // Constantes para facilitar a manutenção
     const DIAS_DA_SEMANA = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO", "DOMINGO"];
     const LISTA_EXAMES_COMUNS = ["Hemograma Completo", "Colesterol Total e Frações", "Glicemia de Jejum", "Ureia e Creatinina", "Exame de Urina (EAS)", "Eletrocardiograma (ECG)", "Raio-X do Tórax", "Ultrassonografia Abdominal"];
     const SPINNER_HTML = `<div class="spinner-container"><div class="spinner"></div></div>`;
 
-    // [CORREÇÃO] Função para limpar o editor TinyMCE antes de renderizar uma nova tela
+    /**
+     * [CORREÇÃO] Função para limpar o editor TinyMCE antes de renderizar uma nova tela.
+     * Isso evita erros de reinicialização do editor.
+     */
     function cleanupBeforeRender() {
-        const editor = tinymce.get('conteudo-editor');
-        if (editor) {
-            editor.remove();
+        // [CORREÇÃO] Verifica se o objeto 'tinymce' existe globalmente antes de usá-lo.
+        // Isso evita erros caso o script do TinyMCE ainda não tenha sido totalmente carregado
+        // ou em telas onde o editor não é utilizado.
+        if (typeof tinymce !== 'undefined') {
+            const editor = tinymce.get('conteudo-editor');
+            if (editor) {
+                editor.remove();
+            }
         }
     }
 
+    /**
+     * Função principal que inicializa o dashboard do médico.
+     * Busca os dados do médico e configura os cards principais.
+     */
     async function initMedicoDashboard() {
         try {
             const respMe = await fetchAuthenticated('/api/usuarios/me');
@@ -30,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Renderiza a grade de cards do menu principal
         contentArea.innerHTML = `
             <div class="dashboard-grid">
                 <div class="dashboard-card" id="card-minha-agenda">
@@ -61,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div id="medico-content-dinamico"></div>
         `;
 
+        // Adiciona os listeners de evento para cada card
         document.getElementById('card-minha-agenda').addEventListener('click', renderMinhaAgenda);
         document.getElementById('card-historico').addEventListener('click', renderHistoricoDeAtendimentos);
         document.getElementById('card-meus-horarios').addEventListener('click', renderGerenciarHorarios);
@@ -68,15 +84,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('card-meus-conteudos').addEventListener('click', renderMeusConteudos);
         document.getElementById('card-meu-perfil').addEventListener('click', renderMeuPerfil);
 
+        // Configura o modal de pré-visualização de conteúdo
         const previewModal = document.getElementById('preview-modal');
         if (previewModal) {
             document.getElementById('preview-modal-close').addEventListener('click', closePreviewModal);
             previewModal.addEventListener('click', (e) => { if (e.target.id === 'preview-modal') closePreviewModal(); });
         }
 
+        // Carrega a tela inicial da agenda
         await renderMinhaAgenda();
     }
 
+    /**
+     * Renderiza a lista de agendamentos ativos (Pendentes ou Confirmados).
+     */
     async function renderMinhaAgenda() {
         cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
@@ -104,6 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { console.error(err); document.getElementById('lista-agendamentos-medico').innerHTML = '<p>Erro ao carregar agendamentos.</p>'; }
     }
 
+    /**
+     * Renderiza o histórico de atendimentos (Atendidos, Cancelados, etc.).
+     */
     async function renderHistoricoDeAtendimentos() {
         cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
@@ -131,6 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { console.error(err); document.getElementById('lista-historico-medico').innerHTML = '<p>Erro ao carregar histórico.</p>'; }
     }
 
+    /**
+     * Renderiza a tela de atendimento (ativa ou de histórico).
+     * @param {number} agendamentoId ID do agendamento a ser exibido.
+     * @param {boolean} isHistorico Flag para indicar se é uma visualização de histórico.
+     */
     async function renderTelaDeAtendimento(agendamentoId, isHistorico = false) {
         cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
@@ -206,6 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { console.error(err); contentDinamico.innerHTML = '<p>Erro ao carregar dados do atendimento.</p>'; }
     }
 
+    /**
+     * Manipula o envio do formulário de finalização de consulta.
+     * @param {number} agendamentoId ID do agendamento a ser finalizado.
+     */
     async function handleFinalizarConsulta(agendamentoId) {
         const necessitaAtestado = document.querySelector('input[name="necessitaAtestado"]:checked').value === 'sim';
         const diasRepousoInput = document.getElementById('dias-repouso');
@@ -231,6 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { showToast('Erro de rede ao finalizar a consulta.', 'error'); }
     }
 
+    /**
+     * Renderiza a interface para gerenciar os horários de atendimento.
+     */
     async function renderGerenciarHorarios() {
         cleanupBeforeRender();
         const contentDinamico = document.getElementById('medico-content-dinamico');
@@ -376,42 +412,70 @@ document.addEventListener('DOMContentLoaded', () => {
         contentDinamico.innerHTML = `<div class="booking-form-container"><div class="admin-section-header"><h4>${isEditing ? 'Editar Conteúdo' : 'Criar Novo Conteúdo'}</h4><button class="btn btn-secondary" id="btn-voltar-conteudos">&larr; Voltar</button></div><form id="form-conteudo"><input type="hidden" id="conteudo-id" value="${conteudoId || ''}"><div id="conteudo-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Título</label><input type="text" id="conteudo-titulo" required></div><div class="input-group"><label>Tipo</label><select id="conteudo-tipo" required><option value="NOTICIA">Notícia</option><option value="ARTIGO">Artigo</option><option value="OUTRO">Outro</option></select></div><div class="input-group"><label>Corpo do Conteúdo</label><textarea id="conteudo-editor"></textarea></div><div class="form-actions" style="justify-content: space-between;"><button type="button" class="btn btn-secondary" id="btn-preview">Pré-visualizar</button><div><button type="submit" class="btn btn-primary">Salvar Rascunho</button></div></div></form></div>`;
         document.getElementById('btn-voltar-conteudos').addEventListener('click', renderMeusConteudos);
 
-        tinymce.init({
-            selector: '#conteudo-editor',
-            plugins: 'lists link image table code help wordcount autoresize',
-            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image | code',
-            language: 'pt_BR',
-            height: 700,
-            menubar: false,
-            setup: (editor) => {
-                editor.on('init', async () => {
-                    if (isEditing) {
-                        try {
-                            const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`);
-                            if (!response || !response.ok) throw new Error('Conteúdo não encontrado');
-                            const data = await response.json();
-                            document.getElementById('conteudo-titulo').value = data.titulo;
-                            document.getElementById('conteudo-tipo').value = data.tipo;
-                            editor.setContent(data.corpo);
-                        } catch (err) {
-                            showToast(err.message, 'error');
-                            renderMeusConteudos();
-                        }
-                    }
-                });
+        // [CORREÇÃO] Função recursiva para aguardar o carregamento do TinyMCE
+        const initTinyMCE = () => {
+            // Verifica se o objeto global 'tinymce' já está disponível
+            if (typeof tinymce === 'undefined') {
+                // Se não estiver, aguarda 100ms e tenta novamente
+                setTimeout(initTinyMCE, 100);
+                return;
             }
-        });
+
+            // Se estiver disponível, inicializa o editor
+            tinymce.init({
+                selector: '#conteudo-editor',
+                plugins: 'lists link image table code help wordcount autoresize',
+                toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | link image | code',
+                language: 'pt_BR',
+                height: 700,
+                menubar: false,
+                setup: (editor) => {
+                    editor.on('init', async () => {
+                        if (isEditing) {
+                            try {
+                                const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`);
+                                if (!response || !response.ok) throw new Error('Conteúdo não encontrado');
+                                const data = await response.json();
+                                document.getElementById('conteudo-titulo').value = data.titulo;
+                                document.getElementById('conteudo-tipo').value = data.tipo;
+                                editor.setContent(data.corpo);
+                            } catch (err) {
+                                showToast(err.message, 'error');
+                                renderMeusConteudos();
+                            }
+                        }
+                    });
+                }
+            });
+        };
+
+        // Inicia a verificação e inicialização
+        initTinyMCE();
+
         document.getElementById('btn-preview').addEventListener('click', () => {
             const title = document.getElementById('conteudo-titulo').value || "Sem Título";
-            const content = tinymce.get('conteudo-editor').getContent();
-            openPreviewModal(title, content);
+            const editor = tinymce.get('conteudo-editor');
+            if (editor) {
+                const content = editor.getContent();
+                openPreviewModal(title, content);
+            } else {
+                showToast("O editor ainda não foi carregado. Aguarde um momento.", "error");
+            }
         });
         document.getElementById('form-conteudo').addEventListener('submit', handleConteudoSubmit);
     }
 
     async function handleConteudoSubmit(event) {
         event.preventDefault();
-        const corpoConteudo = tinymce.get('conteudo-editor').getContent();
+
+        // [CORREÇÃO] Garante que estamos interagindo com uma instância válida do editor
+        const editor = tinymce.get('conteudo-editor');
+        if (!editor) {
+            showToast("O editor ainda não foi carregado. Aguarde um momento.", "error");
+            return;
+        }
+
+        const corpoConteudo = editor.getContent();
         if (!corpoConteudo) {
             showToast('O corpo do conteúdo não pode estar vazio.', 'error');
             return;
@@ -468,5 +532,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { showToast('Erro de rede ao alterar senha.', 'error'); }
     }
 
+    // Inicia a execução do dashboard
     initMedicoDashboard();
 });
+
+
