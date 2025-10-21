@@ -1220,3 +1220,79 @@ a:hover {
     border-color: var(--cor-primaria);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--cor-primaria) 25%, transparent);
 }
+
+/* ===================================================================
+   10. [NOVO] Estilos para a Central de Ajuda (FAQ)
+   =================================================================== */
+
+.faq-container {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.faq-container details {
+    background-color: var(--cor-fundo-container);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-borda);
+    transition: all 0.2s ease;
+}
+
+.faq-container details:hover {
+    border-color: var(--cor-primaria);
+}
+
+.faq-container summary {
+    padding: 1.25rem 1.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    outline: none;
+    list-style: none;
+    /* Remove a seta padrão */
+    position: relative;
+    color: var(--cor-texto-principal);
+}
+
+.faq-container summary::-webkit-details-marker {
+    display: none;
+    /* Remove a seta padrão no Chrome/Safari */
+}
+
+/* Adiciona um ícone de seta customizado */
+.faq-container summary::after {
+    content: '+';
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: var(--cor-primaria);
+    transition: transform 0.2s ease;
+}
+
+.faq-container details[open] summary::after {
+    transform: translateY(-50%) rotate(45deg);
+}
+
+
+.faq-container details[open] summary {
+    border-bottom: 1px solid var(--cor-borda);
+    color: var(--cor-primaria);
+}
+
+.faq-content {
+    padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+    line-height: 1.7;
+    color: var(--cor-texto-secundario);
+    animation: fadeIn 0.3s ease;
+}
+
+.faq-content p {
+    margin-bottom: 1rem;
+}
+
+.faq-content p:last-child {
+    margin-bottom: 0;
+}

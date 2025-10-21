@@ -1,6 +1,6 @@
 // ===================================================================
 // PACIENTE.JS (VERSÃO COMPLETA E ATUALIZADA)
-// Inclui o novo sistema de filtros na tela de agendamento.
+// Inclui o novo sistema de filtros na tela de agendamento e a Central de Ajuda.
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -62,6 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                     <span>Notícias e Artigos</span>
                 </div>
+                 <div class="dashboard-card" id="card-ajuda">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>Central de Ajuda</span>
+                </div>
             </div>
             <hr>
             <div id="paciente-content-dinamico"></div>
@@ -74,8 +78,65 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('paciente-content-dinamico').innerHTML = `<div class="admin-section-header"><h3>Notícias e Artigos</h3></div>`;
             renderNoticiasPublicas('paciente-content-dinamico');
         });
+        document.getElementById('card-ajuda').addEventListener('click', renderCentralDeAjuda);
 
         renderTelaDeAgendamento();
+    }
+
+    // [NOVO] Função para renderizar a Central de Ajuda
+    function renderCentralDeAjuda() {
+        const contentDinamico = document.getElementById('paciente-content-dinamico');
+        contentDinamico.innerHTML = `
+            <div class="admin-section-header">
+                <h3>Central de Ajuda</h3>
+            </div>
+            <p>Encontre respostas para as perguntas mais comuns sobre o uso do AgendaSUS.</p>
+            <div class="faq-container">
+                <details>
+                    <summary>Como agendo uma nova consulta?</summary>
+                    <div class="faq-content">
+                        <p><strong>1. Acesse a tela "Novo Agendamento":</strong> Este é o primeiro item que aparece no seu dashboard.</p>
+                        <p><strong>2. Filtre e Encontre um Médico:</strong> Você pode buscar médicos pelo nome, especialidade ou pela Unidade de Saúde.</p>
+                        <p><strong>3. Veja os Horários:</strong> Clique em "Ver horários &rarr;" no médico desejado.</p>
+                        <p><strong>4. Escolha um Horário:</strong> Os horários disponíveis estarão em azul. Clique no que for melhor para você.</p>
+                        <p><strong>5. Descreva seus Sintomas:</strong> Preencha o formulário final com seus sintomas e outras informações relevantes e clique em "Confirmar Agendamento".</p>
+                    </div>
+                </details>
+                <details>
+                    <summary>Como posso ver meus agendamentos?</summary>
+                    <div class="faq-content">
+                        <p>Clique no card <strong>"Meus Agendamentos"</strong>. A tela mostrará duas seções:</p>
+                        <p><strong>- Próximos Agendamentos:</strong> Suas consultas futuras, com status PENDENTE ou CONFIRMADO.</p>
+                        <p><strong>- Histórico de Agendamentos:</strong> Todas as suas consultas passadas (ATENDIDO, CANCELADO, etc.).</p>
+                    </div>
+                </details>
+                 <details>
+                    <summary>Como cancelo uma consulta?</summary>
+                    <div class="faq-content">
+                        <p><strong>1.</strong> Vá para <strong>"Meus Agendamentos"</strong>.</p>
+                        <p><strong>2.</strong> Na lista de "Próximos Agendamentos", encontre a consulta que deseja cancelar.</p>
+                        <p><strong>3.</strong> Clique no botão vermelho <strong>"Cancelar"</strong> ao lado dela e confirme a ação.</p>
+                        <p>Lembre-se: Só é possível cancelar agendamentos com status PENDENTE ou CONFIRMADO.</p>
+                    </div>
+                </details>
+                <details>
+                    <summary>Onde encontro minhas prescrições, atestados e exames?</summary>
+                    <div class="faq-content">
+                        <p><strong>1.</strong> Acesse <strong>"Meus Agendamentos"</strong> e vá para o <strong>"Histórico de Agendamentos"</strong>.</p>
+                        <p><strong>2.</strong> Encontre a consulta que foi "ATENDIDA".</p>
+                        <p><strong>3.</strong> Clique no botão <strong>"Ver Detalhes"</strong>. Uma nova seção aparecerá na tela com todos os documentos gerados naquela consulta (prescrições, atestados e a lista de exames solicitados).</p>
+                    </div>
+                </details>
+                 <details>
+                    <summary>Esqueci minha senha, e agora?</summary>
+                    <div class="faq-content">
+                        <p><strong>1.</strong> Na tela de login, clique no link <strong>"Esqueci minha senha"</strong>.</p>
+                        <p><strong>2.</strong> Informe seu e-mail de cadastro para receber um token de recuperação.</p>
+                        <p><strong>3.</strong> Vá para a página de redefinição, cole o token e crie uma nova senha.</p>
+                    </div>
+                </details>
+            </div>
+        `;
     }
 
     // [NOVO] Função principal que organiza a tela de agendamento
