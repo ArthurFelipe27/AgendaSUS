@@ -28,15 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span>Gerenciar Unidades</span>
                 </div>
                 <div class="dashboard-card admin" id="card-gerenciar-medicos">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-stethoscope"><path d="M4.8 2.3A.3.3 0 1 0 5 2a.3.3 0 0 0-.2.3"/><path d="M6.4 4c-.2.2-.2.5 0 .7l5.2 5.2c.2.2.5.2.7 0L17.6 4a.5.5 0 0 0 0-.7l-.1-.1a.5.5 0 0 0-.7 0l-4.4 4.5-4.5-4.5a.5.5 0 0 0-.7 0l-.1.1Z"/><path d="M8 13.2c0 1.3.5 2.5 1.4 3.4.9.9 2.1 1.4 3.4 1.4s2.5-.5 3.4-1.4c.9-.9 1.4-2.1 1.4-3.4"/><path d="M18.8 2.3A.3.3 0 1 0 19 2a.3.3 0 0 0-.2.3"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-medical-square"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
                     <span>Gerenciar Médicos</span>
                 </div>
                 <div class="dashboard-card admin" id="card-gerenciar-usuarios">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-round"><path d="M18 21a8 8 0 0 0-12 0"/><circle cx="12" cy="8" r="5"/><path d="M22 21a8 8 0 0 0-4-4"/><circle cx="6" cy="8" r="5"/><path d="M2 21a8 8 0 0 1 4-4"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     <span>Gerenciar Usuários</span>
                 </div>
                 <div class="dashboard-card admin" id="card-gerenciar-conteudo">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-check-2"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v16Z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-check"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
                     <span>Gerenciar Conteúdo</span>
                 </div>
                 <div class="dashboard-card" id="card-meu-perfil">
@@ -44,12 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span>Meu Perfil</span>
                 </div>
                 <div class="dashboard-card" id="card-noticias">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-                    <span>Ver Notícias Públicas</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    <span>Notícias e Artigos</span>
                 </div>
             </div>
             <hr>
-            <div id="diretor-content-dinamico"></div> 
+            <div id="diretor-content-dinamico"></div>
         `;
         document.getElementById('card-gerenciar-unidades').addEventListener('click', renderGerenciadorDeUnidades);
         document.getElementById('card-gerenciar-medicos').addEventListener('click', renderGerenciadorDeMedicos);
