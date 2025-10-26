@@ -390,7 +390,8 @@ document.addEventListener('DOMContentLoaded', () => {
         htmlForm += `</div><div class="form-actions" style="margin-top: 2rem; justify-content: flex-end;"><button type="button" class="btn btn-primary" id="btn-salvar-agenda">Salvar Agenda</button></div></div>`;
         contentDinamico.innerHTML = htmlForm;
         try {
-            const respHorarios = await fetchAuthenticated(`/api/medicos/${meuIdDeMedico}/horarios`);
+            // CORREÇÃO: Usar a variável idUsuarioLogado que foi definida no escopo global do script.
+            const respHorarios = await fetchAuthenticated(`/api/medicos/${idUsuarioLogado}/horarios`);
             if (respHorarios && respHorarios.ok) {
                 const agendaAtual = await respHorarios.json();
                 if (agendaAtual.dias) {
