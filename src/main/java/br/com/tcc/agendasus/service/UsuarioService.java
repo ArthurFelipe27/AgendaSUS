@@ -8,7 +8,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
 import br.com.tcc.agendasus.dto.DTOs.ForgotPasswordRequestDTO;
 import br.com.tcc.agendasus.dto.DTOs.ResetPasswordRequestDTO;
 import br.com.tcc.agendasus.dto.DTOs.UsuarioCadastroDTO;
@@ -73,7 +72,7 @@ public class UsuarioService {
 
         return new UsuarioResponseDTO(usuarioSalvo);
     }
-    
+
     @Transactional(readOnly = true)
     public List<UsuarioResponseDTO> listarTodos() {
         return usuarioRepository.findAll().stream()
@@ -101,7 +100,16 @@ public class UsuarioService {
         usuario.setAtivo(false);
         usuarioRepository.save(usuario);
     }
-    
+
+    // NOVO MÉTODO: reativarUsuario
+    @Transactional
+    public void reativarUsuario(Long id) {
+        Usuario usuario = findById(id);
+        // Apenas Diretores podem reativar (implícito pela segurança do endpoint)
+        usuario.setAtivo(true);
+        usuarioRepository.save(usuario);
+    }
+
     @Transactional
     public String gerarTokenResetSenha(ForgotPasswordRequestDTO dados) {
         Usuario usuario = usuarioRepository.findByEmail(dados.email())
@@ -125,7 +133,7 @@ public class UsuarioService {
             usuarioRepository.save(usuario);
             throw new IllegalArgumentException("Token expirado. Por favor, solicite um novo.");
         }
-        
+
         usuario.setSenha(passwordEncoder.encode(dados.novaSenha()));
         usuario.setResetToken(null);
         usuario.setResetTokenExpiry(null);

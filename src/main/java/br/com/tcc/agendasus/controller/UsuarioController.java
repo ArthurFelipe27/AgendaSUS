@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
 import br.com.tcc.agendasus.dto.DTOs.UsuarioCadastroDTO;
 import br.com.tcc.agendasus.dto.DTOs.UsuarioResponseDTO;
 import br.com.tcc.agendasus.dto.DTOs.UsuarioUpdateDTO;
@@ -40,6 +40,7 @@ public class UsuarioController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('DIRETOR')") // Garante que só diretores podem listar
     public ResponseEntity<List<UsuarioResponseDTO>> listar() {
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
@@ -56,8 +57,17 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('DIRETOR')") // Garante que só diretores podem desativar
     public ResponseEntity<Void> desativar(@PathVariable Long id) {
         usuarioService.desativarUsuario(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // NOVO ENDPOINT: reativar
+    @PutMapping("/{id}/reativar")
+    @PreAuthorize("hasRole('DIRETOR')") // Garante que só diretores podem reativar
+    public ResponseEntity<Void> reativar(@PathVariable Long id) {
+        usuarioService.reativarUsuario(id);
         return ResponseEntity.noContent().build();
     }
 }

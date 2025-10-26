@@ -1,17 +1,21 @@
 // ===================================================================
-// DIRETOR.JS (VERSÃO COM MELHORIAS VISUAIS)
+// DIRETOR.JS (VERSÃO COM MELHORIAS VISUAIS, REATIVAÇÃO E FILTRO DE USUÁRIO)
 // Implementa ícones, spinners e um layout de card aprimorado.
+// Adiciona botão e lógica para reativar usuários.
+// Botão de ação do usuário restaurado para o design original (sempre vermelho).
+// Adiciona filtro de status (Todos, Ativos, Inativos) na tela de Gerenciar Usuários.
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     const contentArea = document.getElementById('content-area');
     let idUsuarioLogado = null;
+    let todosOsUsuarios = []; // Armazena a lista completa de usuários para filtragem
     const SPINNER_HTML = `<div class="spinner-container"><div class="spinner"></div></div>`;
 
     async function initDiretorDashboard() {
         try {
             const responseMe = await fetchAuthenticated('/api/usuarios/me');
-            if (!responseMe.ok) throw new Error('Falha ao buscar perfil do admin');
+            if (!responseMe || !responseMe.ok) throw new Error('Falha ao buscar perfil do admin');
             const adminUser = await responseMe.json();
             idUsuarioLogado = adminUser.id;
         } catch (e) {
@@ -188,7 +192,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 tableHTML += '<tr><td colspan="6">Nenhum médico cadastrado.</td></tr>';
             } else {
                 medicos.forEach(medico => {
-                    tableHTML += `<tr><td>${medico.id}</td><td>${medico.nome}</td><td>${medico.especialidade.replace(/_/g, ' ')}</td><td>${medico.unidade ? medico.unidade.nome : 'N/A'}</td><td>${medico.ativo ? 'Sim' : 'Não'}</td><td><button class="btn btn-danger btn-toggle-medico" data-medico-id="${medico.id}" data-medico-nome="${medico.nome}" data-ativo="${medico.ativo}">${medico.ativo ? 'Desativar' : 'Reativar'}</button></td></tr>`;
+                    // Restaura o design original: sempre usa btn-danger, mas o texto muda
+                    const buttonText = medico.ativo ? 'Desativar' : 'Reativar';
+                    tableHTML += `<tr>
+                                    <td>${medico.id}</td>
+                                    <td>${medico.nome}</td>
+                                    <td>${medico.especialidade.replace(/_/g, ' ')}</td>
+                                    <td>${medico.unidade ? medico.unidade.nome : 'N/A'}</td>
+                                    <td>${medico.ativo ? 'Sim' : 'Não'}</td>
+                                    <td><button class="btn btn-danger btn-toggle-medico" data-medico-id="${medico.id}" data-medico-nome="${medico.nome}" data-ativo="${medico.ativo}">${buttonText}</button></td>
+                                  </tr>`;
                 });
             }
             tableHTML += '</tbody></table>';
@@ -200,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (err) { console.error(err); container.innerHTML = '<p>Erro ao carregar médicos.</p>'; }
     }
+
 
     function renderFormCadastroMedico(unidades) {
         const formContainer = document.getElementById('medico-form-container');
@@ -250,40 +264,109 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleToggleAtivacaoMedico(medicoId, medicoNome, isAtivo) {
+        // Usa o endpoint de usuário para ativar/desativar
         const acao = isAtivo ? 'desativar' : 'reativar';
+        const endpoint = isAtivo ? `/api/usuarios/${medicoId}` : `/api/usuarios/${medicoId}/reativar`;
+        const method = isAtivo ? 'DELETE' : 'PUT';
+
         if (!confirm(`Tem certeza que deseja ${acao} o(a) médico(a) ${medicoNome}?`)) return;
+
         try {
-            const dto = { ativo: !isAtivo };
-            const response = await fetchAuthenticated(`/api/medicos/${medicoId}`, { method: 'PUT', body: JSON.stringify(dto) });
+            const response = await fetchAuthenticated(endpoint, { method: method });
             if (response && response.ok) {
                 showToast(`Médico ${isAtivo ? 'desativado' : 'reativado'}!`, 'success');
-                await carregarTabelaMedicos();
+                await carregarTabelaMedicos(); // Recarrega a tabela de médicos
             } else { await handleApiError(response, null); }
         } catch (err) { showToast('Erro de rede.', 'error'); }
     }
 
+    // Função modificada para incluir o filtro e buscar os dados da API
     async function renderGerenciadorDeUsuarios() {
         const adminContent = document.getElementById('diretor-content-dinamico');
-        adminContent.innerHTML = `<div class="admin-section-header"><h4>Usuários do Sistema</h4></div><div id="admin-user-list-container">${SPINNER_HTML}</div>`;
+        adminContent.innerHTML = `
+            <div class="admin-section-header">
+                <h4>Usuários do Sistema</h4>
+                <div class="filter-group" style="max-width: 200px;">
+                    <label for="filtro-status-usuario">Filtrar por Status</label>
+                    <select id="filtro-status-usuario">
+                        <option value="todos">Todos</option>
+                        <option value="ativos">Ativos</option>
+                        <option value="inativos">Inativos</option>
+                    </select>
+                </div>
+            </div>
+            <div id="admin-user-list-container">${SPINNER_HTML}</div>`;
+
+        // Adiciona o listener para o novo filtro
+        document.getElementById('filtro-status-usuario').addEventListener('change', () => {
+            // Quando o filtro muda, renderiza a tabela novamente com os usuários já carregados
+            renderUserTable(todosOsUsuarios);
+        });
+
         try {
             const response = await fetchAuthenticated('/api/usuarios');
             if (!response || !response.ok) throw new Error('Falha ao buscar usuários');
-            const usuarios = await response.json();
-            document.getElementById('admin-user-list-container').innerHTML = renderUserTable(usuarios);
-            document.querySelectorAll('.btn-desativar-user').forEach(button => {
-                button.addEventListener('click', async e => { if (confirm(`Desativar: ${e.target.dataset.userName}?`)) await handleDesativarUsuario(e.target.dataset.userId); });
-            });
-        } catch (err) { console.error(err); adminContent.innerHTML = `<p>Erro ao carregar usuários.</p>`; }
+            todosOsUsuarios = await response.json(); // Armazena a lista completa
+            renderUserTable(todosOsUsuarios); // Renderiza a tabela inicial (com filtro 'todos')
+        } catch (err) {
+            console.error(err);
+            adminContent.innerHTML = `<p>Erro ao carregar usuários.</p>`;
+        }
     }
 
+    // Função modificada para aceitar a lista de usuários e aplicar o filtro
     function renderUserTable(usuarios) {
-        let tableHTML = `<div class="admin-table-container"><table class="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Perfil</th><th>Ativo?</th><th>Ações</th></tr></thead><tbody>`;
-        usuarios.forEach(user => {
-            const isSelf = (user.id === idUsuarioLogado);
-            tableHTML += `<tr><td>${user.id}</td><td>${user.nome}</td><td>${user.email}</td><td>${user.role}</td><td>${user.ativo ? 'Sim' : 'Não'}</td><td><button class="btn btn-danger btn-desativar-user" data-user-id="${user.id}" data-user-name="${user.nome}" ${isSelf ? 'disabled title="Não pode desativar a si mesmo"' : ''}>Desativar</button></td></tr>`;
+        const container = document.getElementById('admin-user-list-container');
+        const filtroSelecionado = document.getElementById('filtro-status-usuario')?.value || 'todos';
+
+        // Filtra a lista 'todosOsUsuarios' com base no filtro selecionado
+        const usuariosFiltrados = usuarios.filter(user => {
+            if (filtroSelecionado === 'todos') return true;
+            if (filtroSelecionado === 'ativos') return user.ativo;
+            if (filtroSelecionado === 'inativos') return !user.ativo;
+            return true; // Caso padrão (nunca deve acontecer)
         });
+
+        let tableHTML = `<div class="admin-table-container"><table class="admin-table"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Perfil</th><th>Ativo?</th><th>Ações</th></tr></thead><tbody>`;
+
+        if (usuariosFiltrados.length === 0) {
+            tableHTML += `<tr><td colspan="6">Nenhum usuário encontrado com este filtro.</td></tr>`;
+        } else {
+            usuariosFiltrados.forEach(user => {
+                const isSelf = (user.id == idUsuarioLogado); // Usar == para comparar Long com string
+                const buttonText = user.ativo ? 'Desativar' : 'Reativar';
+                const buttonDisabled = isSelf ? 'disabled title="Não pode alterar o próprio status"' : '';
+
+                tableHTML += `<tr>
+                                <td>${user.id}</td>
+                                <td>${user.nome}</td>
+                                <td>${user.email}</td>
+                                <td>${user.role}</td>
+                                <td>${user.ativo ? 'Sim' : 'Não'}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-toggle-user" data-user-id="${user.id}" data-user-name="${user.nome}" data-ativo="${user.ativo}" ${buttonDisabled}>
+                                        ${buttonText}
+                                    </button>
+                                </td>
+                              </tr>`;
+            });
+        }
         tableHTML += `</tbody></table></div>`;
-        return tableHTML;
+        container.innerHTML = tableHTML; // Atualiza o container com a tabela filtrada
+
+        // Reanexa os event listeners aos botões da tabela atualizada
+        document.querySelectorAll('.btn-toggle-user').forEach(button => {
+            button.addEventListener('click', async e => {
+                const userId = e.target.dataset.userId;
+                const userName = e.target.dataset.userName;
+                const isActive = e.target.dataset.ativo === 'true';
+                if (isActive) {
+                    if (confirm(`Desativar: ${userName}?`)) await handleDesativarUsuario(userId);
+                } else {
+                    if (confirm(`Reativar: ${userName}?`)) await handleReativarUsuario(userId);
+                }
+            });
+        });
     }
 
     async function handleDesativarUsuario(userId) {
@@ -291,10 +374,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetchAuthenticated(`/api/usuarios/${userId}`, { method: 'DELETE' });
             if (response && response.ok) {
                 showToast('Usuário desativado com sucesso!', 'success');
-                renderGerenciadorDeUsuarios();
-            } else { const error = await response.json(); showToast(`Falha ao desativar: ${error.message}`, 'error'); }
+                // Atualiza a lista local e re-renderiza a tabela
+                const userIndex = todosOsUsuarios.findIndex(u => u.id == userId);
+                if (userIndex > -1) todosOsUsuarios[userIndex].ativo = false;
+                renderUserTable(todosOsUsuarios);
+            } else { await handleApiError(response, null); }
         } catch (err) { showToast('Erro ao tentar desativar.', 'error'); }
     }
+
+    async function handleReativarUsuario(userId) {
+        try {
+            const response = await fetchAuthenticated(`/api/usuarios/${userId}/reativar`, { method: 'PUT' });
+            if (response && response.ok) {
+                showToast('Usuário reativado com sucesso!', 'success');
+                // Atualiza a lista local e re-renderiza a tabela
+                const userIndex = todosOsUsuarios.findIndex(u => u.id == userId);
+                if (userIndex > -1) todosOsUsuarios[userIndex].ativo = true;
+                renderUserTable(todosOsUsuarios);
+            } else { await handleApiError(response, null); }
+        } catch (err) { showToast('Erro ao tentar reativar.', 'error'); }
+    }
+
 
     async function renderGerenciadorDeConteudo() {
         const adminContent = document.getElementById('diretor-content-dinamico');
@@ -311,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     let acoes = '';
                     if (c.status === 'RASCUNHO') { acoes = `<button class="btn btn-success btn-aprovar-conteudo" data-id="${c.id}">Aprovar</button><button class="btn btn-danger btn-deletar-conteudo" data-id="${c.id}" style="margin-left: 0.5rem;">Deletar</button>`; }
                     else if (c.status === 'PUBLICADO') { acoes = `<button class="btn btn-secondary btn-desativar-conteudo" data-id="${c.id}">Desativar</button>`; }
-                    else { acoes = `<button class="btn btn-danger btn-deletar-conteudo" data-id="${c.id}">Deletar</button>`; }
+                    else { acoes = `<button class="btn btn-danger btn-deletar-conteudo" data-id="${c.id}">Deletar</button>`; } // Ação para DESATIVADO
                     tableHTML += `<tr><td>${c.id}</td><td>${c.titulo}</td><td>${c.autor.nome}</td><td><span class="badge ${c.status}">${c.status}</span></td><td>${acoes}</td></tr>`;
                 });
             }
@@ -329,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`, { method: 'PUT', body: JSON.stringify(dto) });
             if (response && response.ok) { showToast(`Conteúdo atualizado!`, 'success'); renderGerenciadorDeConteudo(); }
-            else { await handleApiError(response, 'diretor-content-dinamico'); }
+            else { await handleApiError(response, null); }
         } catch (err) { showToast('Erro de rede.', 'error'); }
     }
 
@@ -338,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`, { method: 'DELETE' });
             if (response && response.ok) { showToast(`Conteúdo deletado!`, 'success'); renderGerenciadorDeConteudo(); }
-            else { await handleApiError(response, 'diretor-content-dinamico'); }
+            else { await handleApiError(response, null); }
         } catch (err) { showToast('Erro de rede.', 'error'); }
     }
 
@@ -375,3 +475,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initDiretorDashboard();
 });
+
