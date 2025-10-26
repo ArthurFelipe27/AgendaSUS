@@ -3,15 +3,18 @@ package br.com.tcc.agendasus.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional; // Import Optional
 
 import org.hibernate.validator.constraints.br.CPF;
 
 import br.com.tcc.agendasus.model.entity.Agendamento;
 import br.com.tcc.agendasus.model.entity.Atestado;
 import br.com.tcc.agendasus.model.entity.Conteudo;
+import br.com.tcc.agendasus.model.entity.Diretor; // Import Diretor
 import br.com.tcc.agendasus.model.entity.Exame;
 import br.com.tcc.agendasus.model.entity.FichaMedica;
 import br.com.tcc.agendasus.model.entity.Medico;
+import br.com.tcc.agendasus.model.entity.Paciente; // Import Paciente
 import br.com.tcc.agendasus.model.entity.Prescricao;
 import br.com.tcc.agendasus.model.entity.UnidadeDeSaude;
 import br.com.tcc.agendasus.model.entity.Usuario;
@@ -26,6 +29,7 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -38,14 +42,65 @@ public class DTOs {
     public record ResetPasswordRequestDTO(@NotBlank String token, @NotBlank @Size(min = 6) String novaSenha) {}
     public record UsuarioCadastroDTO(
             @NotBlank String nome, @NotBlank @Email String email, @NotBlank @Size(min = 6) String senha,
-            @NotBlank @CPF String cpf, @NotNull LocalDate dataNascimento, @NotBlank String telefone,
-            @NotNull Sexo sexo, String nomeSocial, String cep, String cidade, String estado, String numero, String complemento) {}
-    public record UsuarioUpdateDTO(String nome, @Size(min = 6) String senha) {}
-    public record UsuarioResponseDTO(Long id, String nome, String email, String cpf, Role role, boolean ativo) {
+            @NotBlank @CPF String cpf, @NotNull @PastOrPresent LocalDate dataNascimento, @NotBlank String telefone,
+            @NotNull Sexo sexo, String nomeSocial,
+            @Pattern(regexp = "\\d{8}", message = "CEP deve conter 8 dígitos") String cep,
+            String cidade, String estado, String numero, String complemento) {}
+
+    public record PacienteUpdateDTO(
+            @Size(min = 10, max = 20, message = "Telefone inválido") String telefone,
+            @Pattern(regexp = "\\d{8}", message = "CEP deve conter 8 dígitos") String cep,
+            String cidade,
+            String estado,
+            String numero,
+            String complemento
+    ) {}
+
+    // DTO para atualizar Nome ou Senha (usado por todos os roles)
+    public record UsuarioUpdateDTO(
+        @Size(min = 3, message = "Nome deve ter pelo menos 3 caracteres") String nome,
+        @Size(min = 6, message = "Senha deve ter pelo menos 6 caracteres") String senha
+    ) {}
+
+    // [MODIFICADO] UsuarioResponseDTO para incluir dados específicos de cada Role
+    public record UsuarioResponseDTO(
+        Long id, String nome, String email, String cpf, Role role, boolean ativo,
+        // Campos Paciente
+        String nomeSocial, LocalDate dataNascimento, String telefone, Sexo sexo,
+        String cep, String cidade, String estado, String numero, String complemento,
+        // Campos Medico
+        String crm, String especialidade,
+        // Campos Diretor
+        String cargo
+    ) {
+        // Construtor principal que recebe todos os Optionals
+        public UsuarioResponseDTO(Usuario usuario, Optional<Paciente> pacienteOpt, Optional<Medico> medicoOpt, Optional<Diretor> diretorOpt) {
+            this(
+                // Dados base do Usuario
+                usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getCpf(), usuario.getRole(), usuario.isAtivo(),
+                // Dados do Paciente (se presente)
+                pacienteOpt.map(Paciente::getNomeSocial).orElse(null),
+                pacienteOpt.map(Paciente::getDataNascimento).orElse(null),
+                pacienteOpt.map(Paciente::getTelefone).orElse(null),
+                pacienteOpt.map(Paciente::getSexo).orElse(null),
+                pacienteOpt.map(Paciente::getCep).orElse(null),
+                pacienteOpt.map(Paciente::getCidade).orElse(null),
+                pacienteOpt.map(Paciente::getEstado).orElse(null),
+                pacienteOpt.map(Paciente::getNumero).orElse(null),
+                pacienteOpt.map(Paciente::getComplemento).orElse(null),
+                // Dados do Medico (usa CRM do Usuario base, pega especialidade do Medico)
+                (usuario.getRole() == Role.MEDICO) ? usuario.getCrm() : null, // CRM está no Usuario
+                medicoOpt.map(Medico::getEspecialidade).orElse(null),
+                // Dados do Diretor (se presente)
+                diretorOpt.map(Diretor::getCargo).orElse(null)
+            );
+        }
+        // Construtor simplificado (para listagem geral, sem detalhes específicos)
         public UsuarioResponseDTO(Usuario usuario) {
-            this(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getCpf(), usuario.getRole(), usuario.isAtivo());
+            this(usuario, Optional.empty(), Optional.empty(), Optional.empty());
         }
     }
+
 
     // Agendamento & Prontuário
     public record AgendamentoCadastroDTO(@NotNull Long idMedico, @NotNull @Future LocalDateTime dataHora, @NotBlank String sintomas,
@@ -54,18 +109,16 @@ public class DTOs {
     public record FinalizarConsultaDTO(String evolucaoMedica, String prescricao, List<String> exames, Integer diasDeRepouso) {}
     public record AgendamentoResponseDTO(Long id, LocalDateTime dataHora, StatusAgendamento status, InfoPacienteDTO paciente, InfoMedicoDTO medico) {
         public record InfoPacienteDTO(Long id, String nome) {}
-        // Adiciona nomeUnidade e enderecoUnidade
         public record InfoMedicoDTO(Long id, String nome, String especialidade, String nomeUnidade, String enderecoUnidade) {}
         public AgendamentoResponseDTO(Agendamento agendamento) {
             this(agendamento.getId(), agendamento.getDataHora(), agendamento.getStatus(),
                  new InfoPacienteDTO(agendamento.getPaciente().getIdUsuario(), agendamento.getPaciente().getUsuario().getNome()),
-                 // Popula os novos campos
                  new InfoMedicoDTO(
                      agendamento.getMedico().getIdUsuario(),
                      agendamento.getMedico().getUsuario().getNome(),
                      agendamento.getMedico().getEspecialidade(),
-                     agendamento.getMedico().getUnidade() != null ? agendamento.getMedico().getUnidade().getNome() : "Unidade não informada",
-                     agendamento.getMedico().getUnidade() != null ? agendamento.getMedico().getUnidade().getEndereco() : "Endereço não informado"
+                     Optional.ofNullable(agendamento.getMedico().getUnidade()).map(UnidadeDeSaude::getNome).orElse("N/A"),
+                     Optional.ofNullable(agendamento.getMedico().getUnidade()).map(UnidadeDeSaude::getEndereco).orElse("Endereço não informado")
                  ));
         }
     }
@@ -79,20 +132,23 @@ public class DTOs {
 
 
     // Médico & Horários
-    public record MedicoCadastroDTO(@NotBlank String nome, @NotBlank @Email String email, @NotBlank String senha,
+    public record MedicoCadastroDTO(@NotBlank String nome, @NotBlank @Email String email, @NotBlank @Size(min = 6) String senha,
                                     @NotBlank @CPF String cpf, @NotBlank String crm, @NotBlank String especialidade, @NotNull Long idUnidade) {}
+    // Este DTO é para o Admin editar dados do Médico
     public record MedicoUpdateDTO(String nome, String crm, String especialidade, Boolean ativo) {}
-    public record HorarioDisponivelDTO(@NotEmpty @Valid List<DiaDeTrabalho> dias) {
+    public record HorarioDisponivelDTO(@Valid List<DiaDeTrabalho> dias) {
         public record DiaDeTrabalho(
-                @NotBlank @Pattern(regexp = "SEGUNDA|TERCA|QUARTA|QUINTA|SEXTA|SABADO|DOMINGO") String dia,
-                @NotEmpty List<@Pattern(regexp = "^([01]?[0-9]|2[0-3]):[0-5][0-9]$") String> horarios) {}
+                @NotBlank @Pattern(regexp = "SEGUNDA|TERCA|QUARTA|QUINTA|SEXTA|SABADO|DOMINGO", message = "Dia inválido") String dia, // Corrigido SATURDAY para SABADO
+                @NotEmpty List<@Pattern(regexp = "^([01]?[0-9]|2[0-3]):[0-5][0-9]$", message = "Formato de hora inválido (HH:mm)") String> horarios) {}
     }
     public record MedicoResponseDTO(Long id, String nome, String email, String cpf, String crm, String especialidade, boolean ativo, UnidadeInfoDTO unidade) {
         public record UnidadeInfoDTO(Long id, String nome) {}
         public MedicoResponseDTO(Medico medico) {
             this(medico.getIdUsuario(), medico.getUsuario().getNome(), medico.getUsuario().getEmail(),
                  medico.getUsuario().getCpf(), medico.getUsuario().getCrm(), medico.getEspecialidade(), medico.getUsuario().isAtivo(),
-                 medico.getUnidade() != null ? new UnidadeInfoDTO(medico.getUnidade().getId(), medico.getUnidade().getNome()) : null);
+                 Optional.ofNullable(medico.getUnidade())
+                         .map(u -> new UnidadeInfoDTO(u.getId(), u.getNome()))
+                         .orElse(null));
         }
     }
 
@@ -106,13 +162,12 @@ public class DTOs {
         public PrescricaoResponseDTO(Prescricao p) {
             this(p.getId(), p.getMedicamentos(), p.getDataEmissao(),
                  new AgendamentoResponseDTO.InfoPacienteDTO(p.getPaciente().getIdUsuario(), p.getPaciente().getUsuario().getNome()),
-                 // Atualiza para o novo construtor do InfoMedicoDTO
                  new AgendamentoResponseDTO.InfoMedicoDTO(
                      p.getMedico().getIdUsuario(),
                      p.getMedico().getUsuario().getNome(),
                      p.getMedico().getEspecialidade(),
-                     p.getMedico().getUnidade() != null ? p.getMedico().getUnidade().getNome() : "N/A",
-                     p.getMedico().getUnidade() != null ? p.getMedico().getUnidade().getEndereco() : "N/A"
+                     Optional.ofNullable(p.getMedico().getUnidade()).map(UnidadeDeSaude::getNome).orElse("N/A"),
+                     Optional.ofNullable(p.getMedico().getUnidade()).map(UnidadeDeSaude::getEndereco).orElse(null)
                  ));
         }
     }
@@ -120,13 +175,12 @@ public class DTOs {
         public AtestadoResponseDTO(Atestado a) {
             this(a.getId(), a.getDescricao(), a.getDataEmissao(),
                  new AgendamentoResponseDTO.InfoPacienteDTO(a.getPaciente().getIdUsuario(), a.getPaciente().getUsuario().getNome()),
-                 // Atualiza para o novo construtor do InfoMedicoDTO
                  new AgendamentoResponseDTO.InfoMedicoDTO(
                      a.getMedico().getIdUsuario(),
                      a.getMedico().getUsuario().getNome(),
                      a.getMedico().getEspecialidade(),
-                     a.getMedico().getUnidade() != null ? a.getMedico().getUnidade().getNome() : "N/A",
-                     a.getMedico().getUnidade() != null ? a.getMedico().getUnidade().getEndereco() : "N/A"
+                     Optional.ofNullable(a.getMedico().getUnidade()).map(UnidadeDeSaude::getNome).orElse("N/A"),
+                     Optional.ofNullable(a.getMedico().getUnidade()).map(UnidadeDeSaude::getEndereco).orElse(null)
                  ));
         }
     }
@@ -134,13 +188,12 @@ public class DTOs {
         public ExameResponseDTO(Exame e) {
             this(e.getId(), e.getTipo(), e.getResultado(), e.getDataRealizacao(),
                  new AgendamentoResponseDTO.InfoPacienteDTO(e.getPaciente().getIdUsuario(), e.getPaciente().getUsuario().getNome()),
-                 // Atualiza para o novo construtor do InfoMedicoDTO
-                 new AgendamentoResponseDTO.InfoMedicoDTO(
+                  new AgendamentoResponseDTO.InfoMedicoDTO(
                      e.getMedico().getIdUsuario(),
                      e.getMedico().getUsuario().getNome(),
                      e.getMedico().getEspecialidade(),
-                     e.getMedico().getUnidade() != null ? e.getMedico().getUnidade().getNome() : "N/A",
-                     e.getMedico().getUnidade() != null ? e.getMedico().getUnidade().getEndereco() : "N/A"
+                     Optional.ofNullable(e.getMedico().getUnidade()).map(UnidadeDeSaude::getNome).orElse("N/A"),
+                     Optional.ofNullable(e.getMedico().getUnidade()).map(UnidadeDeSaude::getEndereco).orElse(null)
                  ));
         }
     }
@@ -161,15 +214,18 @@ public class DTOs {
         public record AutorDTO(Long id, String nome) {}
         public ConteudoResponseDTO(Conteudo c) {
             this(c.getId(), c.getTipo(), c.getTitulo(), c.getCorpo(), c.getStatus(), c.getPublicadoEm(),
-                 c.getAutor() != null ? new AutorDTO(c.getAutor().getId(), c.getAutor().getNome()) : null); // Adiciona verificação de autor nulo
+                 Optional.ofNullable(c.getAutor())
+                         .map(autor -> new AutorDTO(autor.getId(), autor.getNome()))
+                         .orElse(new AutorDTO(null, "Autor Desconhecido")));
         }
     }
 
     // Ficha Médica
-    public record FichaMedicaResponseDTO(Long id, String sintomas, Integer diasSintomas, String alergias, String cirurgias, AgendamentoResponseDTO.InfoPacienteDTO paciente) {
+    public record FichaMedicaResponseDTO(Long id, String sintomas, Integer diasSintomas, String alergias, String cirurgias, String evolucaoMedica, AgendamentoResponseDTO.InfoPacienteDTO paciente) {
         public FichaMedicaResponseDTO(FichaMedica ficha) {
-            this(ficha.getId(), ficha.getSintomas(), ficha.getDiasSintomas(), ficha.getAlergias(), ficha.getCirurgias(),
+            this(ficha.getId(), ficha.getSintomas(), ficha.getDiasSintomas(), ficha.getAlergias(), ficha.getCirurgias(), ficha.getEvolucaoMedica(),
                  new AgendamentoResponseDTO.InfoPacienteDTO(ficha.getPaciente().getIdUsuario(), ficha.getPaciente().getUsuario().getNome()));
         }
     }
 }
+
