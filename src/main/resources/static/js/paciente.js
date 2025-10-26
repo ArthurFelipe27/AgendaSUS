@@ -1,6 +1,7 @@
 // ===================================================================
 // PACIENTE.JS (VERSÃO COMPLETA E ATUALIZADA)
 // Inclui o novo sistema de filtros na tela de agendamento e a Central de Ajuda.
+// Adiciona endereço da UBS e especialidade do médico nos cards de agendamento.
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,12 +36,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initPacienteDashboard() {
         try {
             const responseMe = await fetchAuthenticated('/api/usuarios/me');
-            if (!responseMe.ok) throw new Error('Falha ao buscar perfil do paciente');
+            if (!responseMe || !responseMe.ok) throw new Error('Falha ao buscar perfil do paciente');
             const pacienteUser = await responseMe.json();
             idUsuarioLogado = pacienteUser.id;
         } catch (e) {
             console.error(e);
             contentArea.innerHTML = "<p>Erro fatal ao carregar dados do paciente. Faça o login novamente.</p>";
+            // Adicionado para limpar localStorage e redirecionar em caso de erro fatal
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('userName');
+            window.location.href = 'login.html';
             return;
         }
 
@@ -80,10 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('card-ajuda').addEventListener('click', renderCentralDeAjuda);
 
-        renderTelaDeAgendamento();
+        renderTelaDeAgendamento(); // Inicia na tela de agendamento
     }
 
-    // [NOVO] Função para renderizar a Central de Ajuda
     function renderCentralDeAjuda() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
         contentDinamico.innerHTML = `
@@ -139,35 +143,33 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // [NOVO] Função principal que organiza a tela de agendamento
     async function renderTelaDeAgendamento() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Novo Agendamento</h3><p>Encontre um profissional para agendar sua consulta.</p><div id="filtros-container"></div><ul id="lista-medicos" class="medico-list">${SPINNER_HTML}</ul>`;
+        contentDinamico.innerHTML = `<div class="section-card"><h3>Novo Agendamento</h3><p>Encontre um profissional para agendar sua consulta.</p><div id="filtros-container"></div><ul id="lista-medicos" class="medico-list" style="margin-top: 1.5rem;">${SPINNER_HTML}</ul></div>`;
 
         try {
             const response = await fetchAuthenticated('/api/medicos');
             if (!response || !response.ok) throw new Error('Falha ao carregar médicos');
             todosOsMedicos = await response.json();
 
-            renderFiltrosMedicos();
-            renderListaMedicos();
+            renderFiltrosMedicos(); // Renderiza os filtros primeiro
+            renderListaMedicos(); // Renderiza a lista inicial (sem filtro)
         } catch (err) {
             console.error(err);
             document.getElementById('lista-medicos').innerHTML = '<li>Erro ao carregar médicos.</li>';
         }
     }
 
-    // [NOVO] Função para renderizar os controles de filtro
     function renderFiltrosMedicos() {
         const container = document.getElementById('filtros-container');
         if (!container) return;
 
-        // Extrai opções únicas para os filtros de especialidade e região
-        const especialidades = [...new Set(todosOsMedicos.map(m => m.especialidade))].sort();
-        const regioes = [...new Set(todosOsMedicos.map(m => m.unidade?.nome).filter(Boolean))].sort();
+        // Extrai opções únicas para os filtros
+        const especialidades = [...new Set(todosOsMedicos.map(m => m.especialidade).filter(Boolean))].sort();
+        const unidades = [...new Set(todosOsMedicos.map(m => m.unidade?.nome).filter(Boolean))].sort(); // Usa ?. para segurança
 
         let especialidadesOptions = especialidades.map(e => `<option value="${e}">${e.replace(/_/g, ' ')}</option>`).join('');
-        let regioesOptions = regioes.map(r => `<option value="${r}">${r}</option>`).join('');
+        let unidadesOptions = unidades.map(u => `<option value="${u}">${u}</option>`).join('');
 
         container.innerHTML = `
             <div class="filter-bar">
@@ -183,10 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="filtro-regiao">Unidade de Saúde</label>
-                    <select id="filtro-regiao">
+                    <label for="filtro-unidade">Unidade de Saúde</label>
+                    <select id="filtro-unidade">
                         <option value="">Todas</option>
-                        ${regioesOptions}
+                        ${unidadesOptions}
                     </select>
                 </div>
             </div>
@@ -195,26 +197,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Adiciona os listeners para os filtros
         document.getElementById('filtro-nome').addEventListener('input', renderListaMedicos);
         document.getElementById('filtro-especialidade').addEventListener('change', renderListaMedicos);
-        document.getElementById('filtro-regiao').addEventListener('change', renderListaMedicos);
+        document.getElementById('filtro-unidade').addEventListener('change', renderListaMedicos);
     }
 
-    // [MODIFICADO] Função para renderizar a lista de médicos, agora aplicando os filtros
     function renderListaMedicos() {
         const listaUL = document.getElementById('lista-medicos');
-        listaUL.innerHTML = '';
+        listaUL.innerHTML = ''; // Limpa a lista antes de renderizar
 
         const nomeFiltro = document.getElementById('filtro-nome')?.value.toLowerCase() || '';
         const especialidadeFiltro = document.getElementById('filtro-especialidade')?.value || '';
-        const regiaoFiltro = document.getElementById('filtro-regiao')?.value || '';
+        const unidadeFiltro = document.getElementById('filtro-unidade')?.value || '';
 
         const medicosFiltrados = todosOsMedicos.filter(medico => {
-            if (!medico.ativo) return false;
+            if (!medico.ativo) return false; // Ignora médicos inativos
 
             const matchNome = medico.nome.toLowerCase().includes(nomeFiltro);
             const matchEspecialidade = !especialidadeFiltro || medico.especialidade === especialidadeFiltro;
-            const matchRegiao = !regiaoFiltro || medico.unidade?.nome === regiaoFiltro;
+            const matchUnidade = !unidadeFiltro || medico.unidade?.nome === unidadeFiltro; // Usa ?. para segurança
 
-            return matchNome && matchEspecialidade && matchRegiao;
+            return matchNome && matchEspecialidade && matchUnidade;
         });
 
         if (medicosFiltrados.length === 0) {
@@ -222,10 +223,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        medicosFiltrados.sort((a, b) => a.nome.localeCompare(b.nome)); // Ordena por nome
+
         medicosFiltrados.forEach(medico => {
             const li = document.createElement('li');
             li.className = 'medico-item-clicavel';
-            li.innerHTML = `<div><strong>Dr(a). ${medico.nome}</strong><br><small>${medico.especialidade.replace(/_/g, ' ')} | ${medico.unidade ? medico.unidade.nome : 'N/A'}</small></div><span>Ver horários &rarr;</span>`;
+            // Inclui o nome da unidade aqui
+            li.innerHTML = `<div><strong>Dr(a). ${medico.nome}</strong><br><small>${medico.especialidade.replace(/_/g, ' ')} | ${medico.unidade ? medico.unidade.nome : 'Unidade N/A'}</small></div><span>Ver horários &rarr;</span>`;
             li.addEventListener('click', () => renderDetalhesMedicoParaAgendamento(medico.id));
             listaUL.appendChild(li);
         });
@@ -233,12 +237,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderMeuPerfil() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<div class="booking-form-container"><h3>Meu Perfil</h3><div id="perfil-info" class="document-item">${SPINNER_HTML}</div></div><hr><div class="booking-form-container"><h4>Alterar Senha</h4><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="section-card"><h3>Meu Perfil</h3><div id="perfil-info">${SPINNER_HTML}</div></div><div class="section-card" style="margin-top: 1.5rem;"><h4>Alterar Senha</h4><form id="form-alterar-senha"><div id="senha-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Nova Senha</label><input type="password" id="nova-senha" required minlength="6"></div><div class="input-group"><label>Confirme</label><input type="password" id="confirma-senha" required></div><div class="form-actions"><button type="submit" class="btn btn-success">Salvar Nova Senha</button></div></form></div>`;
         try {
             const response = await fetchAuthenticated('/api/usuarios/me');
-            if (!response.ok) throw new Error('Falha ao buscar perfil.');
+            if (!response || !response.ok) throw new Error('Falha ao buscar perfil.');
             const usuario = await response.json();
-            document.getElementById('perfil-info').innerHTML = `<p><strong>Nome:</strong> ${usuario.nome}</p><p><strong>Email:</strong> ${usuario.email}</p><p><strong>CPF:</strong> ${usuario.cpf}</p>`;
+            // Tenta buscar dados específicos do paciente (opcional, pode vir do /me se ajustado no backend)
+            // const respPaciente = await fetchAuthenticated(`/api/pacientes/${usuario.id}`); // Exemplo
+            // if(respPaciente && respPaciente.ok) { const pacienteData = await respPaciente.json(); /* usar dados extras */ }
+
+            document.getElementById('perfil-info').innerHTML = `<p><strong>Nome:</strong> ${usuario.nome}</p><p><strong>Email:</strong> ${usuario.email}</p><p><strong>CPF:</strong> ${usuario.cpf}</p>`; // Adicionar mais dados se disponíveis
         } catch (err) { document.getElementById('perfil-info').innerHTML = '<p>Erro ao carregar seu perfil.</p>'; }
         document.getElementById('form-alterar-senha').addEventListener('submit', handleUpdatePassword);
     }
@@ -251,6 +259,11 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('As senhas não coincidem.', 'error');
             return;
         }
+
+        const submitButton = event.target.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Salvando...';
+
         const dto = { senha: novaSenha };
         try {
             const response = await fetchAuthenticated(`/api/usuarios/${idUsuarioLogado}`, { method: 'PUT', body: JSON.stringify(dto) });
@@ -259,41 +272,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(logout, 2000);
             } else { await handleApiError(response, 'senha-error-message'); }
         } catch (err) { showToast('Erro de rede ao alterar senha.', 'error'); }
+        finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Salvar Nova Senha';
+        }
     }
 
     async function renderDetalhesMedicoParaAgendamento(medicoId) {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<ul class="medico-list">${SPINNER_HTML}</ul>`;
+        contentDinamico.innerHTML = `<div class="section-card">${SPINNER_HTML}</div>`;
         try {
             const [respMedico, respHorarios, respHorariosOcupados] = await Promise.all([
                 fetchAuthenticated(`/api/medicos/${medicoId}`),
                 fetchAuthenticated(`/api/medicos/${medicoId}/horarios`),
-                fetchAuthenticated(`/api/agendamentos/medico/${medicoId}/horarios-ocupados`)
+                fetchAuthenticated(`/api/agendamentos/medico/${medicoId}/horarios-ocupados`) // Endpoint seguro
             ]);
-            if (!respMedico.ok || !respHorarios.ok || !respHorariosOcupados.ok) throw new Error('Não foi possível carregar os dados completos do médico.');
+            if (!respMedico || !respMedico.ok || !respHorarios || !respHorarios.ok || !respHorariosOcupados || !respHorariosOcupados.ok) {
+                throw new Error('Não foi possível carregar os dados completos do médico.');
+            }
 
             const medico = await respMedico.json();
             const agenda = await respHorarios.json();
-            const horariosOcupados = await respHorariosOcupados.json();
-            const horariosAgendados = new Set(horariosOcupados);
+            const horariosOcupadosISO = await respHorariosOcupados.json(); // Lista de strings ISO
+            const horariosAgendados = new Set(horariosOcupadosISO); // Usa Set para busca rápida
 
-            let htmlAgenda = `<h3>Agenda de ${medico.nome} (${medico.especialidade.replace(/_/g, ' ')})</h3><button class="btn btn-secondary" id="btn-voltar-lista" style="margin-bottom: 1rem;">&larr; Voltar</button>`;
+            let htmlAgenda = `<div class="section-card">
+                                <h3>Agenda de ${medico.nome} (${medico.especialidade.replace(/_/g, ' ')})</h3>
+                                <p><strong>Unidade:</strong> ${medico.unidade ? medico.unidade.nome : 'N/A'}</p>
+                                <button class="btn btn-secondary" id="btn-voltar-lista" style="margin-bottom: 1rem;">&larr; Voltar para Lista</button>`;
 
             if (!agenda.dias || agenda.dias.length === 0) {
-                htmlAgenda += '<p>Este médico não possui horários disponíveis cadastrados.</p>';
+                htmlAgenda += '<p style="margin-top: 1rem;">Este médico não possui horários disponíveis cadastrados.</p>';
             } else {
-                htmlAgenda += '<p>Selecione um horário para agendar:</p>';
-                agenda.dias.forEach(dia => {
-                    htmlAgenda += `<div class="dia-agenda"><strong>${dia.dia}</strong><div class="horarios-grid">`;
-                    dia.horarios.forEach(hora => {
+                htmlAgenda += '<p style="margin-top: 1rem;">Selecione um horário para agendar:</p>';
+                // Ordena os dias da semana corretamente
+                const diasOrdenados = agenda.dias.sort((a, b) => DIAS_SEMANA_MAP[a.dia.toUpperCase()] - DIAS_SEMANA_MAP[b.dia.toUpperCase()]);
+
+                diasOrdenados.forEach(dia => {
+                    htmlAgenda += `<div class="dia-agenda"><strong>${dia.dia.charAt(0) + dia.dia.slice(1).toLowerCase()}</strong><div class="horarios-grid">`;
+                    // Ordena os horários dentro do dia
+                    const horariosOrdenados = dia.horarios.sort();
+                    horariosOrdenados.forEach(hora => {
                         const dataSlotISO = getProximaDataISO(dia.dia, hora);
                         const isAgendado = horariosAgendados.has(dataSlotISO);
 
-                        htmlAgenda += `<button class="btn-horario ${isAgendado ? 'indisponivel' : ''}" data-iso-datetime="${dataSlotISO}" data-medico-id="${medico.id}" data-medico-nome="${medico.nome}" ${isAgendado ? 'disabled' : ''}>${hora}</button>`;
+                        htmlAgenda += `<button class="btn-horario ${isAgendado ? 'indisponivel' : ''}" data-iso-datetime="${dataSlotISO}" data-medico-id="${medico.id}" data-medico-nome="${medico.nome}" ${isAgendado ? 'disabled title="Horário já agendado"' : ''}>${hora}</button>`;
                     });
                     htmlAgenda += `</div></div>`;
                 });
             }
+            htmlAgenda += `</div>`; // Fecha section-card
             contentDinamico.innerHTML = htmlAgenda;
             document.getElementById('btn-voltar-lista').addEventListener('click', renderTelaDeAgendamento);
             document.querySelectorAll('.btn-horario:not(.indisponivel)').forEach(button => {
@@ -301,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (err) {
             console.error(err);
-            contentDinamico.innerHTML = `<p>Erro ao carregar agenda. <button class="btn btn-secondary" id="btn-voltar-lista">Voltar</button></p>`;
+            contentDinamico.innerHTML = `<div class="section-card"><p>Erro ao carregar agenda. <button class="btn btn-secondary" id="btn-voltar-lista">Voltar</button></p></div>`;
             document.getElementById('btn-voltar-lista').addEventListener('click', renderTelaDeAgendamento);
         }
     }
@@ -309,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderFormularioSintomas(dataISO, medicoId, nomeMedico) {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
         const dataFormatada = new Date(dataISO).toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' });
-        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Confirmar Agendamento</h4><p>Médico: <strong>${nomeMedico}</strong><br>Horário: <strong style="font-size: 1.2rem;">${dataFormatada}</strong></p><form id="form-agendamento-final" style="margin-top: 1.5rem;"><div id="booking-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label>Sintomas (obrigatório)</label><textarea id="sintomas" required></textarea></div><div class="input-group"><label>Está com sintomas há quantos dias?</label><input type="number" id="diasSintomas" min="0"></div><div class="input-group"><label>Alergias (Opcional)</label><input type="text" id="alergias"></div><div class="input-group"><label>Cirurgias prévias (Opcional)</label><input type="text" id="cirurgias"></div><div class="form-actions"><button type="submit" class="btn btn-success">Confirmar Agendamento</button><button type="button" class="btn btn-secondary" id="btn-cancelar">Voltar</button></div></form></div>`;
+        contentDinamico.innerHTML = `<div class="booking-form-container"><h4>Confirmar Agendamento</h4><p>Médico: <strong>${nomeMedico}</strong><br>Horário: <strong style="font-size: 1.1rem;">${dataFormatada}</strong></p><form id="form-agendamento-final" style="margin-top: 1.5rem;"><div id="booking-error-message" class="error-message" style="display:none;"></div><div class="input-group"><label for="sintomas">Sintomas (obrigatório)</label><textarea id="sintomas" required rows="4"></textarea></div><div class="input-group"><label for="diasSintomas">Está com sintomas há quantos dias?</label><input type="number" id="diasSintomas" min="0"></div><div class="input-group"><label for="alergias">Alergias (Opcional)</label><input type="text" id="alergias"></div><div class="input-group"><label for="cirurgias">Cirurgias prévias (Opcional)</label><input type="text" id="cirurgias"></div><div class="form-actions"><button type="submit" class="btn btn-success">Confirmar Agendamento</button><button type="button" class="btn btn-secondary" id="btn-cancelar">Voltar</button></div></form></div>`;
         document.getElementById('btn-cancelar').addEventListener('click', () => renderDetalhesMedicoParaAgendamento(medicoId));
         document.getElementById('form-agendamento-final').addEventListener('submit', (e) => handleBookingSubmit(e, dataISO, medicoId));
     }
@@ -322,6 +350,10 @@ document.addEventListener('DOMContentLoaded', () => {
             sintomasInput.focus();
             return;
         }
+
+        const submitButton = event.target.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Agendando...';
 
         const diasSintomasValue = document.getElementById('diasSintomas').value;
         const agendamentoDTO = {
@@ -337,12 +369,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetchAuthenticated('/api/agendamentos', { method: 'POST', body: JSON.stringify(agendamentoDTO) });
             if (response && response.ok) {
                 showToast('Agendamento realizado com sucesso!', 'success');
-                renderMeusAgendamentos();
+                renderMeusAgendamentos(); // Vai para a tela de "Meus Agendamentos"
             } else if (response) {
                 await handleApiError(response, 'booking-error-message');
             }
         } catch (err) {
             showToast('Erro de rede ao agendar.', 'error');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Confirmar Agendamento';
         }
     }
 
@@ -354,17 +389,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!modal || !messageP || !btnConfirm || !btnCancel) {
             console.error("Elementos do modal de confirmação não encontrados no HTML.");
-            if (confirm(message)) { onConfirm(); } // Fallback
+            if (confirm(message)) { onConfirm(); } // Fallback para confirm nativo
             return;
         }
 
         messageP.textContent = message;
         modal.style.display = 'flex';
 
+        // Usa AbortController para remover listeners antigos e evitar múltiplos cliques
         const controller = new AbortController();
         const cleanup = () => {
             modal.style.display = 'none';
-            controller.abort();
+            controller.abort(); // Remove os listeners associados a este controller
         };
 
         btnConfirm.addEventListener('click', () => { onConfirm(); cleanup(); }, { signal: controller.signal });
@@ -374,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderMeusAgendamentos() {
         const contentDinamico = document.getElementById('paciente-content-dinamico');
-        contentDinamico.innerHTML = `<h3>Meus Agendamentos</h3><div id="agendamentos-container">${SPINNER_HTML}</div><div id="detalhes-consulta-container" style="margin-top: 2rem;"></div>`;
+        contentDinamico.innerHTML = `<div class="section-card"><h3>Meus Agendamentos</h3><div id="agendamentos-container">${SPINNER_HTML}</div></div><div id="detalhes-consulta-container" style="margin-top: 2rem;"></div>`;
         try {
             const response = await fetchAuthenticated('/api/agendamentos/meus');
             if (!response || !response.ok) throw new Error('Falha ao buscar agendamentos');
@@ -391,67 +427,103 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 html += '<ul class="medico-list">';
                 proximosAgendamentos.forEach(ag => {
-                    html += `<li class="agendamento-card status-${ag.status}"><div><strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br><small>Médico(a): ${ag.medico.nome} | Status: ${ag.status}</small></div><button class="btn btn-danger btn-cancelar-agendamento" data-id="${ag.id}">Cancelar</button></li>`;
+                    const especialidadeFormatada = ag.medico.especialidade ? ag.medico.especialidade.replace(/_/g, ' ') : 'N/A';
+                    const unidadeNome = ag.medico.nomeUnidade || 'Unidade não informada';
+                    const unidadeEndereco = ag.medico.enderecoUnidade || 'Endereço não informado';
+
+                    html += `
+                    <li class="agendamento-card status-${ag.status}">
+                        <div>
+                            <strong>${new Date(ag.dataHora).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })}</strong><br>
+                            <small>
+                                Médico(a): ${ag.medico.nome} (${especialidadeFormatada})<br>
+                                Local: ${unidadeNome} - ${unidadeEndereco}<br>
+                                Status: <span class="badge status-${ag.status}">${ag.status}</span>
+                            </small>
+                        </div>
+                        <button class="btn btn-danger btn-sm btn-cancelar-agendamento" data-id="${ag.id}" title="Cancelar Agendamento">Cancelar</button>
+                    </li>`;
                 });
                 html += '</ul>';
             }
 
-            html += '<hr><h4>Histórico de Agendamentos</h4>';
+            html += '<hr style="margin: 2.5rem 0;"><h4>Histórico de Agendamentos</h4>'; // Aumenta margem do hr
             if (historicoAgendamentos.length === 0) {
                 html += '<p>Nenhum agendamento no seu histórico.</p>';
             } else {
                 html += '<div class="history-grid">';
                 historicoAgendamentos.forEach(ag => {
+                    const especialidadeFormatada = ag.medico.especialidade ? ag.medico.especialidade.replace(/_/g, ' ') : 'N/A';
+                    const unidadeNome = ag.medico.nomeUnidade || 'Unidade não informada';
+
                     html += `
                     <div class="history-card status-${ag.status}">
                         <div class="history-card-header">
                             <strong>${new Date(ag.dataHora).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}</strong><br>
-                            <small>Médico(a): ${ag.medico.nome}</small>
+                            <small>Médico(a): ${ag.medico.nome} (${especialidadeFormatada})<br>
+                                   Local: ${unidadeNome}
+                            </small>
                         </div>
                          <div class="history-card-footer">
                             <span class="badge status-${ag.status}">${ag.status.replace(/_/g, ' ')}</span>
-                            ${ag.status === 'ATENDIDO' ? `<button class="btn btn-secondary" style="float: right;" onclick="handleVerDetalhesConsulta(${ag.id})">Ver Detalhes</button>` : ''}
+                            ${ag.status === 'ATENDIDO' ? `<button class="btn btn-secondary btn-sm" onclick="handleVerDetalhesConsulta(${ag.id})">Ver Detalhes</button>` : ''}
                         </div>
                     </div>`;
                 });
                 html += '</div>';
             }
             document.getElementById('agendamentos-container').innerHTML = html;
-            document.querySelectorAll('.btn-cancelar-agendamento').forEach(btn => btn.addEventListener('click', () => handleCancelarAgendamento(btn.dataset.id)));
+            document.querySelectorAll('.btn-cancelar-agendamento').forEach(btn => btn.addEventListener('click', () => handleCancelarAgendamento(btn.dataset.id, btn))); // Passa o botão
         } catch (err) {
             console.error(err);
             contentDinamico.innerHTML = '<p>Erro ao carregar seus agendamentos.</p>';
         }
     }
 
-    async function handleCancelarAgendamento(agendamentoId) {
+    async function handleCancelarAgendamento(agendamentoId, buttonElement) {
         showConfirmationModal('Tem certeza que deseja cancelar este agendamento?', async () => {
             try {
+                if (buttonElement) { // Desabilita o botão clicado
+                    buttonElement.disabled = true;
+                    buttonElement.textContent = 'Cancelando...';
+                }
                 const response = await fetchAuthenticated(`/api/agendamentos/${agendamentoId}/cancelar`, { method: 'PUT' });
                 if (response && response.ok) {
                     showToast('Agendamento cancelado!', 'success');
-                    await renderMeusAgendamentos();
+                    await renderMeusAgendamentos(); // Recarrega a lista
                 } else if (response) {
                     await handleApiError(response, null);
+                    if (buttonElement) { // Reabilita em caso de erro da API
+                        buttonElement.disabled = false;
+                        buttonElement.textContent = 'Cancelar';
+                    }
                 }
             } catch (err) {
                 console.error("Erro ao cancelar agendamento:", err);
                 showToast('Erro de rede ao cancelar.', 'error');
+                if (buttonElement) { // Reabilita em caso de erro de rede
+                    buttonElement.disabled = false;
+                    buttonElement.textContent = 'Cancelar';
+                }
             }
         });
     }
 
+    // Torna a função global para ser chamada pelo onclick no HTML
     window.handleVerDetalhesConsulta = async (agendamentoId) => {
         const container = document.getElementById('detalhes-consulta-container');
         container.innerHTML = `<div class="document-view"><h4>${SPINNER_HTML}</h4></div>`;
+        container.scrollIntoView({ behavior: 'smooth' }); // Rola para a área de detalhes
 
         try {
+            // Busca todos os detalhes em paralelo
             const [respPresc, respAtest, respExames] = await Promise.all([
                 fetchAuthenticated(`/api/prescricoes/agendamento/${agendamentoId}`),
                 fetchAuthenticated(`/api/atestados/agendamento/${agendamentoId}`),
                 fetchAuthenticated(`/api/exames/agendamento/${agendamentoId}`)
             ]);
 
+            // Trata as respostas individualmente, permitindo que algumas falhem sem quebrar tudo
             const prescricao = (respPresc && respPresc.ok) ? await respPresc.json().catch(() => null) : null;
             const atestado = (respAtest && respAtest.ok) ? await respAtest.json().catch(() => null) : null;
             const exames = (respExames && respExames.ok) ? await respExames.json().catch(() => []) : [];
@@ -460,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="document-view">
                     <div class="admin-section-header">
                         <h4>Detalhes da Consulta</h4>
-                        <button class="btn btn-secondary" onclick="document.getElementById('detalhes-consulta-container').innerHTML = ''">Fechar</button>
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('detalhes-consulta-container').innerHTML = ''">Fechar Detalhes</button>
                     </div>`;
 
             if (prescricao) {
@@ -476,21 +548,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 detailsHtml += `</ul></div>`;
             }
+            // Mensagem se nenhum documento foi encontrado
             if (!prescricao && !atestado && exames.length === 0) {
                 detailsHtml += '<p>Nenhum documento (prescrição, atestado ou exame) foi gerado para esta consulta.</p>';
             }
-            detailsHtml += '</div>';
+            detailsHtml += '</div>'; // Fecha document-view
 
             container.innerHTML = detailsHtml;
-            container.scrollIntoView({ behavior: 'smooth' });
 
         } catch (err) {
             console.error('Erro ao montar detalhes da consulta:', err);
             showToast('Erro ao carregar detalhes da consulta.', 'error');
-            container.innerHTML = '';
+            container.innerHTML = '<div class="document-view"><p>Erro ao carregar detalhes.</p><button class="btn btn-secondary btn-sm" onclick="document.getElementById(\'detalhes-consulta-container\').innerHTML = \'\'">Fechar</button></div>';
         }
     }
 
     initPacienteDashboard();
 });
-

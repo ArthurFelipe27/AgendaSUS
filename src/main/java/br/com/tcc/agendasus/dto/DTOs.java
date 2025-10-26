@@ -54,11 +54,19 @@ public class DTOs {
     public record FinalizarConsultaDTO(String evolucaoMedica, String prescricao, List<String> exames, Integer diasDeRepouso) {}
     public record AgendamentoResponseDTO(Long id, LocalDateTime dataHora, StatusAgendamento status, InfoPacienteDTO paciente, InfoMedicoDTO medico) {
         public record InfoPacienteDTO(Long id, String nome) {}
-        public record InfoMedicoDTO(Long id, String nome, String especialidade) {}
+        // Adiciona nomeUnidade e enderecoUnidade
+        public record InfoMedicoDTO(Long id, String nome, String especialidade, String nomeUnidade, String enderecoUnidade) {}
         public AgendamentoResponseDTO(Agendamento agendamento) {
             this(agendamento.getId(), agendamento.getDataHora(), agendamento.getStatus(),
                  new InfoPacienteDTO(agendamento.getPaciente().getIdUsuario(), agendamento.getPaciente().getUsuario().getNome()),
-                 new InfoMedicoDTO(agendamento.getMedico().getIdUsuario(), agendamento.getMedico().getUsuario().getNome(), agendamento.getMedico().getEspecialidade()));
+                 // Popula os novos campos
+                 new InfoMedicoDTO(
+                     agendamento.getMedico().getIdUsuario(),
+                     agendamento.getMedico().getUsuario().getNome(),
+                     agendamento.getMedico().getEspecialidade(),
+                     agendamento.getMedico().getUnidade() != null ? agendamento.getMedico().getUnidade().getNome() : "Unidade não informada",
+                     agendamento.getMedico().getUnidade() != null ? agendamento.getMedico().getUnidade().getEndereco() : "Endereço não informado"
+                 ));
         }
     }
     public record ProntuarioDTO(
@@ -98,21 +106,42 @@ public class DTOs {
         public PrescricaoResponseDTO(Prescricao p) {
             this(p.getId(), p.getMedicamentos(), p.getDataEmissao(),
                  new AgendamentoResponseDTO.InfoPacienteDTO(p.getPaciente().getIdUsuario(), p.getPaciente().getUsuario().getNome()),
-                 new AgendamentoResponseDTO.InfoMedicoDTO(p.getMedico().getIdUsuario(), p.getMedico().getUsuario().getNome(), p.getMedico().getEspecialidade()));
+                 // Atualiza para o novo construtor do InfoMedicoDTO
+                 new AgendamentoResponseDTO.InfoMedicoDTO(
+                     p.getMedico().getIdUsuario(),
+                     p.getMedico().getUsuario().getNome(),
+                     p.getMedico().getEspecialidade(),
+                     p.getMedico().getUnidade() != null ? p.getMedico().getUnidade().getNome() : "N/A",
+                     p.getMedico().getUnidade() != null ? p.getMedico().getUnidade().getEndereco() : "N/A"
+                 ));
         }
     }
     public record AtestadoResponseDTO(Long id, String descricao, LocalDate dataEmissao, AgendamentoResponseDTO.InfoPacienteDTO paciente, AgendamentoResponseDTO.InfoMedicoDTO medico) {
         public AtestadoResponseDTO(Atestado a) {
             this(a.getId(), a.getDescricao(), a.getDataEmissao(),
                  new AgendamentoResponseDTO.InfoPacienteDTO(a.getPaciente().getIdUsuario(), a.getPaciente().getUsuario().getNome()),
-                 new AgendamentoResponseDTO.InfoMedicoDTO(a.getMedico().getIdUsuario(), a.getMedico().getUsuario().getNome(), a.getMedico().getEspecialidade()));
+                 // Atualiza para o novo construtor do InfoMedicoDTO
+                 new AgendamentoResponseDTO.InfoMedicoDTO(
+                     a.getMedico().getIdUsuario(),
+                     a.getMedico().getUsuario().getNome(),
+                     a.getMedico().getEspecialidade(),
+                     a.getMedico().getUnidade() != null ? a.getMedico().getUnidade().getNome() : "N/A",
+                     a.getMedico().getUnidade() != null ? a.getMedico().getUnidade().getEndereco() : "N/A"
+                 ));
         }
     }
     public record ExameResponseDTO(Long id, String tipo, String resultado, LocalDate dataRealizacao, AgendamentoResponseDTO.InfoPacienteDTO paciente, AgendamentoResponseDTO.InfoMedicoDTO medico) {
         public ExameResponseDTO(Exame e) {
             this(e.getId(), e.getTipo(), e.getResultado(), e.getDataRealizacao(),
                  new AgendamentoResponseDTO.InfoPacienteDTO(e.getPaciente().getIdUsuario(), e.getPaciente().getUsuario().getNome()),
-                 new AgendamentoResponseDTO.InfoMedicoDTO(e.getMedico().getIdUsuario(), e.getMedico().getUsuario().getNome(), e.getMedico().getEspecialidade()));
+                 // Atualiza para o novo construtor do InfoMedicoDTO
+                 new AgendamentoResponseDTO.InfoMedicoDTO(
+                     e.getMedico().getIdUsuario(),
+                     e.getMedico().getUsuario().getNome(),
+                     e.getMedico().getEspecialidade(),
+                     e.getMedico().getUnidade() != null ? e.getMedico().getUnidade().getNome() : "N/A",
+                     e.getMedico().getUnidade() != null ? e.getMedico().getUnidade().getEndereco() : "N/A"
+                 ));
         }
     }
 
@@ -132,10 +161,10 @@ public class DTOs {
         public record AutorDTO(Long id, String nome) {}
         public ConteudoResponseDTO(Conteudo c) {
             this(c.getId(), c.getTipo(), c.getTitulo(), c.getCorpo(), c.getStatus(), c.getPublicadoEm(),
-                 new AutorDTO(c.getAutor().getId(), c.getAutor().getNome()));
+                 c.getAutor() != null ? new AutorDTO(c.getAutor().getId(), c.getAutor().getNome()) : null); // Adiciona verificação de autor nulo
         }
     }
-    
+
     // Ficha Médica
     public record FichaMedicaResponseDTO(Long id, String sintomas, Integer diasSintomas, String alergias, String cirurgias, AgendamentoResponseDTO.InfoPacienteDTO paciente) {
         public FichaMedicaResponseDTO(FichaMedica ficha) {
@@ -144,4 +173,3 @@ public class DTOs {
         }
     }
 }
-
