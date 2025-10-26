@@ -1,9 +1,10 @@
 // ===================================================================
-// DIRETOR.JS (VERSÃO COM MELHORIAS VISUAIS, REATIVAÇÃO E FILTRO DE USUÁRIO)
+// DIRETOR.JS (VERSÃO COM PRÉ-VISUALIZAÇÃO DE CONTEÚDO PARA ADMIN)
 // Implementa ícones, spinners e um layout de card aprimorado.
 // Adiciona botão e lógica para reativar usuários.
 // Botão de ação do usuário restaurado para o design original (sempre vermelho).
 // Adiciona filtro de status (Todos, Ativos, Inativos) na tela de Gerenciar Usuários.
+// Adiciona botão "Visualizar" e modal para pré-visualização de conteúdo na moderação.
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -67,6 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             renderNoticiasPublicas('public-news-container');
         });
+
+        // Configura o modal de pré-visualização (se existir no HTML)
+        const previewModal = document.getElementById('preview-modal');
+        if (previewModal) {
+            document.getElementById('preview-modal-close').addEventListener('click', closePreviewModal);
+            previewModal.addEventListener('click', (e) => { if (e.target.id === 'preview-modal') closePreviewModal(); });
+        }
+
 
         renderGerenciadorDeUnidades();
     }
@@ -408,20 +417,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 tableHTML += `<tr><td colspan="5">Nenhum conteúdo para moderar.</td></tr>`;
             } else {
                 conteudos.forEach(c => {
-                    let acoes = '';
-                    if (c.status === 'RASCUNHO') { acoes = `<button class="btn btn-success btn-aprovar-conteudo" data-id="${c.id}">Aprovar</button><button class="btn btn-danger btn-deletar-conteudo" data-id="${c.id}" style="margin-left: 0.5rem;">Deletar</button>`; }
-                    else if (c.status === 'PUBLICADO') { acoes = `<button class="btn btn-secondary btn-desativar-conteudo" data-id="${c.id}">Desativar</button>`; }
-                    else { acoes = `<button class="btn btn-danger btn-deletar-conteudo" data-id="${c.id}">Deletar</button>`; } // Ação para DESATIVADO
+                    // Adiciona o botão "Visualizar"
+                    let acoes = `<button class="btn btn-secondary btn-sm btn-visualizar-conteudo" data-id="${c.id}" style="margin-right: 0.5rem;">Visualizar</button>`;
+                    if (c.status === 'RASCUNHO') {
+                        acoes += `<button class="btn btn-success btn-sm btn-aprovar-conteudo" data-id="${c.id}">Aprovar</button>
+                                  <button class="btn btn-danger btn-sm btn-deletar-conteudo" data-id="${c.id}" style="margin-left: 0.5rem;">Deletar</button>`;
+                    } else if (c.status === 'PUBLICADO') {
+                        acoes += `<button class="btn btn-warning btn-sm btn-desativar-conteudo" data-id="${c.id}">Desativar</button>`; // Botão amarelo para desativar
+                    } else { // Status DESATIVADO
+                        acoes += `<button class="btn btn-danger btn-sm btn-deletar-conteudo" data-id="${c.id}">Deletar</button>`;
+                    }
                     tableHTML += `<tr><td>${c.id}</td><td>${c.titulo}</td><td>${c.autor.nome}</td><td><span class="badge ${c.status}">${c.status}</span></td><td>${acoes}</td></tr>`;
                 });
             }
             tableHTML += `</tbody></table>`;
             document.getElementById('admin-content-list').innerHTML = tableHTML;
+
+            // Adiciona listeners para os botões
+            document.querySelectorAll('.btn-visualizar-conteudo').forEach(btn => btn.addEventListener('click', () => handleVisualizarConteudo(btn.dataset.id)));
             document.querySelectorAll('.btn-aprovar-conteudo').forEach(btn => btn.addEventListener('click', () => handleUpdateConteudoStatus(btn.dataset.id, 'PUBLICADO')));
             document.querySelectorAll('.btn-desativar-conteudo').forEach(btn => btn.addEventListener('click', () => handleUpdateConteudoStatus(btn.dataset.id, 'DESATIVADO')));
             document.querySelectorAll('.btn-deletar-conteudo').forEach(btn => btn.addEventListener('click', () => handleDeletarConteudo(btn.dataset.id)));
         } catch (err) { console.error(err); adminContent.innerHTML = `<p>Erro ao carregar conteúdo.</p>`; }
     }
+
+    // NOVA FUNÇÃO: handleVisualizarConteudo
+    async function handleVisualizarConteudo(conteudoId) {
+        try {
+            const response = await fetchAuthenticated(`/api/conteudo/admin/${conteudoId}`); // Usa o mesmo endpoint do editar
+            if (!response || !response.ok) {
+                await handleApiError(response, null);
+                return;
+            };
+            const conteudo = await response.json();
+            openPreviewModal(conteudo.titulo, conteudo.corpo); // Reutiliza a função do modal
+        } catch (err) {
+            showToast(err.message || 'Erro de rede ao visualizar', 'error');
+        }
+    }
+
+    // FUNÇÕES DO MODAL (reutilizadas ou adaptadas do medico.js)
+    function openPreviewModal(title, content) {
+        const modal = document.getElementById('preview-modal');
+        if (!modal) {
+            console.error("Elemento do modal de preview não encontrado.");
+            return; // Sai se o modal não existe
+        }
+        document.getElementById('preview-title').textContent = title;
+        document.getElementById('preview-body').innerHTML = content;
+        modal.style.display = 'flex';
+    }
+
+    function closePreviewModal() {
+        const modal = document.getElementById('preview-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
 
     async function handleUpdateConteudoStatus(conteudoId, novoStatus) {
         if (!confirm(`Alterar status para ${novoStatus}?`)) return;
