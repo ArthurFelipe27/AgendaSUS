@@ -14,6 +14,7 @@
     --cor-perigo: #dc2626;
     --cor-perigo-hover: #b91c1c;
     --cor-aviso: #f97316;
+    /* Adicionado para aviso */
     --cor-fundo-body: #f1f5f9;
     --cor-fundo-container: #ffffff;
     --cor-texto-principal: #1e293b;
@@ -182,6 +183,8 @@ a:hover {
    =================================================================== */
 .input-group {
     margin-bottom: 1.25rem;
+    position: relative;
+    /* Adicionado para posicionar a mensagem de validação */
 }
 
 .input-group label {
@@ -211,6 +214,43 @@ a:hover {
     outline: none;
     background-color: var(--cor-fundo-container);
 }
+
+/* NOVOS ESTILOS PARA VALIDAÇÃO */
+.input-group input.input-invalid,
+.input-group select.input-invalid {
+    border-color: var(--cor-perigo);
+    background-color: #fee2e2;
+}
+
+.input-group input.input-invalid:focus,
+.input-group select.input-invalid:focus {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cor-perigo) 25%, transparent);
+}
+
+.input-group input.input-valid,
+.input-group select.input-valid {
+    border-color: var(--cor-sucesso);
+    background-color: #dcfce7;
+}
+
+.input-group input.input-valid:focus,
+.input-group select.input-valid:focus {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cor-sucesso) 25%, transparent);
+}
+
+.validation-message {
+    display: block;
+    /* Garante que ocupe a linha abaixo */
+    font-size: 0.8rem;
+    color: var(--cor-perigo);
+    margin-top: 0.3rem;
+    /* Espaçamento acima da mensagem */
+    min-height: 1.2em;
+    /* Reserva espaço mesmo quando vazio */
+}
+
+/* FIM DOS NOVOS ESTILOS */
+
 
 .error-message {
     background-color: #fee2e2;
@@ -282,6 +322,18 @@ a:hover {
     box-shadow: var(--sombra-card-hover);
 }
 
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
 .btn-full-width {
     width: 100%;
 }
@@ -291,7 +343,7 @@ a:hover {
     color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     background: var(--cor-primaria-hover);
     color: white;
     text-decoration: none;
@@ -302,7 +354,7 @@ a:hover {
     color: white;
 }
 
-.btn-success:hover {
+.btn-success:hover:not(:disabled) {
     background: var(--cor-sucesso-hover);
     color: white;
     text-decoration: none;
@@ -313,7 +365,7 @@ a:hover {
     color: white;
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
     background: var(--cor-perigo-hover);
     color: white;
     text-decoration: none;
@@ -325,9 +377,22 @@ a:hover {
     color: var(--cor-texto-secundario);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
     background-color: #e2e8f0;
     color: var(--cor-texto-principal);
+    text-decoration: none;
+}
+
+.btn-warning {
+    /* Adicionado para desativar conteúdo */
+    background-color: var(--cor-aviso);
+    color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background-color: #d97706;
+    /* Cor mais escura para hover */
+    color: white;
     text-decoration: none;
 }
 
@@ -481,6 +546,8 @@ a:hover {
     padding: 1rem;
     border-bottom: 1px solid var(--cor-borda);
     text-align: left;
+    vertical-align: middle;
+    /* Alinha verticalmente */
 }
 
 .admin-table thead {
@@ -656,6 +723,12 @@ a:hover {
     margin-top: auto;
     background-color: #f8fafc;
     border-top: 1px solid var(--cor-borda);
+    display: flex;
+    /* Adicionado para alinhar itens */
+    justify-content: space-between;
+    /* Alinha badge à esquerda, botão à direita */
+    align-items: center;
+    /* Alinha verticalmente */
 }
 
 .history-card.status-ATENDIDO {
@@ -787,6 +860,8 @@ a:hover {
     padding: 2rem;
     border-radius: var(--raio-borda);
     box-shadow: var(--sombra-card);
+    margin-bottom: 1.5rem;
+    /* Adicionado para espaçamento */
 }
 
 .atendimento-form-section h4 {
@@ -802,6 +877,8 @@ a:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
+    align-items: center;
+    /* Alinha itens na vertical */
 }
 
 .checkbox-group {
@@ -809,6 +886,24 @@ a:hover {
     align-items: center;
     gap: 0.5rem;
 }
+
+/* Garante que o radio button e seu label fiquem juntos */
+.radio-group label {
+    margin-bottom: 0;
+    /* Remove margem padrão do label */
+    margin-right: 1rem;
+    /* Espaço entre opções */
+    cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+    width: auto;
+    /* Tira a largura total */
+    margin-right: 0.3rem;
+    /* Espaço entre o radio e o label */
+    cursor: pointer;
+}
+
 
 .token-box {
     background-color: var(--cor-fundo-body);
@@ -1132,19 +1227,23 @@ a:hover {
 }
 
 
-.modal-content p {
+.modal-content p#modal-message {
+    /* Target específico para a msg do modal de confirmação */
     font-size: 1.15rem;
     color: var(--cor-texto-principal);
-    margin: 0 0 2rem 0;
+    margin: 0;
+    /* Removido margin bottom */
     line-height: 1.5;
-    padding: 1.5rem 2.5rem 0;
+    padding: 1.5rem 2.5rem;
+    /* Ajustado padding */
 }
 
 .modal-actions {
     display: flex;
     justify-content: center;
     gap: 1rem;
-    padding: 0 2.5rem 2.5rem;
+    padding: 1.5rem 2.5rem 2.5rem;
+    /* Ajustado padding top */
 }
 
 /* Estilos para o corpo do modal de preview com scroll */
@@ -1295,4 +1394,24 @@ a:hover {
 
 .faq-content p:last-child {
     margin-bottom: 0;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    /* Alinha botões à direita por padrão */
+    gap: 1rem;
+    margin-top: 1.5rem;
+    /* Adiciona espaço acima dos botões */
+}
+
+/* Responsividade adicional para botões de formulário */
+@media (max-width: 480px) {
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions button {
+        width: 100%;
+    }
 }
