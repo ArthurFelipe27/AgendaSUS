@@ -42,10 +42,6 @@ public class AgendamentoController {
         return ResponseEntity.ok(service.listarMeusAgendamentos(auth));
     }
 
-    // [REMOVIDO] Endpoint inseguro que expunha dados de pacientes.
-    // @GetMapping("/medico/{medicoId}") ...
-
-    // [NOVO] Endpoint seguro que retorna apenas os horários ocupados de um médico, sem dados de pacientes.
     @GetMapping("/medico/{medicoId}/horarios-ocupados")
     public ResponseEntity<List<LocalDateTime>> listarHorariosOcupados(@PathVariable Long medicoId) {
         return ResponseEntity.ok(service.listarHorariosOcupadosPorMedico(medicoId));
@@ -60,7 +56,7 @@ public class AgendamentoController {
     public ResponseEntity<AgendamentoResponseDTO> atualizarStatus(@PathVariable Long id, @RequestBody @Valid AgendamentoStatusUpdateDTO dados, Authentication auth) {
         return ResponseEntity.ok(service.atualizarStatus(id, dados, auth));
     }
-    
+
     @PutMapping("/{id}/cancelar")
     public ResponseEntity<AgendamentoResponseDTO> cancelarAgendamento(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(service.cancelarAgendamentoPaciente(id, auth));
@@ -71,10 +67,9 @@ public class AgendamentoController {
         service.finalizarConsulta(id, dados, auth);
         return ResponseEntity.noContent().build();
     }
-    
+
     @GetMapping("/{id}/prontuario")
     public ResponseEntity<ProntuarioDTO> getProntuario(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(service.getProntuarioDoAgendamento(id, auth));
     }
 }
-

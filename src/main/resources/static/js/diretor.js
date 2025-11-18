@@ -487,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="section-card">
                 <div class="admin-section-header">
                     <h4>Usuários do Sistema</h4>
-                     <!-- Filtro de Status -->
+                      Filtro de Status -->
                     <div class="filter-group" style="margin-left: auto; min-width: 150px;">
                         <label for="filtro-status-usuario" style="margin-bottom: 0.25rem; font-size: 0.8rem;">Filtrar por Status</label>
                         <select id="filtro-status-usuario">
@@ -770,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div id="perfil-info-admin" class="document-item">
                  <p><strong>Nome:</strong> <span id="display-nome-admin">${usuario.nome || 'N/A'}</span> <button class="btn btn-secondary btn-sm" id="btn-editar-nome-admin" style="margin-left: 1rem;">Editar Nome</button></p>
-                 <!-- Formulário de Edição de Nome (oculto) -->
+                  Formulário de Edição de Nome (oculto) -->
                 <form id="form-editar-nome-admin" style="display: none; margin-top: 0.5rem; margin-bottom: 1rem; padding: 1rem; background-color: #f8f9fa; border-radius: 0.5rem; border: 1px solid var(--cor-borda);">
                      <div id="nome-edit-error-admin" class="error-message" style="display:none; margin-bottom: 0.5rem;"></div>
                     <div class="input-group" style="margin-bottom: 0.5rem;">
@@ -788,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
 
-        <!-- Seção de Alterar Senha -->
+         Seção de Alterar Senha -->
         <div class="section-card" style="margin-top: 1.5rem;">
             <h4>Alterar Senha</h4>
             <form id="form-alterar-senha-admin">

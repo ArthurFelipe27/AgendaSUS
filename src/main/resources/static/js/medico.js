@@ -778,7 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div id="perfil-info-medico" class="document-item">
                  <p><strong>Nome:</strong> <span id="display-nome-medico">${usuario.nome || 'N/A'}</span> <button class="btn btn-secondary btn-sm" id="btn-editar-nome-medico" style="margin-left: 1rem;">Editar Nome</button></p>
-                 <!-- Formulário de Edição de Nome (oculto) -->
+                  Formulário de Edição de Nome (oculto) -->
                 <form id="form-editar-nome-medico" style="display: none; margin-top: 0.5rem; margin-bottom: 1rem; padding: 1rem; background-color: #f8f9fa; border-radius: 0.5rem; border: 1px solid var(--cor-borda);">
                      <div id="nome-edit-error-medico" class="error-message" style="display:none; margin-bottom: 0.5rem;"></div>
                     <div class="input-group" style="margin-bottom: 0.5rem;">
@@ -794,11 +794,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p><strong>CPF:</strong> ${formatCPF(usuario.cpf) || 'N/A'}</p>
                 <p><strong>CRM:</strong> ${usuario.crm || 'N/A'}</p>
                 <p><strong>Especialidade:</strong> ${especialidadeFormatada}</p>
-                <!-- Poderia adicionar a Unidade de Saúde aqui se necessário -->
+                 Poderia adicionar a Unidade de Saúde aqui se necessário -->
             </div>
         </div>
 
-        <!-- Seção de Alterar Senha -->
+         Seção de Alterar Senha -->
         <div class="section-card" style="margin-top: 1.5rem;">
             <h4>Alterar Senha</h4>
             <form id="form-alterar-senha-medico">

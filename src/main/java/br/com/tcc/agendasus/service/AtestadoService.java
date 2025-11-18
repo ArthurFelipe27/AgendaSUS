@@ -7,7 +7,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
 import br.com.tcc.agendasus.dto.DTOs.AtestadoResponseDTO;
 import br.com.tcc.agendasus.model.entity.Atestado;
 import br.com.tcc.agendasus.model.entity.Usuario;
@@ -37,7 +36,6 @@ public class AtestadoService {
     
     @Transactional(readOnly = true)
     public AtestadoResponseDTO buscarPorAgendamento(Long agendamentoId, Authentication auth) {
-        // A validação de segurança deve ocorrer no AgendamentoService/Controller
         return repository.findByAgendamentoId(agendamentoId)
                 .map(AtestadoResponseDTO::new)
                 .orElse(null);

@@ -52,7 +52,7 @@ public class Agendamento {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusAgendamento status;
-    
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 
@@ -64,11 +64,10 @@ public class Agendamento {
         criadoEm = LocalDateTime.now();
         atualizadoEm = LocalDateTime.now();
     }
+
     @PreUpdate
     protected void onUpdate() {
         atualizadoEm = LocalDateTime.now();
     }
-    
-    // O método auxiliar setFichaMedica foi removido pois a relação agora é unidirecional e mais simples.
-}
 
+}

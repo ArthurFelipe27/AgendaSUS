@@ -13,6 +13,5 @@ public class PacienteService {
         this.pacienteRepository = pacienteRepository;
     }
 
-    // Esta classe está intencionalmente enxuta, pois a lógica de prontuário
-    // foi movida para AgendamentoService e a de cadastro para UsuarioService.
+   
 }

@@ -15,8 +15,13 @@ import jakarta.persistence.EntityNotFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private record ErrorResponse(String message) {}
-    private record ValidationErrorResponse(String field, String message) {}
+    private record ErrorResponse(String message) {
+
+    }
+
+    private record ValidationErrorResponse(String field, String message) {
+
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<ValidationErrorResponse>> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -43,7 +48,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        // Logar a exceção em um sistema de logs real (ex: SLF4J)
         ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Ocorreu um erro interno no servidor."));
     }

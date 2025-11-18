@@ -12,19 +12,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service; // Import Authentication
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.tcc.agendasus.dto.DTOs.*; // Import Diretor
-import br.com.tcc.agendasus.dto.DTOs.ForgotPasswordRequestDTO;   // Import Medico
-import br.com.tcc.agendasus.dto.DTOs.PacienteUpdateDTO;
+import br.com.tcc.agendasus.dto.DTOs.ForgotPasswordRequestDTO; // Import Diretor
+import br.com.tcc.agendasus.dto.DTOs.PacienteUpdateDTO;   // Import Medico
 import br.com.tcc.agendasus.dto.DTOs.ResetPasswordRequestDTO;
 import br.com.tcc.agendasus.dto.DTOs.UsuarioCadastroDTO;
-import br.com.tcc.agendasus.dto.DTOs.UsuarioResponseDTO; // Import DiretorRepository
-import br.com.tcc.agendasus.dto.DTOs.UsuarioUpdateDTO;   // Import MedicoRepository
-import br.com.tcc.agendasus.model.entity.Diretor;
+import br.com.tcc.agendasus.dto.DTOs.UsuarioResponseDTO;
+import br.com.tcc.agendasus.dto.DTOs.UsuarioUpdateDTO; // Import DiretorRepository
+import br.com.tcc.agendasus.model.entity.Diretor;   // Import MedicoRepository
 import br.com.tcc.agendasus.model.entity.Medico;
 import br.com.tcc.agendasus.model.entity.Paciente;
 import br.com.tcc.agendasus.model.entity.Usuario;
-import br.com.tcc.agendasus.model.enums.Role; // Import AccessDeniedException
-import br.com.tcc.agendasus.repository.DiretorRepository;
+import br.com.tcc.agendasus.model.enums.Role;
+import br.com.tcc.agendasus.repository.DiretorRepository; // Import AccessDeniedException
 import br.com.tcc.agendasus.repository.MedicoRepository;
 import br.com.tcc.agendasus.repository.PacienteRepository;
 import br.com.tcc.agendasus.repository.UsuarioRepository;
@@ -189,7 +188,6 @@ public class UsuarioService {
 
         Paciente pacienteAtualizado = pacienteRepository.save(paciente);
 
-        // Retorna o DTO completo com os dados atualizados
         return new UsuarioResponseDTO(usuarioLogado, Optional.of(pacienteAtualizado), Optional.empty(), Optional.empty());
     }
 
@@ -197,15 +195,10 @@ public class UsuarioService {
     @Transactional
     public void desativarUsuario(Long id) {
         Usuario usuario = findById(id);
-        // Adicionar validação para não desativar a si mesmo? Ou o único admin?
-        // if (usuario.getId().equals(authorizationService.getUsuarioLogado(auth).getId())) {
-        //     throw new IllegalArgumentException("Você não pode desativar a si mesmo.");
-        // }
         usuario.setAtivo(false);
         usuarioRepository.save(usuario);
     }
 
-    // Método para reativar usuário (chamado pelo Admin/Diretor)
     @Transactional
     public void reativarUsuario(Long id) {
         Usuario usuario = findById(id);
@@ -213,7 +206,6 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    // Gerar Token de Reset de Senha (mantido igual)
     @Transactional
     public String gerarTokenResetSenha(ForgotPasswordRequestDTO dados) {
         Usuario usuario = usuarioRepository.findByEmail(dados.email())
@@ -221,13 +213,12 @@ public class UsuarioService {
 
         String token = UUID.randomUUID().toString();
         usuario.setResetToken(token);
-        usuario.setResetTokenExpiry(LocalDateTime.now().plusHours(1)); // 1 hora de validade
+        usuario.setResetTokenExpiry(LocalDateTime.now().plusHours(1)); 
         usuarioRepository.save(usuario);
         System.out.println("---- DEBUG: Token de Reset Gerado para " + dados.email() + ": " + token + " ----");
         return token;
     }
 
-    // Redefinir Senha (mantido igual)
     @Transactional
     public void redefinirSenha(ResetPasswordRequestDTO dados) {
         if (dados.token() == null || dados.token().isBlank()) {
@@ -246,12 +237,11 @@ public class UsuarioService {
              throw new IllegalArgumentException("A nova senha deve ter pelo menos 6 caracteres e conter um número.");
         }
         usuario.setSenha(passwordEncoder.encode(dados.novaSenha()));
-        usuario.setResetToken(null); // Limpa o token após o uso
+        usuario.setResetToken(null); 
         usuario.setResetTokenExpiry(null);
         usuarioRepository.save(usuario);
     }
 
-    // Método auxiliar privado para buscar usuário ou lançar exceção
     private Usuario findById(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com o ID: " + id));

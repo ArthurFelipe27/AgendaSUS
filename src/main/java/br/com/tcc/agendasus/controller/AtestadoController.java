@@ -1,14 +1,17 @@
 package br.com.tcc.agendasus.controller;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
-import br.com.tcc.agendasus.service.AtestadoService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import br.com.tcc.agendasus.dto.DTOs.*;
+import br.com.tcc.agendasus.dto.DTOs.AtestadoResponseDTO;
+import br.com.tcc.agendasus.service.AtestadoService;
 
 @RestController
 @RequestMapping("/api/atestados")
@@ -19,12 +22,6 @@ public class AtestadoController {
     public AtestadoController(AtestadoService service) {
         this.service = service;
     }
-
-    // Este endpoint pode ser removido se o atestado for sempre criado ao finalizar a consulta
-    // @PostMapping
-    // public ResponseEntity<AtestadoResponseDTO> criar(@RequestBody @Valid AtestadoCadastroDTO dados, Authentication auth) {
-    //     return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(dados, auth));
-    // }
 
     @GetMapping("/meus")
     public ResponseEntity<List<AtestadoResponseDTO>> listarMinhas(Authentication auth) {

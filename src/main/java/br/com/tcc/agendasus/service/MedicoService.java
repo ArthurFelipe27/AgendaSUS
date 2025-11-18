@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
 import br.com.tcc.agendasus.dto.DTOs.HorarioDisponivelDTO;
 import br.com.tcc.agendasus.dto.DTOs.MedicoCadastroDTO;
 import br.com.tcc.agendasus.dto.DTOs.MedicoResponseDTO;
@@ -71,12 +70,7 @@ public class MedicoService {
         return new MedicoResponseDTO(medicoRepository.save(novoMedico));
     }
 
-    /**
-     * CORREÇÃO: A anotação @Transactional é crucial aqui. Sem ela, ao tentar
-     * acessar medico.getUsuario() ou medico.getUnidade() dentro do construtor do DTO,
-     * a sessão do banco de dados já teria sido fechada, causando um LazyInitializationException.
-     * A anotação mantém a sessão aberta durante toda a execução do método.
-     */
+ 
     @Transactional(readOnly = true)
     public List<MedicoResponseDTO> listarTodos() {
         return medicoRepository.findAll().stream()

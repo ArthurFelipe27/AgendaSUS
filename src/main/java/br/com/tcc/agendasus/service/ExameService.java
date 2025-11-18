@@ -8,7 +8,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
 import br.com.tcc.agendasus.dto.DTOs.ExameResponseDTO;
 import br.com.tcc.agendasus.dto.DTOs.ExameResultadoUpdateDTO;
 import br.com.tcc.agendasus.model.entity.Exame;
@@ -57,7 +56,6 @@ public class ExameService {
 
     @Transactional(readOnly = true)
     public List<ExameResponseDTO> buscarPorAgendamento(Long agendamentoId, Authentication auth) {
-        // A autorização é validada no AgendamentoService
         return repository.findAllByAgendamentoId(agendamentoId)
                 .stream()
                 .map(ExameResponseDTO::new)

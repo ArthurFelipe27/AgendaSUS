@@ -189,17 +189,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p><strong>Nome:</strong> ${usuario.nome || 'N/A'}</p>
                 <p><strong>Nome Social:</strong> ${usuario.nomeSocial || 'N/A'}</p>
                 <p><strong>Email:</strong> ${usuario.email || 'N/A'}</p>
-                <p><strong>CPF:</strong> ${formatCPF(usuario.cpf) || 'N/A'}</p> <!-- Formata CPF -->
+                <p><strong>CPF:</strong> ${formatCPF(usuario.cpf) || 'N/A'}</p>  Formata CPF -->
                 <p><strong>Data de Nascimento:</strong> ${usuario.dataNascimento ? new Date(usuario.dataNascimento + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}</p>
                 <p><strong>Gênero:</strong> ${usuario.sexo || 'N/A'}</p>
-                <p><strong>Telefone:</strong> ${formatTelefone(usuario.telefone) || 'Não informado'}</p> <!-- Formata Telefone -->
+                <p><strong>Telefone:</strong> ${formatTelefone(usuario.telefone) || 'Não informado'}</p>  Formata Telefone -->
                 <p><strong>Endereço:</strong> ${enderecoCompleto || 'Não informado'}</p>
             </div>
             <div class="form-actions" style="margin-top: 1.5rem;">
                 <button class="btn btn-primary" id="btn-editar-perfil">Editar Endereço/Telefone</button>
             </div>
 
-            <!-- Formulário de Edição (inicialmente oculto) -->
+             Formulário de Edição (inicialmente oculto) -->
             <div id="perfil-edit-form-container" class="booking-form-container" style="display: none; margin-top: 2rem; border-top: 1px solid var(--cor-borda); padding-top: 2rem;">
                 <h4>Editar Endereço e Telefone</h4>
                 <form id="form-editar-paciente">
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <label for="edit-complemento">Complemento</label>
                         <input type="text" id="edit-complemento" value="${usuario.complemento || ''}">
                      </div>
-                     <input type="hidden" id="edit-estado" value="DF"> <!-- Estado fixo -->
+                     <input type="hidden" id="edit-estado" value="DF">  Estado fixo -->
                      <div class="form-actions">
                          <button type="submit" class="btn btn-success">Salvar Alterações</button>
                          <button type="button" class="btn btn-secondary" id="btn-cancelar-edicao">Cancelar</button>
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
 
-        <!-- Seção de Alterar Senha -->
+         Seção de Alterar Senha -->
         <div class="section-card" style="margin-top: 1.5rem;">
             <h4>Alterar Senha</h4>
             <form id="form-alterar-senha">
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <label for="nova-senha">Nova Senha</label>
                     <input type="password" id="nova-senha" required minlength="6">
                 </div>
-                 <!-- Critérios da Senha -->
+                  Critérios da Senha -->
                 <div class="password-criteria-container" style="margin-top: -0.5rem; margin-bottom: 1rem;">
                     <ul>
                         <li id="length-check-perfil">Pelo menos 6 caracteres</li>

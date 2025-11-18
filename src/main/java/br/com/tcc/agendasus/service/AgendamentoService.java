@@ -53,20 +53,20 @@ public class AgendamentoService {
     private final ExameRepository exameRepository;
     private final PrescricaoRepository prescricaoRepository;
     private final AtestadoRepository atestadoRepository;
-    private final AuthorizationService authorizationService; // Adicionado
+    private final AuthorizationService authorizationService;
 
     private static final Map<DayOfWeek, String> DIAS_DA_SEMANA_MAP = Map.of(
-        DayOfWeek.MONDAY, "SEGUNDA", DayOfWeek.TUESDAY, "TERCA", DayOfWeek.WEDNESDAY, "QUARTA",
-        DayOfWeek.THURSDAY, "QUINTA", DayOfWeek.FRIDAY, "SEXTA", DayOfWeek.SATURDAY, "SABADO",
-        DayOfWeek.SUNDAY, "DOMINGO"
+            DayOfWeek.MONDAY, "SEGUNDA", DayOfWeek.TUESDAY, "TERCA", DayOfWeek.WEDNESDAY, "QUARTA",
+            DayOfWeek.THURSDAY, "QUINTA", DayOfWeek.FRIDAY, "SEXTA", DayOfWeek.SATURDAY, "SABADO",
+            DayOfWeek.SUNDAY, "DOMINGO"
     );
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FichaMedicaRepository fichaMedicaRepository,
-                              PacienteRepository pacienteRepository, MedicoRepository medicoRepository,
-                              ObjectMapper objectMapper, ExameRepository exameRepository,
-                              PrescricaoRepository prescricaoRepository, AtestadoRepository atestadoRepository,
-                              AuthorizationService authorizationService) { // Adicionado
+            PacienteRepository pacienteRepository, MedicoRepository medicoRepository,
+            ObjectMapper objectMapper, ExameRepository exameRepository,
+            PrescricaoRepository prescricaoRepository, AtestadoRepository atestadoRepository,
+            AuthorizationService authorizationService) {
         this.agendamentoRepository = agendamentoRepository;
         this.pacienteRepository = pacienteRepository;
         this.medicoRepository = medicoRepository;
@@ -74,21 +74,21 @@ public class AgendamentoService {
         this.exameRepository = exameRepository;
         this.prescricaoRepository = prescricaoRepository;
         this.atestadoRepository = atestadoRepository;
-        this.authorizationService = authorizationService; // Adicionado
+        this.authorizationService = authorizationService;
     }
 
     @Transactional
     public AgendamentoResponseDTO criarAgendamento(AgendamentoCadastroDTO dados, Authentication authentication) {
-        Usuario usuarioLogado = authorizationService.getUsuarioLogado(authentication); // Usa o service
+        Usuario usuarioLogado = authorizationService.getUsuarioLogado(authentication);
         if (usuarioLogado.getRole() != Role.PACIENTE) {
             throw new AccessDeniedException("Apenas pacientes podem criar agendamentos.");
         }
 
         Paciente paciente = pacienteRepository.findById(usuarioLogado.getId())
-            .orElseThrow(() -> new EntityNotFoundException("Paciente não encontrado para o usuário logado."));
+                .orElseThrow(() -> new EntityNotFoundException("Paciente não encontrado para o usuário logado."));
 
         Medico medico = medicoRepository.findById(dados.idMedico())
-            .orElseThrow(() -> new EntityNotFoundException("Médico não encontrado com o ID fornecido."));
+                .orElseThrow(() -> new EntityNotFoundException("Médico não encontrado com o ID fornecido."));
 
         long agendamentosAtivos = agendamentoRepository.countByPacienteIdUsuarioAndMedicoIdUsuarioAndStatusIn(
                 paciente.getIdUsuario(),
@@ -118,7 +118,6 @@ public class AgendamentoService {
 
         Agendamento agendamentoSalvo = agendamentoRepository.save(novoAgendamento);
 
-        // A construção do DTO agora incluirá automaticamente o endereço via construtor
         return new AgendamentoResponseDTO(agendamentoSalvo);
     }
 
@@ -172,27 +171,25 @@ public class AgendamentoService {
         } else {
             return List.of();
         }
-        // A construção do DTO agora incluirá automaticamente o endereço via construtor
         return agendamentos.stream().map(AgendamentoResponseDTO::new).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<LocalDateTime> listarHorariosOcupadosPorMedico(Long medicoId) {
         return agendamentoRepository.findDataHoraByMedicoIdUsuarioAndStatusIn(
-            medicoId,
-            List.of(StatusAgendamento.PENDENTE, StatusAgendamento.CONFIRMADO)
+                medicoId,
+                List.of(StatusAgendamento.PENDENTE, StatusAgendamento.CONFIRMADO)
         );
     }
 
     @Transactional(readOnly = true)
     public List<AgendamentoResponseDTO> listarTodosAgendamentos() {
-        // A construção do DTO agora incluirá automaticamente o endereço via construtor
         return agendamentoRepository.findAll().stream().map(AgendamentoResponseDTO::new).collect(Collectors.toList());
     }
 
     @Transactional
     public AgendamentoResponseDTO atualizarStatus(Long agendamentoId, AgendamentoStatusUpdateDTO dados, Authentication authentication) {
-        Usuario usuarioLogado = authorizationService.getUsuarioLogado(authentication); // Usa o service
+        Usuario usuarioLogado = authorizationService.getUsuarioLogado(authentication);
         if (usuarioLogado.getRole() != Role.MEDICO) {
             throw new AccessDeniedException("Apenas médicos podem atualizar o status.");
         }
@@ -202,13 +199,12 @@ public class AgendamentoService {
             throw new AccessDeniedException("Você não tem permissão para alterar um agendamento que não é seu.");
         }
         agendamento.setStatus(dados.novoStatus());
-        // A construção do DTO agora incluirá automaticamente o endereço via construtor
         return new AgendamentoResponseDTO(agendamentoRepository.save(agendamento));
     }
 
     @Transactional
     public AgendamentoResponseDTO cancelarAgendamentoPaciente(Long agendamentoId, Authentication authentication) {
-        Usuario usuarioLogado = authorizationService.getUsuarioLogado(authentication); // Usa o service
+        Usuario usuarioLogado = authorizationService.getUsuarioLogado(authentication);
         if (usuarioLogado.getRole() != Role.PACIENTE) {
             throw new AccessDeniedException("Apenas pacientes podem cancelar agendamentos.");
         }
@@ -222,17 +218,15 @@ public class AgendamentoService {
             throw new IllegalArgumentException("Este agendamento não pode mais ser cancelado (Status: " + statusAtual + ").");
         }
         agendamento.setStatus(StatusAgendamento.CANCELADO);
-        // A construção do DTO agora incluirá automaticamente o endereço via construtor
         return new AgendamentoResponseDTO(agendamentoRepository.save(agendamento));
     }
 
     @Transactional(readOnly = true)
     public ProntuarioDTO getProntuarioDoAgendamento(Long agendamentoId, Authentication authentication) {
-        Usuario usuarioLogado = authorizationService.getUsuarioLogado(authentication); // Usa o service
+        Usuario usuarioLogado = authorizationService.getUsuarioLogado(authentication);
         Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
                 .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado."));
 
-        // A verificação de permissão agora usa o AuthorizationService
         authorizationService.verificarSePodeAcessarAgendamento(authentication, agendamento);
 
         Paciente paciente = agendamento.getPaciente();
@@ -249,20 +243,20 @@ public class AgendamentoService {
         List<ProntuarioDTO.ConsultaAnteriorDTO> historico = criarHistoricoDTO(paciente.getIdUsuario(), medico.getIdUsuario(), agendamento.getId());
 
         return new ProntuarioDTO(
-            paciente.getIdUsuario(),
-            paciente.getUsuario().getNome(),
-            idade,
-            paciente.getTelefone(),
-            totalConsultas,
-            proximaConsulta,
-            detalhesDaConsulta,
-            historico
+                paciente.getIdUsuario(),
+                paciente.getUsuario().getNome(),
+                idade,
+                paciente.getTelefone(),
+                totalConsultas,
+                proximaConsulta,
+                detalhesDaConsulta,
+                historico
         );
     }
 
     @Transactional
     public void finalizarConsulta(Long agendamentoId, FinalizarConsultaDTO dados, Authentication authentication) {
-        Usuario medicoLogado = authorizationService.getUsuarioLogado(authentication); // Usa o service
+        Usuario medicoLogado = authorizationService.getUsuarioLogado(authentication);
         Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
                 .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado."));
 
@@ -290,18 +284,18 @@ public class AgendamentoService {
                 novoExame.setMedico(agendamento.getMedico());
                 novoExame.setPaciente(agendamento.getPaciente());
                 novoExame.setTipo(tipoExame);
-                novoExame.setDataRealizacao(LocalDate.now()); // Data da solicitação, pode ser ajustado
+                novoExame.setDataRealizacao(LocalDate.now());
                 exameRepository.save(novoExame);
             }
         }
         if (dados.diasDeRepouso() != null && dados.diasDeRepouso() > 0) {
             UnidadeDeSaude unidade = agendamento.getMedico().getUnidade();
             String descricaoAtestado = String.format(
-                "Atestado para os devidos fins que o(a) paciente %s foi atendido(a) na unidade %s no dia %s, necessitando de %d dias de repouso.",
-                agendamento.getPaciente().getUsuario().getNome(),
-                unidade != null ? unidade.getNome() : "[Unidade não informada]",
-                agendamento.getDataHora().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                dados.diasDeRepouso()
+                    "Atestado para os devidos fins que o(a) paciente %s foi atendido(a) na unidade %s no dia %s, necessitando de %d dias de repouso.",
+                    agendamento.getPaciente().getUsuario().getNome(),
+                    unidade != null ? unidade.getNome() : "[Unidade não informada]",
+                    agendamento.getDataHora().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    dados.diasDeRepouso()
             );
             Atestado novoAtestado = new Atestado();
             novoAtestado.setAgendamento(agendamento);
@@ -311,14 +305,12 @@ public class AgendamentoService {
             novoAtestado.setDataEmissao(LocalDate.now());
             atestadoRepository.save(novoAtestado);
         }
-        agendamentoRepository.save(agendamento); // Salva a ficha médica atualizada e o status do agendamento
+        agendamentoRepository.save(agendamento);
     }
 
     private ProntuarioDTO.ConsultaDetalhesDTO criarConsultaDetalhesDTO(Agendamento agendamento) {
         FichaMedica fichaAtual = agendamento.getFichaMedica();
-        // Busca a prescrição associada, se existir
         String prescricaoTexto = prescricaoRepository.findByAgendamentoId(agendamento.getId()).map(Prescricao::getMedicamentos).orElse(null);
-        // Busca os exames solicitados, se existirem
         List<String> examesSolicitados = exameRepository.findAllByAgendamentoId(agendamento.getId()).stream().map(Exame::getTipo).collect(Collectors.toList());
         return new ProntuarioDTO.ConsultaDetalhesDTO(
                 agendamento.getDataHora(), fichaAtual.getSintomas(), fichaAtual.getEvolucaoMedica(),
@@ -331,7 +323,6 @@ public class AgendamentoService {
         return agendamentoRepository
                 .findAllByPacienteIdUsuarioAndMedicoIdUsuarioAndStatus(pacienteId, medicoId, StatusAgendamento.ATENDIDO)
                 .stream()
-                // Garante que a consulta atual não entre no histórico dela mesma
                 .filter(ag -> !ag.getId().equals(agendamentoAtualId))
                 .map(ag -> new ProntuarioDTO.ConsultaAnteriorDTO(ag.getDataHora(), ag.getFichaMedica() != null ? ag.getFichaMedica().getSintomas() : "Sintomas não registrados")) // Adiciona verificação de ficha nula
                 .collect(Collectors.toList());

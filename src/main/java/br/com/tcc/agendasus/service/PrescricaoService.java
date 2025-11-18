@@ -7,7 +7,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
 import br.com.tcc.agendasus.dto.DTOs.PrescricaoResponseDTO;
 import br.com.tcc.agendasus.model.entity.Prescricao;
 import br.com.tcc.agendasus.model.entity.Usuario;
@@ -42,7 +41,6 @@ public class PrescricaoService {
 
     @Transactional(readOnly = true)
     public PrescricaoResponseDTO buscarPorAgendamento(Long agendamentoId, Authentication auth) {
-        // Validação de segurança deve ser feita no AgendamentoService/Controller
         return repository.findByAgendamentoId(agendamentoId)
                 .map(PrescricaoResponseDTO::new)
                 .orElse(null);

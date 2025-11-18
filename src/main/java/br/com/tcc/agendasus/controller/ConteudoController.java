@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.tcc.agendasus.dto.DTOs.*;
 import br.com.tcc.agendasus.dto.DTOs.ConteudoCadastroDTO;
 import br.com.tcc.agendasus.dto.DTOs.ConteudoResponseDTO;
 import br.com.tcc.agendasus.dto.DTOs.ConteudoUpdateDTO;
@@ -35,14 +34,12 @@ public class ConteudoController {
     public ResponseEntity<List<ConteudoResponseDTO>> listarPublicados() {
         return ResponseEntity.ok(service.listarPublicados());
     }
-    
-    // [NOVO] Endpoint para o médico listar seus próprios conteúdos
+
     @GetMapping("/meus")
     public ResponseEntity<List<ConteudoResponseDTO>> listarMeus(Authentication auth) {
         return ResponseEntity.ok(service.listarMeusConteudos(auth));
     }
 
-    // [NOVO] Endpoint para buscar um conteúdo específico (para edição)
     @GetMapping("/admin/{id}")
     public ResponseEntity<ConteudoResponseDTO> buscarPorIdAdmin(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(service.buscarPorIdAdmin(id, auth));
