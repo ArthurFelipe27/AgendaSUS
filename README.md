@@ -29,7 +29,7 @@ Para executar este projeto localmente, você precisará ter o Java (JDK 17+), Ma
 
 1. Clone este repositório:
 
-git clone [https://github.com/arthurfelipe27/meu_tcc.git](https://github.com/arthurfelipe27/meu_tcc.git)  
+git clone [https://github.com/arthurfelipe27/meu_tcc.git](https://github.com/arthurfelipe27/AgendaSUS.git)  
 cd agendasus-api  
 
 
